@@ -1,0 +1,23 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hdt", "hdt.vcproj", "{E19AD84B-1457-4CE8-A148-8043BEE97209}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectDependencies) = postSolution
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{E19AD84B-1457-4CE8-A148-8043BEE97209}.Debug.ActiveCfg = Debug|Win32
+		{E19AD84B-1457-4CE8-A148-8043BEE97209}.Debug.Build.0 = Debug|Win32
+		{E19AD84B-1457-4CE8-A148-8043BEE97209}.Release.ActiveCfg = Release|Win32
+		{E19AD84B-1457-4CE8-A148-8043BEE97209}.Release.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal
