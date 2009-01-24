@@ -4,6 +4,7 @@
 #include "MainWndDef.h"
 
 /* 外部関数定義 */
+#include "SomeCtrl.h"
 
 /* 外部変数定義 */
 extern HINSTANCE ghInst;      /* インスタンスのハンドラ     */
@@ -173,27 +174,29 @@ static WNDPROC_INDEX convertMSGtoINDEX( UINT message )
 static LRESULT onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
-
-#if 0
     HDC        hdc;
     TEXTMETRIC tm;
     HFONT hFont,hOldFont;
-    SIZE        size;
 
     hdc = GetDC( hwnd );
-    GetTextExtentPoint( hdc, TEXT ("M"), 1, &size );
-    mainSts.cxCaps = size.cx;
-    mainSts.cyChar = size.cy;
+    hFont = GetStockObject(DEFAULT_GUI_FONT);
+    hOldFont = SelectObject(hdc, hFont);
+    GetTextMetrics( hdc, &tm );
+    mainSts.cxChar = tm.tmAveCharWidth;
+    mainSts.cyChar = tm.tmHeight + (tm.tmHeight/2) + (GetSystemMetrics(SM_CYEDGE) * 2);
+
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hFont);
     ReleaseDC( hwnd,hdc );
 
+#if 0
     IoWndCreate( hwnd );
+    mainSts.execute = 0;
+#endif
 
     /* コントロールをまとめて生成 */
-    WndSomeCtrlCreate( hwnd );
+    SomeCtrlCreate( hwnd );
 
-    mainSts.execute = 0;
-
-#endif
     return rtn;
 }
 
@@ -222,12 +225,13 @@ static LRESULT onPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 ********************************************************************************/
 static LRESULT onSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
-#if 0
     mainSts.cxClient = LOWORD( lParam );
     mainSts.cyClient = HIWORD( lParam );
 
     /* コントロールをまとめて調整 */
-    WndSomeCtrlSize( mainSts.cxClient, mainSts.cyClient );
+    SomeCtrlSize( mainSts.cxClient, mainSts.cyChar );
+
+#if 0
     IoWndSize( mainSts.cxClient, mainSts.cyClient );
 #endif
     return 0;
@@ -291,14 +295,14 @@ static LRESULT onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam 
         if( mainSts.execute == 0 )
         {
             /* COMポート名取得 */
-            WndSomeCtrlGetText( WND_SOME_CTRL_COMPORT_COMBOBOX, szComPort );
+            SomeCtrlGetText( WND_SOME_CTRL_COMPORT_COMBOBOX, szComPort );
             commParam.portStr = &szComPort;
             if( COMMopen( &commParam ) )
             {
                 mainSts.execute = 1;
 
-                WndSomeCtrlDisable( WND_SOME_CTRL_COMPORT_COMBOBOX );
-                SetWindowText( WndSomeCtrlGetHWND(WND_SOME_CTRL_COMPORT_BUTTON), TEXT("DISCONNECT") );
+                SomeCtrlDisable( WND_SOME_CTRL_COMPORT_COMBOBOX );
+                SetWindowText( SomeCtrlGetHWND(WND_SOME_CTRL_COMPORT_BUTTON), TEXT("DISCONNECT") );
             }
             else
             {
@@ -310,14 +314,14 @@ static LRESULT onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam 
             COMMclose();
             mainSts.execute = 0;
 
-            WndSomeCtrlEnable( WND_SOME_CTRL_COMPORT_COMBOBOX );
-            SetWindowText( WndSomeCtrlGetHWND(WND_SOME_CTRL_COMPORT_BUTTON), TEXT("CONNECT") );
+            SomeCtrlEnable( WND_SOME_CTRL_COMPORT_COMBOBOX );
+            SetWindowText( SomeCtrlGetHWND(WND_SOME_CTRL_COMPORT_BUTTON), TEXT("CONNECT") );
         }
         break;
 
     case (WND_SOME_CTRL_PROPERTY_BUTTON+WND_SOME_CTRL_ID_OFFSET):
         /* COMポート名取得 */
-        WndSomeCtrlGetText( WND_SOME_CTRL_COMPORT_COMBOBOX, szComPort );
+        SomeCtrlGetText( WND_SOME_CTRL_COMPORT_COMBOBOX, szComPort );
         commParam.portStr = &szComPort;
         COMMproperty( hwnd, &commParam );
         break;

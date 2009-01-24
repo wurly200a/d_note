@@ -114,6 +114,9 @@
 			RelativePath="..\wnd\MainWnd\MainWnd.c">
 		</File>
 		<File
+			RelativePath="..\wnd\SomeCtrl\SomeCtrl.c">
+		</File>
+		<File
 			RelativePath="..\sys\WinMain\WinMain.c">
 		</File>
 	</Files>
