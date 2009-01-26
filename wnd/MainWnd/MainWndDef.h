@@ -2,21 +2,21 @@
 
 typedef enum
 {
-    WNDPROC_ON_CREATE , /* WM_CREATE  */
-    WNDPROC_ON_PAINT  , /* WM_PAINT   */
-    WNDPROC_ON_SIZE   , /* WM_SIZE    */
-    WNDPROC_ON_CLOSE  , /* WM_CLOSE   */
-    WNDPROC_ON_DESTROY, /* WM_DESTROY */
-    WNDPROC_ON_COMMAND, /* WM_COMMAND */
-    WNDPROC_ON_KEYUP  , /* WM_KEYUP   */
-    WNDPROC_ON_KEYDOWN, /* WM_KEYDOWN */
-    WNDPROC_ON_CHAR   , /* WM_CHAR    */
-    WNDPROC_ON_HSCROLL, /* WM_HSCROLL */
-    WNDPROC_ON_VSCROLL, /* WM_VSCROLL */
-    WNDPROC_ON_APP    , /* WM_APP     */
-    WNDPROC_ON_DEFAULT, /* default    */
-    WNDPROC_MAX
-} WNDPROC_INDEX;
+    MAINWND_ON_CREATE , /* WM_CREATE  */
+    MAINWND_ON_PAINT  , /* WM_PAINT   */
+    MAINWND_ON_SIZE   , /* WM_SIZE    */
+    MAINWND_ON_CLOSE  , /* WM_CLOSE   */
+    MAINWND_ON_DESTROY, /* WM_DESTROY */
+    MAINWND_ON_COMMAND, /* WM_COMMAND */
+    MAINWND_ON_KEYUP  , /* WM_KEYUP   */
+    MAINWND_ON_KEYDOWN, /* WM_KEYDOWN */
+    MAINWND_ON_CHAR   , /* WM_CHAR    */
+    MAINWND_ON_HSCROLL, /* WM_HSCROLL */
+    MAINWND_ON_VSCROLL, /* WM_VSCROLL */
+    MAINWND_ON_APP    , /* WM_APP     */
+    MAINWND_ON_DEFAULT, /* default    */
+    MAINWND_MAX
+} MAINWND_INDEX;
 
 typedef struct
 {
@@ -27,7 +27,7 @@ typedef struct
     int  cxChar;
     int  cyChar;
     int  cxCaps;
-} S_MAIN_STATUS;
+} S_MAINWND_DATA;
 
 #define MAINWND_DEF_H
 #endif /* MAINWND_DEF_H */

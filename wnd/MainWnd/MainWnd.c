@@ -12,11 +12,11 @@
 /* 内部関数定義 */
 #include "MainWnd.h"
 LRESULT CALLBACK WndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static WNDPROC_INDEX convertMSGtoINDEX( UINT message );
-static LRESULT onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static MAINWND_INDEX convertMSGtoINDEX( UINT message );
+static LRESULT onCreate ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onPaint  ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onSize   ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onClose  ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onDestroy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onKeyUp  ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
@@ -24,18 +24,18 @@ static LRESULT onKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam 
 static LRESULT onChar   ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onHscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onVscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onApp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onApp    ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onDefault( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
 /* 内部変数定義 */
 static HWND hwndMain; /* メインウィンドウのハンドラ */
 static HWND hwndSbar;
-static S_MAIN_STATUS mainSts;
+static S_MAINWND_DATA mainWndData;
 
 static int sbarColWidth[5] = { 100, 200, 300, 400, -1 };
 
 /* *INDENT-OFF* */
-static LRESULT (*wndProcTbl[WNDPROC_MAX])( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam ) =
+static LRESULT (*wndProcTbl[MAINWND_MAX])( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam ) =
 {
     onCreate , /* WM_CREATE  */
     onPaint  , /* WM_PAINT   */
@@ -53,13 +53,11 @@ static LRESULT (*wndProcTbl[WNDPROC_MAX])( HWND hwnd, UINT message, WPARAM wPara
 };
 /* *INDENT-ON* */
 
-
 /********************************************************************************
- * 関数名 : MainWndCreate()
- * 引数   : int nCmdShow
- * 戻り値 : BOOL
- * 内容   : メインウィンドウクラスの登録、ウィンドウの生成
- ********************************************************************************/
+ * 内容  : メインウィンドウクラスの登録、ウィンドウの生成
+ * 引数  : int nCmdShow
+ * 戻り値: BOOL
+ ***************************************/
 BOOL
 MainWndCreate( int nCmdShow )
 {
@@ -106,11 +104,10 @@ MainWndCreate( int nCmdShow )
 }
 
 /********************************************************************************
- * 関数名 : IsMainWndMessage()
- * 引数   : MSG *msg
- * 戻り値 : BOOL
- * 内容   : メインウィンドウ内で処理するメッセージを判定する
- ********************************************************************************/
+ * 内容  : メインウィンドウ内で処理するメッセージを判定する
+ * 引数  : MSG *msg
+ * 戻り値: BOOL
+ ***************************************/
 BOOL
 IsMainWndMessage( MSG *msg )
 {
@@ -118,15 +115,15 @@ IsMainWndMessage( MSG *msg )
 }
 
 /********************************************************************************
- * 関数名 : WndProc()
- * 引数   : ウィンドウハンドラ HWND hwnd
- *          メッセージ         UINT message
- *          パラメータ1        WPARAM wParam (内容はメッセージの種類により異なる)
- *          パラメータ2        LPARAM lParam (内容はメッセージの種類により異なる)
- * 戻り値 : LRESULT
- * 内容   : ウィンドウプロシージャ。WINDOWSから受け取ったメッセージを処理する
- ********************************************************************************/
-LRESULT CALLBACK WndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+ * 内容  : ウィンドウプロシージャ。WINDOWSから受け取ったメッセージの処理
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+LRESULT CALLBACK
+WndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     return wndProcTbl[convertMSGtoINDEX(message)]( hwnd, message, wParam, lParam );
 }
@@ -134,29 +131,30 @@ LRESULT CALLBACK WndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam 
 /********************************************************************************
  * 関数名 : ConvertMSGtoINDEX()
  * 引数   : UINT message
- * 戻り値 : MAIN_WNDPRC_INDEX
+ * 戻り値 : WNDPRC_INDEX
  * 内容   : ウィンドウズメッセージから対応するインデックスに変換する
- ********************************************************************************/
-static WNDPROC_INDEX convertMSGtoINDEX( UINT message )
+ ***************************************/
+static MAINWND_INDEX
+convertMSGtoINDEX( UINT message )
 {
-    WNDPROC_INDEX rtn;
+    MAINWND_INDEX rtn;
 
     /* *INDENT-OFF* */
     switch( message )
     {
-    case WM_CREATE :rtn = WNDPROC_ON_CREATE ;break;
-    case WM_PAINT  :rtn = WNDPROC_ON_PAINT  ;break;
-    case WM_SIZE   :rtn = WNDPROC_ON_SIZE   ;break;
-    case WM_CLOSE  :rtn = WNDPROC_ON_CLOSE  ;break;
-    case WM_DESTROY:rtn = WNDPROC_ON_DESTROY;break;
-    case WM_COMMAND:rtn = WNDPROC_ON_COMMAND;break;
-    case WM_APP    :rtn = WNDPROC_ON_APP    ;break;
-    case WM_KEYUP  :rtn = WNDPROC_ON_KEYUP  ;break;
-    case WM_KEYDOWN:rtn = WNDPROC_ON_KEYDOWN;break;
-    case WM_CHAR   :rtn = WNDPROC_ON_CHAR   ;break;
-    case WM_HSCROLL:rtn = WNDPROC_ON_HSCROLL;break;
-    case WM_VSCROLL:rtn = WNDPROC_ON_VSCROLL;break;
-    default        :rtn = WNDPROC_ON_DEFAULT;break;
+    case WM_CREATE :rtn = MAINWND_ON_CREATE ;break;
+    case WM_PAINT  :rtn = MAINWND_ON_PAINT  ;break;
+    case WM_SIZE   :rtn = MAINWND_ON_SIZE   ;break;
+    case WM_CLOSE  :rtn = MAINWND_ON_CLOSE  ;break;
+    case WM_DESTROY:rtn = MAINWND_ON_DESTROY;break;
+    case WM_COMMAND:rtn = MAINWND_ON_COMMAND;break;
+    case WM_APP    :rtn = MAINWND_ON_APP    ;break;
+    case WM_KEYUP  :rtn = MAINWND_ON_KEYUP  ;break;
+    case WM_KEYDOWN:rtn = MAINWND_ON_KEYDOWN;break;
+    case WM_CHAR   :rtn = MAINWND_ON_CHAR   ;break;
+    case WM_HSCROLL:rtn = MAINWND_ON_HSCROLL;break;
+    case WM_VSCROLL:rtn = MAINWND_ON_VSCROLL;break;
+    default        :rtn = MAINWND_ON_DEFAULT;break;
     }
     /* *INDENT-ON* */
 
@@ -164,15 +162,15 @@ static WNDPROC_INDEX convertMSGtoINDEX( UINT message )
 }
 
 /********************************************************************************
- * 関数名 : onCreate()
- * 引数   : ウィンドウハンドラ HWND hwnd
- *          メッセージ         UINT message
- *          パラメータ1        WPARAM wParam (内容はメッセージの種類により異なる)
- *          パラメータ2        LPARAM lParam (内容はメッセージの種類により異なる)
- * 戻り値 : LRESULT
- * 内容   : WM_CREATE を処理する
- ********************************************************************************/
-static LRESULT onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+ * 内容  : WM_CREATE の処理
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
     HDC        hdc;
@@ -183,8 +181,8 @@ static LRESULT onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     hFont = GetStockObject(DEFAULT_GUI_FONT);
     hOldFont = SelectObject(hdc, hFont);
     GetTextMetrics( hdc, &tm );
-    mainSts.cxChar = tm.tmAveCharWidth;
-    mainSts.cyChar = tm.tmHeight + (tm.tmHeight/2) + (GetSystemMetrics(SM_CYEDGE) * 2);
+    mainWndData.cxChar = tm.tmAveCharWidth;
+    mainWndData.cyChar = tm.tmHeight + (tm.tmHeight/2) + (GetSystemMetrics(SM_CYEDGE) * 2);
 
     SelectObject(hdc, hOldFont);
     DeleteObject(hFont);
@@ -192,7 +190,7 @@ static LRESULT onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
 #if 0
     IoWndCreate( hwnd );
-    mainSts.execute = 0;
+    mainWndData.execute = 0;
 #endif
 
     /* コントロールをまとめて生成 */
@@ -202,52 +200,52 @@ static LRESULT onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 }
 
 /********************************************************************************
- * 関数名 : onPaint()
- * 引数   : ウィンドウハンドラ HWND hwnd
- *          メッセージ         UINT message
- *          パラメータ1        WPARAM wParam (内容はメッセージの種類により異なる)
- *          パラメータ2        LPARAM lParam (内容はメッセージの種類により異なる)
- * 戻り値 : LRESULT
- * 内容   : WM_PAINT を処理する
- ********************************************************************************/
-static LRESULT onPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+ * 内容  : WM_PAINT の処理
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+onPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     return DefWindowProc( hwnd, message, wParam, lParam );
 }
 
 /********************************************************************************
-  関数名 : onSize()
-  引数   : ウィンドウハンドラ HWND hwnd
-           メッセージ         UINT message
-           パラメータ1        WPARAM wParam (内容はメッセージの種類により異なる)
-           パラメータ2        LPARAM lParam (内容はメッセージの種類により異なる)
-  戻り値 : LRESULT
-  内容   : WM_SIZE を処理する
-********************************************************************************/
-static LRESULT onSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+ * 内容  : WM_SIZE の処理
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+onSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
-    mainSts.cxClient = LOWORD( lParam );
-    mainSts.cyClient = HIWORD( lParam );
+    mainWndData.cxClient = LOWORD( lParam );
+    mainWndData.cyClient = HIWORD( lParam );
 
     /* コントロールをまとめて調整 */
-    SomeCtrlSize( mainSts.cxClient, mainSts.cyChar );
+    SomeCtrlSize( mainWndData.cxClient, mainWndData.cyChar );
 
 #if 0
-    IoWndSize( mainSts.cxClient, mainSts.cyClient );
+    IoWndSize( mainWndData.cxClient, mainWndData.cyClient );
 #endif
     return 0;
 }
 
 /********************************************************************************
- * 関数名 : onClose()
- * 引数   : ウィンドウハンドラ HWND hwnd
- *          メッセージ         UINT message
- *          パラメータ1        WPARAM wParam (内容はメッセージの種類により異なる)
- *          パラメータ2        LPARAM lParam (内容はメッセージの種類により異なる)
- * 戻り値 : LRESULT
- * 内容   : WM_CLOSE を処理する
- ********************************************************************************/
-static LRESULT onClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+ * 内容  : WM_CLOSE の処理
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+onClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     DestroyWindow( hwnd );
 
@@ -255,15 +253,15 @@ static LRESULT onClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 }
 
 /********************************************************************************
- * 関数名 : onDestroy()
- * 引数   : ウィンドウハンドラ HWND hwnd
- *          メッセージ         UINT message
- *          パラメータ1        WPARAM wParam (内容はメッセージの種類により異なる)
- *          パラメータ2        LPARAM lParam (内容はメッセージの種類により異なる)
- * 戻り値 : LRESULT
- * 内容   : WM_DESTROY を処理する
- ********************************************************************************/
-static LRESULT onDestroy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+ * 内容  : WM_DESTROY の処理
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+onDestroy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
 #if 0
     IoWndDestroy();
@@ -274,15 +272,15 @@ static LRESULT onDestroy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam 
 }
 
 /********************************************************************************
- * 関数名 : onCommand()
- * 引数   : ウィンドウハンドラ HWND hwnd
- *          メッセージ         UINT message
- *          パラメータ1        WPARAM wParam (内容はメッセージの種類により異なる)
- *          パラメータ2        LPARAM lParam (内容はメッセージの種類により異なる)
- * 戻り値 : LRESULT
- * 内容   : WM_COMMAND を処理する
- ********************************************************************************/
-static LRESULT onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+ * 内容  : WM_COMMAND の処理
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 #if 0
@@ -293,14 +291,14 @@ static LRESULT onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam 
     switch( LOWORD(wParam) )
     {
     case (WND_SOME_CTRL_COMPORT_BUTTON+WND_SOME_CTRL_ID_OFFSET):
-        if( mainSts.execute == 0 )
+        if( mainWndData.execute == 0 )
         {
             /* COMポート名取得 */
             SomeCtrlGetText( WND_SOME_CTRL_COMPORT_COMBOBOX, szComPort );
             commParam.portStr = &szComPort;
             if( COMMopen( &commParam ) )
             {
-                mainSts.execute = 1;
+                mainWndData.execute = 1;
 
                 SomeCtrlDisable( WND_SOME_CTRL_COMPORT_COMBOBOX );
                 SetWindowText( SomeCtrlGetHWND(WND_SOME_CTRL_COMPORT_BUTTON), TEXT("DISCONNECT") );
@@ -313,7 +311,7 @@ static LRESULT onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam 
         else
         {
             COMMclose();
-            mainSts.execute = 0;
+            mainWndData.execute = 0;
 
             SomeCtrlEnable( WND_SOME_CTRL_COMPORT_COMBOBOX );
             SetWindowText( SomeCtrlGetHWND(WND_SOME_CTRL_COMPORT_BUTTON), TEXT("CONNECT") );
@@ -346,15 +344,15 @@ static LRESULT onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam 
 
 
 /********************************************************************************
- * 関数名 : onKeyUp()
- * 引数   : ウィンドウハンドラ HWND hwnd
- *          メッセージ         UINT message
- *          パラメータ1        WPARAM wParam (内容はメッセージの種類により異なる)
- *          パラメータ2        LPARAM lParam (内容はメッセージの種類により異なる)
- * 戻り値 : LRESULT
- * 内容   : WM_KEYUP を処理する
- ********************************************************************************/
-static LRESULT onKeyUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+ * 内容  : WM_KEYUP の処理
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+onKeyUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
@@ -362,15 +360,15 @@ static LRESULT onKeyUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 }
 
 /********************************************************************************
- * 関数名 : onKeyDown()
- * 引数   : ウィンドウハンドラ HWND hwnd
- *          メッセージ         UINT message
- *          パラメータ1        WPARAM wParam (内容はメッセージの種類により異なる)
- *          パラメータ2        LPARAM lParam (内容はメッセージの種類により異なる)
- * 戻り値 : LRESULT
- * 内容   : WM_KEYDOWN を処理する
- ********************************************************************************/
-static LRESULT onKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+ * 内容  : WM_KEYDOWN の処理
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+onKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
@@ -378,15 +376,15 @@ static LRESULT onKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam 
 }
 
 /********************************************************************************
- * 関数名 : onChar()
- * 引数   : ウィンドウハンドラ HWND hwnd
- *          メッセージ         UINT message
- *          パラメータ1        WPARAM wParam (内容はメッセージの種類により異なる)
- *          パラメータ2        LPARAM lParam (内容はメッセージの種類により異なる)
- * 戻り値 : LRESULT
- * 内容   : WM_CHAR を処理する
- ********************************************************************************/
-static LRESULT onChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+ * 内容  : WM_CHAR の処理
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+onChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
@@ -394,15 +392,15 @@ static LRESULT onChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 }
 
 /********************************************************************************
- * 関数名 : onHscroll()
- * 引数   : ウィンドウハンドラ HWND hwnd
- *          メッセージ         UINT message
- *          パラメータ1        WPARAM wParam (内容はメッセージの種類により異なる)
- *          パラメータ2        LPARAM lParam (内容はメッセージの種類により異なる)
- * 戻り値 : LRESULT
- * 内容   : WM_HSCROLL を処理する
- ********************************************************************************/
-static LRESULT onHscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+ * 内容  : WM_HSCROLL の処理
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+onHscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
@@ -410,15 +408,15 @@ static LRESULT onHscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam 
 }
 
 /********************************************************************************
- * 関数名 : onVscroll()
- * 引数   : ウィンドウハンドラ HWND hwnd
- *          メッセージ         UINT message
- *          パラメータ1        WPARAM wParam (内容はメッセージの種類により異なる)
- *          パラメータ2        LPARAM lParam (内容はメッセージの種類により異なる)
- * 戻り値 : LRESULT
- * 内容   : WM_VSCROLL を処理する
- ********************************************************************************/
-static LRESULT onVscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+ * 内容  : WM_VSCROLL の処理
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+onVscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
@@ -427,15 +425,15 @@ static LRESULT onVscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam 
 
 
 /********************************************************************************
- * 関数名 : onApp()
- * 引数   : ウィンドウハンドラ HWND hwnd
- *          メッセージ         UINT message
- *          パラメータ1        WPARAM wParam (内容はメッセージの種類により異なる)
- *          パラメータ2        LPARAM lParam (内容はメッセージの種類により異なる)
- * 戻り値 : LRESULT
- * 内容   : WM_APP を処理する
- ********************************************************************************/
-static LRESULT onApp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+ * 内容  : WM_APP の処理
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+onApp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
@@ -449,15 +447,15 @@ static LRESULT onApp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 }
 
 /********************************************************************************
- * 関数名 : onDefault()
- * 引数   : ウィンドウハンドラ HWND hwnd
- *          メッセージ         UINT message
- *          パラメータ1        WPARAM wParam (内容はメッセージの種類により異なる)
- *          パラメータ2        LPARAM lParam (内容はメッセージの種類により異なる)
- * 戻り値 : LRESULT
- * 内容   : メッセージのデフォルト処理
- ********************************************************************************/
-static LRESULT onDefault( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+ * 内容  : メッセージのデフォルト処理
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+onDefault( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     return DefWindowProc( hwnd, message, wParam, lParam );
 }
