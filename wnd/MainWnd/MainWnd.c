@@ -5,6 +5,7 @@
 
 /* 外部関数定義 */
 #include "WinMain.h"
+#include "IoWnd.h"
 #include "SomeCtrl.h"
 
 /* 外部変数定義 */
@@ -188,8 +189,8 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     DeleteObject(hFont);
     ReleaseDC( hwnd,hdc );
 
-#if 0
     IoWndCreate( hwnd );
+#if 0
     mainWndData.execute = 0;
 #endif
 
@@ -230,9 +231,8 @@ onSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     /* コントロールをまとめて調整 */
     SomeCtrlSize( mainWndData.cxClient, mainWndData.cyChar );
 
-#if 0
     IoWndSize( mainWndData.cxClient, mainWndData.cyClient );
-#endif
+
     return 0;
 }
 
@@ -263,9 +263,7 @@ onClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 static LRESULT
 onDestroy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
-#if 0
     IoWndDestroy();
-#endif
 
     PostQuitMessage(0); /* WM_QUITメッセージをポストする */
     return 0;
@@ -341,7 +339,6 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     return rtn;
 }
-
 
 /********************************************************************************
  * 内容  : WM_KEYUP の処理

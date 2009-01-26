@@ -111,6 +111,9 @@
 	</References>
 	<Files>
 		<File
+			RelativePath="..\wnd\IoWnd\IoWnd.c">
+		</File>
+		<File
 			RelativePath="..\wnd\MainWnd\MainWnd.c">
 		</File>
 		<File
