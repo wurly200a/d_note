@@ -8,17 +8,16 @@
 static BOOL initializeApp( HINSTANCE, int);
 
 /* 内部変数定義 */
-HINSTANCE ghInst;    /* インスタンスのハンドラ     */
-TCHAR szAppName[] = TEXT("hdt"); /* アプリケーションの名称 */
+static HINSTANCE hInstance;    /* インスタンスのハンドラ     */
+static TCHAR szAppName[] = TEXT("hdt"); /* アプリケーションの名称 */
 
 /********************************************************************************
- * 関数名: WinMain()
- * 引数  : HINSTANCE hInstance     インスタンスのハンドラ
- *         HINSTANCE hPrevInstance このプログラムが直前に実行されていたインスタンスのハンドラ
- *         PSTR szCmdLine          プログラムの起動のために使われたコマンド行
- *         int iCmdShow            プログラムの初期表示の形態の指定
- * 戻り値: int
  * 内容  : WINDOWSプログラムのエントリポイント
+ * 引数  : HINSTANCE hInstance     インスタンスのハンドラ
+ * 引数  : HINSTANCE hPrevInstance このプログラムが直前に実行されていたインスタンスのハンドラ
+ * 引数  : PSTR szCmdLine          プログラムの起動のために使われたコマンド行
+ * 引数  : int iCmdShow            プログラムの初期表示の形態の指定
+ * 戻り値: int
  ***************************************/
 int WINAPI
 WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nCmdShow )
@@ -45,14 +44,35 @@ WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nCmdS
 
 
 /********************************************************************************
- * 関数名 : initializeApp()
- * 引数   : HINSTANCE hInst, int nCmdShow
- * 戻り値 : BOOL
  * 内容   : アプリケーションの初期化
+ * 引数   : HINSTANCE hInst
+ * 引数   : int nCmdShow
+ * 戻り値 : BOOL
  ***************************************/
 static BOOL
 initializeApp( HINSTANCE hInst, int nCmdShow )
 {
-    ghInst = hInst;
+    hInstance = hInst;
     return MainWndCreate( nCmdShow ); /* メインウィンドウ生成 */
+}
+
+/********************************************************************************
+ * 内容   : インスタンスハンドラの取得
+ * 引数   : なし
+ * 戻り値 : HINSTANCE
+ ***************************************/
+HINSTANCE
+GetHinst( void )
+{
+    return hInstance;
+}
+/********************************************************************************
+ * 内容   : アプリケーションの名称文字列の取得
+ * 引数   : なし
+ * 戻り値 : PTSTR
+ ***************************************/
+PTSTR
+GetAppName( void )
+{
+    return szAppName;
 }

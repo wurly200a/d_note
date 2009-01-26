@@ -4,11 +4,10 @@
 #include "MainWndDef.h"
 
 /* 外部関数定義 */
+#include "WinMain.h"
 #include "SomeCtrl.h"
 
 /* 外部変数定義 */
-extern HINSTANCE ghInst;      /* インスタンスのハンドラ     */
-extern TCHAR     szAppName[]; /* アプリケーションの名称 */
 
 /* 内部関数定義 */
 #include "MainWnd.h"
@@ -65,33 +64,35 @@ BOOL
 MainWndCreate( int nCmdShow )
 {
     WNDCLASS wc = {0};
+    HINSTANCE hInst = GetHinst();
+    PTSTR pAppName = GetAppName();
 
     /* メインウィンドウクラス */
     wc.style            = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc      = (WNDPROC) WndProc;
     wc.cbClsExtra       = 0; /* クラス構造体の為の追加領域を予約する */
     wc.cbWndExtra       = 0; /* ウィンドウ構造体の為の追加領域を予約する */
-    wc.hInstance        = ghInst;
-    wc.hIcon            = LoadIcon( ghInst, szAppName );          /* アイコン */
+    wc.hInstance        = hInst;
+    wc.hIcon            = LoadIcon( hInst, pAppName );          /* アイコン */
     wc.hCursor          = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground    = (HBRUSH) (COLOR_BTNFACE + 1); /* 背景 */
-    wc.lpszMenuName     = szAppName;
-    wc.lpszClassName    = szAppName;
+    wc.lpszMenuName     = pAppName;
+    wc.lpszClassName    = pAppName;
 
     if( !RegisterClass(&wc) )
     {
-        MessageBox( NULL, TEXT("This program requires Windows 2000!"), szAppName, MB_ICONERROR );
+        MessageBox( NULL, TEXT("This program requires Windows 2000!"), pAppName, MB_ICONERROR );
         return FALSE;
     }
 
     /* メインウィンドウを作成 */
     InitCommonControls(); /* commctrl.hのインクルード、comctl32.libのプロジェクトへの参加が必要 */
     hwndMain = CreateWindowEx( /* WS_EX_OVERLAPPEDWINDOW | */ WS_EX_ACCEPTFILES,
-                               szAppName, szAppName,
+                               pAppName, pAppName,
                                WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS /* | WS_VSCROLL | WS_HSCROLL*/,
                                CW_USEDEFAULT, CW_USEDEFAULT,
                                WND_WIDTH    , WND_HEIGHT,
-                               NULL, NULL, ghInst, NULL);
+                               NULL, NULL, hInst, NULL);
 
     if( hwndMain == NULL )
     {

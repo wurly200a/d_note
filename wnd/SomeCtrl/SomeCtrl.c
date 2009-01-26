@@ -3,9 +3,9 @@
 /* 個別インクルードファイル */
 
 /* 外部関数定義 */
+#include "WinMain.h"
+
 /* 外部変数定義 */
-extern HINSTANCE ghInst;      /* インスタンスのハンドラ     */
-extern TCHAR     szAppName[]; /* アプリケーションの名称 */
 
 /* 内部関数定義 */
 #include "SomeCtrl.h"
@@ -57,7 +57,7 @@ SomeCtrlCreate(HWND hwnd)
                                               ctrlListTbl[i].width,                    /* 幅                 */
                                               ctrlListTbl[i].height,                   /* 高さ               */
                                               hwnd,(HMENU)(SOME_CTRL_ID_OFFSET+i),     /* 親ウィンドウ,子ウィンドウID */
-                                              ghInst,NULL );                           /* インスタンスハンドル,補助引数 */
+                                              GetHinst(),NULL );                       /* インスタンスハンドル,補助引数 */
         if( ctrlListTbl[i].hwnd != NULL )
         {
             SendMessage(ctrlListTbl[i].hwnd, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0));
