@@ -7,6 +7,7 @@
 #include "WinMain.h"
 #include "IoWnd.h"
 #include "SomeCtrl.h"
+#include "File.h"
 
 /* 外部変数定義 */
 
@@ -193,6 +194,7 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 #if 0
     mainWndData.execute = 0;
 #endif
+    FileInitialize( hwnd );
 
     /* コントロールをまとめて生成 */
     SomeCtrlCreate( hwnd );
@@ -264,6 +266,7 @@ static LRESULT
 onDestroy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     IoWndDestroy();
+    FileEnd();
 
     PostQuitMessage(0); /* WM_QUITメッセージをポストする */
     return 0;
@@ -281,61 +284,26 @@ static LRESULT
 onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
-#if 0
-    static TCHAR szComPort[50];
-    static S_COMM_PARAM commParam;
-    TCHAR szBuf[100];
+    DWORD dwSize;
+    PBYTE dataPtr;
 
     switch( LOWORD(wParam) )
     {
-    case (WND_SOME_CTRL_COMPORT_BUTTON+WND_SOME_CTRL_ID_OFFSET):
-        if( mainWndData.execute == 0 )
+    case (SOME_CTRL_FILEOPEN_BUTTON+SOME_CTRL_ID_OFFSET):
+        if( FileOpenDlg( hwnd,FILE_ID_BIN ) )
         {
-            /* COMポート名取得 */
-            SomeCtrlGetText( WND_SOME_CTRL_COMPORT_COMBOBOX, szComPort );
-            commParam.portStr = &szComPort;
-            if( COMMopen( &commParam ) )
-            {
-                mainWndData.execute = 1;
-
-                SomeCtrlDisable( WND_SOME_CTRL_COMPORT_COMBOBOX );
-                SetWindowText( SomeCtrlGetHWND(WND_SOME_CTRL_COMPORT_BUTTON), TEXT("DISCONNECT") );
-            }
-            else
-            {
-                chMB("Cannot Open.");
-            }
+            SetWindowText( SomeCtrlGetHWND(SOME_CTRL_FILENAME), FileGetName(FILE_ID_BIN) );
+            dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
+            IoWndPrint( dataPtr,dwSize );
         }
         else
         {
-            COMMclose();
-            mainWndData.execute = 0;
-
-            SomeCtrlEnable( WND_SOME_CTRL_COMPORT_COMBOBOX );
-            SetWindowText( SomeCtrlGetHWND(WND_SOME_CTRL_COMPORT_BUTTON), TEXT("CONNECT") );
+            /* キャンセルされた。又はエラー */
         }
         break;
-
-    case (WND_SOME_CTRL_PROPERTY_BUTTON+WND_SOME_CTRL_ID_OFFSET):
-        /* COMポート名取得 */
-        SomeCtrlGetText( WND_SOME_CTRL_COMPORT_COMBOBOX, szComPort );
-        commParam.portStr = &szComPort;
-        COMMproperty( hwnd, &commParam );
-        break;
-
-#if 0
-    case IDM_APP_EXIT:
-        SendMessage( hwnd, WM_CLOSE, 0, 0 );
-        break;
-    case IDM_APP_ABOUT:
-        DialogBox( ghInst, TEXT("ABOUT_BOX"), hwnd, AboutDlgProc );
-        /* ダイアログボックスがクローズされるまで制御を返さない */
-        break;
-#endif
     default:
         break;
     }
-#endif
 
     return rtn;
 }

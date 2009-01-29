@@ -111,6 +111,9 @@
 	</References>
 	<Files>
 		<File
+			RelativePath="..\sys\File\File.c">
+		</File>
+		<File
 			RelativePath="..\wnd\IoWnd\IoWnd.c">
 		</File>
 		<File

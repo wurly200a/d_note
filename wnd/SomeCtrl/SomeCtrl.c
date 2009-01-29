@@ -33,16 +33,16 @@ S_SOME_CTRL ctrlListTbl[SOME_CTRL_MAX] =
     /* exist,  hwnd, class             , value              , x , y  , w  , h  ,bSAdj ,wOfst, hOfst,exStyle,style  */
     {FALSE  ,(HWND)0, TEXT("static")  , TEXT("file")        ,  5, 15, 60 , 15 ,FALSE ,0    , 0    ,0            ,(WS_CHILD|ES_RIGHT)                      },
     {FALSE  ,(HWND)0, TEXT("edit")    , TEXT("")            , 70, 10, 0  , 0  ,TRUE  ,-120 , 0    ,(MY_EX_STYLE),(WS_CHILD|WS_BORDER|ES_LEFT)             },
+    {FALSE  ,(HWND)0, TEXT("button")  , TEXT("Open")        , 70, 35, 80 , 20 ,FALSE ,0    , 0    ,0            ,(WS_CHILD)                               },
 };
 
-
 /********************************************************************************
- * 内容   : 登録された全てのコントロールを生成する
- * 引数   : HWND hwnd親ウィンドウのハンドラ
- * 戻り値 : BOOL
- ********************************************************************************/
+ * 内容  : 登録された全てのコントロールを生成する
+ * 引数  : HWND hwnd 親ウィンドウのハンドラ
+ * 戻り値: BOOL
+ ***************************************/
 BOOL
-SomeCtrlCreate(HWND hwnd)
+SomeCtrlCreate( HWND hwnd )
 {
     int i,j;
     TCHAR buf[10];
@@ -81,14 +81,14 @@ SomeCtrlCreate(HWND hwnd)
     return TRUE;
 }
 
-
 /********************************************************************************
- * 内容   : 登録された全てのコントロールのサイズを調整する
- * 引数   : HWND hwnd親ウィンドウのハンドラ
- * 戻り値 : BOOL
- ********************************************************************************/
+ * 内容  : 登録された全てのコントロールのサイズを調整する
+ * 引数  : int cxClient
+ * 引数  : int cyClient
+ * 戻り値: BOOL
+ ***************************************/
 BOOL
-SomeCtrlSize(int cxClient, int cyClient)
+SomeCtrlSize( int cxClient,int cyClient )
 {
     int i;
 
@@ -108,12 +108,12 @@ SomeCtrlSize(int cxClient, int cyClient)
 }
 
 /********************************************************************************
- * 内容   : コントロールのウィンドウハンドラを取得する
- * 引数   : SOME_CTRL_ID id
- * 戻り値 : HWND
- ********************************************************************************/
+ * 内容  : コントロールのウィンドウハンドラを取得する
+ * 引数  : SOME_CTRL_ID id
+ * 戻り値: HWND
+ ***************************************/
 HWND
-SomeCtrlGetHWND(SOME_CTRL_ID id)
+SomeCtrlGetHWND( SOME_CTRL_ID id )
 {
     HWND rtn;
 
@@ -130,35 +130,33 @@ SomeCtrlGetHWND(SOME_CTRL_ID id)
 }
 
 /********************************************************************************
- * 内容   :
- * 引数   :
- * 戻り値 :
- ********************************************************************************/
+ * 内容  : コントロールを有効にする
+ * 引数  : SOME_CTRL_ID id
+ * 戻り値: なし
+ ***************************************/
 void
-SomeCtrlEnable(SOME_CTRL_ID id)
+SomeCtrlEnable( SOME_CTRL_ID id )
 {
     EnableWindow( ctrlListTbl[id].hwnd, TRUE);
 }
 
 /********************************************************************************
- * 内容   :
- * 引数   :
- * 戻り値 :
- ********************************************************************************/
+ * 内容  : コントロールを無効にする
+ * 引数  : SOME_CTRL_ID id
+ * 戻り値: なし
+ ***************************************/
 void
-SomeCtrlDisable(SOME_CTRL_ID id)
+SomeCtrlDisable( SOME_CTRL_ID id )
 {
     EnableWindow( ctrlListTbl[id].hwnd, FALSE);
 }
 
 /********************************************************************************
- * 内容   : ウィンドウからテキストを取得する
- *
- * 引数   : SOME_CTRL_ID id
- *        : PTSTR ptstrText
- *
- * 戻り値 : BOOL
- ********************************************************************************/
+ * 内容  : ウィンドウからテキストを取得する
+ * 引数  : SOME_CTRL_ID id
+ * 引数  : PTSTR ptstrText
+ * 戻り値: BOOL
+ ***************************************/
 BOOL
 SomeCtrlGetText( SOME_CTRL_ID id, PTSTR ptstrText )
 {
