@@ -27,6 +27,7 @@ static LRESULT ioOnVscroll      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM
 static LRESULT ioOnSetFocus     ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT ioOnKillFocus    ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT ioOnMouseActivate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnMouseWheel   ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT ioOnDefault      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
 /* 内部変数定義 */
@@ -36,21 +37,22 @@ static S_IOWND_DATA ioWndData;
 /* *INDENT-OFF* */
 static LRESULT (*ioWndProcTbl[IOWND_MAX])( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam ) =
 {
-    ioOnCreate       , /* WM_CREATE    */
-    ioOnPaint        , /* WM_PAINT     */
-    ioOnSize         , /* WM_SIZE      */
-    ioOnClose        , /* WM_CLOSE     */
-    ioOnDestroy      , /* WM_DESTROY   */
-    ioOnCommand      , /* WM_COMMAND   */
-    ioOnKeyUp        , /* WM_KEYUP     */
-    ioOnKeyDown      , /* WM_KEYDOWN   */
-    ioOnChar         , /* WM_CHAR      */
-    ioOnHscroll      , /* WM_HSCROLL   */
-    ioOnVscroll      , /* WM_VSCROLL   */
-    ioOnSetFocus     , /* WM_SETFOCUS  */
-    ioOnKillFocus    , /* WM_KILLFOCUS */
-    ioOnMouseActivate, /* WM_KILLFOCUS */
-    ioOnDefault        /* default      */
+    ioOnCreate       , /* WM_CREATE        */
+    ioOnPaint        , /* WM_PAINT         */
+    ioOnSize         , /* WM_SIZE          */
+    ioOnClose        , /* WM_CLOSE         */
+    ioOnDestroy      , /* WM_DESTROY       */
+    ioOnCommand      , /* WM_COMMAND       */
+    ioOnKeyUp        , /* WM_KEYUP         */
+    ioOnKeyDown      , /* WM_KEYDOWN       */
+    ioOnChar         , /* WM_CHAR          */
+    ioOnHscroll      , /* WM_HSCROLL       */
+    ioOnVscroll      , /* WM_VSCROLL       */
+    ioOnSetFocus     , /* WM_SETFOCUS      */
+    ioOnKillFocus    , /* WM_KILLFOCUS     */
+    ioOnMouseActivate, /* WM_MOUSEACTIVATE */
+    ioOnMouseWheel   , /* WM_MOUSEWHEEL    */
+    ioOnDefault        /* default          */
 };
 /* *INDENT-ON* */
 
@@ -58,9 +60,9 @@ static LRESULT (*ioWndProcTbl[IOWND_MAX])( HWND hwnd, UINT message, WPARAM wPara
 /********************************************************************************
  * 内容  : IOウィンドウクラスの登録、ウィンドウの生成
  * 引数  : int nCmdShow
- * 戻り値: BOOL
+ * 戻り値: HWND
  ***************************************/
-BOOL
+HWND
 IoWndCreate( HWND hWnd )
 {
     WNDCLASS wc = {0};
@@ -71,14 +73,14 @@ IoWndCreate( HWND hWnd )
     wc.hInstance        = hInst;
     wc.hIcon            = LoadIcon( hInst, pAppName );
     wc.hCursor          = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground    = (HBRUSH) GetStockObject (WHITE_BRUSH);
+    wc.hbrBackground    = (HBRUSH) GetStockObject(WHITE_BRUSH);
     wc.lpszClassName    = "ioWndClass";
     wc.lpszMenuName     = NULL;
 
     if( !RegisterClass(&wc) )
     {
         MessageBox( NULL, TEXT("This program requires Windows 2000!"), pAppName, MB_ICONERROR );
-        return FALSE;
+        return (HWND)NULL;
     }
 
     hWndIo = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW | WS_EX_ACCEPTFILES,
@@ -88,14 +90,12 @@ IoWndCreate( HWND hWnd )
                                  0, 0,
                                  hWnd, NULL, hInst, NULL );
 
-    if( hWndIo == NULL )
+    if( hWndIo != NULL )
     {
-        return FALSE;
+        SetFocus(hWndIo);
     }
 
-    SetFocus(hWndIo);
-
-    return TRUE;
+    return hWndIo;
 }
 
 /********************************************************************************
@@ -143,7 +143,7 @@ IoWndPrint( TCHAR* strPtr, int length )
         /* キャレットの位置を進める */
         if( ++ioWndData.xCaret == ioWndData.cxBuffer )
         {
-            ioWndData.xCaret = 0 ;
+            ioWndData.xCaret = 0;
 
             if( ++ioWndData.yCaret == ioWndData.cyBuffer )
             {
@@ -219,6 +219,7 @@ ioWndConvertMSGtoINDEX( UINT message )
     case WM_SETFOCUS     :rtn = IOWND_ON_SETFOCUS     ;break;
     case WM_KILLFOCUS    :rtn = IOWND_ON_KILLFOCUS    ;break;
     case WM_MOUSEACTIVATE:rtn = IOWND_ON_MOUSEACTIVATE;break;
+    case WM_MOUSEWHEEL   :rtn = IOWND_ON_MOUSEWHEEL   ;break;
     default              :rtn = IOWND_ON_DEFAULT      ;break;
     }
     /* *INDENT-ON* */
@@ -257,9 +258,11 @@ ioWndBufferOut( int x, int y, TCHAR c )
 static LRESULT
 ioOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
+    LRESULT rtn = 0;
     HDC        hdc;
     TEXTMETRIC tm;
-    LRESULT rtn = 0;
+    int iDelta;          /* for MouseWheel */
+    ULONG ulScrollLines; /* for MouseWheel */
 
     ioWndData.bufferPtr = NULL;
     ioWndData.dwCharSet = DEFAULT_CHARSET;
@@ -269,10 +272,25 @@ ioOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     GetTextMetrics( hdc, &tm );
     ioWndData.cxChar = tm.tmAveCharWidth;
-    ioWndData.cyChar = tm.tmHeight;
+    ioWndData.cxCaps = (tm.tmPitchAndFamily & 1 ? 3 : 2) * ioWndData.cxChar / 2;
+    ioWndData.cyChar = tm.tmHeight + tm.tmExternalLeading;
 
     DeleteObject( SelectObject( hdc, GetStockObject(SYSTEM_FONT)) );
     ReleaseDC( hwnd, hdc );
+
+    ioWndData.iMaxWidth = 40 * ioWndData.cxChar * 22 * ioWndData.cxCaps;
+
+    /* for MouseWheel */
+    SystemParametersInfo(SPI_GETWHEELSCROLLLINES,0, &ulScrollLines, 0);
+    iDelta = HIWORD(wParam);
+    if( ulScrollLines )
+    {
+        ioWndData.iDeltaPerLine = WHEEL_DELTA / ulScrollLines;
+    }
+    else
+    {
+        ioWndData.iDeltaPerLine = 0;
+    }
 
     return rtn;
 }
@@ -291,16 +309,51 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     PAINTSTRUCT  ps;
     HDC          hdc;
     int y;
+    SCROLLINFO  si;
+    int         iPaintBeg,iPaintEnd,iHorzPos,iVertPos,x,i;
+    TCHAR       szBuffer[10] ;
 
+#if 1
+    hdc = BeginPaint(hwnd, &ps);
+
+    /* Get vertical scroll bar position */
+    si.cbSize = sizeof(si);
+    si.fMask  = SIF_POS;
+    GetScrollInfo( hwnd, SB_VERT, &si );
+    iVertPos = si.nPos;
+
+    /* Get horizontal scroll bar position */
+    GetScrollInfo(hwnd, SB_HORZ, &si);
+    iHorzPos = si.nPos;
+
+    /* Find painting limits */
+    iPaintBeg = max(0, iVertPos + ps.rcPaint.top / ioWndData.cyChar);
+    iPaintEnd = min(NUMLINES - 1,iVertPos + ps.rcPaint.bottom / ioWndData.cyChar);
+
+    for(i = iPaintBeg; i <= iPaintEnd; i++)
+    {
+        x = ioWndData.cxChar * (1 - iHorzPos);
+        y = ioWndData.cyChar * (i - iVertPos);
+
+        TextOut(hdc, x, y,sysmetrics[i].szLabel,lstrlen(sysmetrics[i].szLabel));
+        TextOut(hdc, x + 22 * ioWndData.cxCaps, y,sysmetrics[i].szDesc,lstrlen(sysmetrics[i].szDesc));
+        SetTextAlign(hdc, TA_RIGHT | TA_TOP);
+        TextOut(hdc, x + 22 * ioWndData.cxCaps + 40 * ioWndData.cxChar, y, szBuffer,wsprintf(szBuffer, TEXT("%5d"), GetSystemMetrics(sysmetrics[i].iIndex)));
+        SetTextAlign(hdc, TA_LEFT | TA_TOP);
+    }
+
+    EndPaint(hwnd, &ps);
+#else
     /* 表示バッファを表示し直す */
-    hdc = BeginPaint( hwnd, &ps ) ;
+    hdc = BeginPaint( hwnd, &ps );
     SelectObject( hdc, CreateFont(0, 0, 0, 0, 0, 0, 0, 0, ioWndData.dwCharSet, 0, 0, 0, FIXED_PITCH, NULL) );
     for( y = 0; y < ioWndData.cyBuffer; y++ )
     {
         TextOut( hdc, 0, y * ioWndData.cyChar, (ioWndData.bufferPtr + y * ioWndData.cxBuffer + 0), ioWndData.cxBuffer );
     }
     DeleteObject( SelectObject(hdc, GetStockObject(SYSTEM_FONT)) );
-    EndPaint( hwnd, &ps ) ;
+    EndPaint( hwnd, &ps );
+#endif
 
     return 0;
 }
@@ -317,9 +370,26 @@ static LRESULT
 ioOnSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     int x,y;
+    SCROLLINFO si;
 
     ioWndData.cxClient = LOWORD( lParam );
     ioWndData.cyClient = HIWORD( lParam );
+
+    /* Set vertical scroll bar range and page size */
+    si.cbSize = sizeof(si);
+    si.fMask  = SIF_RANGE | SIF_PAGE;
+    si.nMin   = 0;
+    si.nMax   = NUMLINES - 1;
+    si.nPage  = ioWndData.cyClient / ioWndData.cyChar;
+    SetScrollInfo( hwnd, SB_VERT, &si, TRUE );
+
+    /* Set horizontal scroll bar range and page size*/
+    si.cbSize = sizeof(si);
+    si.fMask  = SIF_RANGE | SIF_PAGE;
+    si.nMin   = 0;
+    si.nMax   = 2 + ioWndData.iMaxWidth / ioWndData.cxChar;
+    si.nPage  = ioWndData.cxClient / ioWndData.cxChar;
+    SetScrollInfo( hwnd, SB_HORZ, &si, TRUE );
 
     ioWndData.cxBuffer = max( 1, ioWndData.cxClient / ioWndData.cxChar );
     ioWndData.cyBuffer = max( 1, ioWndData.cyClient / ioWndData.cyChar );
@@ -447,14 +517,14 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
-    switch (wParam)
+    switch(wParam)
     {
     case VK_LEFT:
         ioWndData.xCaret = max( ioWndData.xCaret - 1, 0 );
         break;
     case VK_RIGHT:
         ioWndData.xCaret = min( ioWndData.xCaret + 1, ioWndData.cxBuffer - 1 );
-        break ;
+        break;
     case VK_UP:
         ioWndData.yCaret = max( ioWndData.yCaret - 1, 0 );
         break;
@@ -465,7 +535,7 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         break;
     }
 
-    SetCaretPos( ioWndData.xCaret * ioWndData.cxChar, ioWndData.yCaret * ioWndData.cyChar) ;
+    SetCaretPos( ioWndData.xCaret * ioWndData.cxChar, ioWndData.yCaret * ioWndData.cyChar);
 
     return rtn;
 }
@@ -509,12 +579,12 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             DeleteObject( SelectObject(hdc, GetStockObject(SYSTEM_FONT)) );
             ReleaseDC(hwnd, hdc);
 
-            ShowCaret(hwnd) ;
+            ShowCaret(hwnd);
 
             /* キャレットの位置を進める */
             if( ++ioWndData.xCaret == ioWndData.cxBuffer )
             {
-                ioWndData.xCaret = 0 ;
+                ioWndData.xCaret = 0;
 
                 if( ++ioWndData.yCaret == ioWndData.cyBuffer )
                 {
@@ -530,7 +600,7 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             {
                 /* do nothing */
             }
-            break ;
+            break;
         }
     }
     SetCaretPos( ioWndData.xCaret * ioWndData.cxChar, ioWndData.yCaret * ioWndData.cyChar );
@@ -546,9 +616,53 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
  * 戻り値: LRESULT
  ***************************************/
-static LRESULT ioOnHscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+static LRESULT
+ioOnHscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
+    SCROLLINFO si;
+    int iHorzPos;
+
+    /* Get all the vertial scroll bar information */
+    si.cbSize = sizeof(si);
+    si.fMask  = SIF_ALL;
+
+    /* Save the position for comparison later on */
+    GetScrollInfo( hwnd, SB_HORZ, &si );
+    iHorzPos = si.nPos;
+
+    switch(LOWORD(wParam))
+    {
+    case SB_LINELEFT:
+        si.nPos -= 1;
+        break;
+    case SB_LINERIGHT:
+        si.nPos += 1;
+        break;
+    case SB_PAGELEFT:
+        si.nPos -= si.nPage;
+        break;
+    case SB_PAGERIGHT:
+        si.nPos += si.nPage;
+        break;
+    case SB_THUMBPOSITION:
+        si.nPos = si.nTrackPos;
+        break;
+    default :
+        break;
+    }
+
+    /* Set the position and then retrieve it.  Due to adjustments */
+    /* by Windows it may not be the same as the value set. */
+    si.fMask = SIF_POS;
+    SetScrollInfo( hwnd, SB_HORZ, &si, TRUE );
+    GetScrollInfo( hwnd, SB_HORZ, &si );
+
+    /* If the position has changed, scroll the window */
+    if( si.nPos != iHorzPos )
+    {
+        ScrollWindow( hwnd, ioWndData.cxChar * (iHorzPos - si.nPos), 0, NULL, NULL );
+    }
 
     return rtn;
 }
@@ -565,6 +679,55 @@ static LRESULT
 ioOnVscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
+    SCROLLINFO si;
+    int iVertPos;
+
+    /* Get all the vertial scroll bar information */
+    si.cbSize = sizeof(si);
+    si.fMask  = SIF_ALL;
+    GetScrollInfo( hwnd, SB_VERT, &si );
+
+    /* Save the position for comparison later on */
+    iVertPos = si.nPos;
+
+    switch( LOWORD(wParam) )
+    {
+    case SB_TOP:
+        si.nPos = si.nMin;
+        break;
+     case SB_BOTTOM:
+        si.nPos = si.nMax;
+        break;
+    case SB_LINEUP:
+        si.nPos -= 1;
+        break;
+    case SB_LINEDOWN:
+        si.nPos += 1;
+        break;
+    case SB_PAGEUP:
+        si.nPos -= si.nPage;
+        break;
+    case SB_PAGEDOWN:
+        si.nPos += si.nPage;
+        break;
+    case SB_THUMBTRACK:
+        si.nPos = si.nTrackPos;
+        break;
+    default:
+        break;
+    }
+    /* Set the position and then retrieve it.  Due to adjustments */
+    /* by Windows it may not be the same as the value set. */
+    si.fMask = SIF_POS;
+    SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
+    GetScrollInfo(hwnd, SB_VERT, &si);
+
+    /* If the position has changed, scroll the window and update it */
+    if(si.nPos != iVertPos)
+    {
+        ScrollWindow(hwnd, 0, ioWndData.cyChar * (iVertPos - si.nPos),NULL, NULL);
+        UpdateWindow(hwnd);
+    }
 
     return rtn;
 }
@@ -583,7 +746,7 @@ ioOnSetFocus( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     LRESULT rtn = 0;
 
     CreateCaret( hwnd,NULL,ioWndData.cxChar,ioWndData.cyChar );
-    SetCaretPos( ioWndData.xCaret * ioWndData.cxChar, ioWndData.yCaret * ioWndData.cyChar) ;
+    SetCaretPos( ioWndData.xCaret * ioWndData.cxChar, ioWndData.yCaret * ioWndData.cyChar);
     ShowCaret( hwnd );
 
     return rtn;
@@ -622,6 +785,42 @@ ioOnMouseActivate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     LRESULT rtn = 0;
 
     SetFocus(hwnd);
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : WM_MOUSEWHEEL を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+ioOnMouseWheel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+
+    if( ioWndData.iDeltaPerLine )
+    {
+        ioWndData.iAccumDelta += (short)HIWORD(wParam);
+
+        while( ioWndData.iAccumDelta >= ioWndData.iDeltaPerLine )
+        {
+            SendMessage(hwnd, WM_VSCROLL, SB_LINEUP, 0);
+            ioWndData.iAccumDelta -= ioWndData.iDeltaPerLine;
+        }
+        while( ioWndData.iAccumDelta <= -ioWndData.iDeltaPerLine)
+        {
+            SendMessage(hwnd, WM_VSCROLL, SB_LINEDOWN, 0);
+            ioWndData.iAccumDelta += ioWndData.iDeltaPerLine;
+        }
+    }
+    else
+    {
+        /* do nothing */
+    }
 
     return rtn;
 }
