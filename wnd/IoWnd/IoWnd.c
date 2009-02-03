@@ -136,6 +136,32 @@ IoWndPrint( TCHAR* strPtr, int length )
 {
     int i;
 
+#if 1
+    if( ioWndData.bufferPtr != NULL )
+    {
+        free( ioWndData.bufferPtr );
+        ioWndData.bufferSize = 0;
+    }
+    else
+    {
+        /* do nothing */
+    }
+    ioWndData.bufferPtr = (TCHAR *) malloc( (length * sizeof(TCHAR)) );
+
+    if( ioWndData.bufferPtr != NULL )
+    {
+        ioWndData.bufferSize = length;
+
+        for( i=0; i<length; i++ )
+        {
+            *(ioWndData.bufferPtr+i) = *(strPtr+i);
+        }
+    }
+    else
+    {
+        /* error */
+    }
+#else
     for( i=0; i<length; i++ )
     {
         ioWndBufferOut( ioWndData.xCaret, ioWndData.yCaret, *strPtr );
@@ -162,6 +188,7 @@ IoWndPrint( TCHAR* strPtr, int length )
 
         strPtr++;
     }
+#endif
 
     SendMessage( hWndIo, WM_PAINT, 0, 0 );
     InvalidateRect( hWndIo, NULL, TRUE );
@@ -264,7 +291,8 @@ ioOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     int iDelta;          /* for MouseWheel */
     ULONG ulScrollLines; /* for MouseWheel */
 
-    ioWndData.bufferPtr = NULL;
+    ioWndData.bufferPtr  = NULL;
+    ioWndData.bufferSize = 0;
     ioWndData.dwCharSet = DEFAULT_CHARSET;
 
     hdc = GetDC( hwnd );
@@ -308,13 +336,13 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     PAINTSTRUCT  ps;
     HDC          hdc;
-    int y;
+    int y,xMax,yMax;
     SCROLLINFO  si;
     int         iPaintBeg,iPaintEnd,iHorzPos,iVertPos,x,i;
     TCHAR       szBuffer[10] ;
 
-#if 1
-    hdc = BeginPaint(hwnd, &ps);
+    hdc = BeginPaint( hwnd, &ps );
+    SelectObject( hdc, CreateFont(0, 0, 0, 0, 0, 0, 0, 0, ioWndData.dwCharSet, 0, 0, 0, FIXED_PITCH, NULL) );
 
     /* Get vertical scroll bar position */
     si.cbSize = sizeof(si);
@@ -326,34 +354,21 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     GetScrollInfo(hwnd, SB_HORZ, &si);
     iHorzPos = si.nPos;
 
-    /* Find painting limits */
-    iPaintBeg = max(0, iVertPos + ps.rcPaint.top / ioWndData.cyChar);
-    iPaintEnd = min(NUMLINES - 1,iVertPos + ps.rcPaint.bottom / ioWndData.cyChar);
-
-    for(i = iPaintBeg; i <= iPaintEnd; i++)
+    if( ioWndData.bufferSize >= 16 )
     {
-        x = ioWndData.cxChar * (1 - iHorzPos);
-        y = ioWndData.cyChar * (i - iVertPos);
+        xMax = min(ioWndData.cxBuffer,16);
 
-        TextOut(hdc, x, y,sysmetrics[i].szLabel,lstrlen(sysmetrics[i].szLabel));
-        TextOut(hdc, x + 22 * ioWndData.cxCaps, y,sysmetrics[i].szDesc,lstrlen(sysmetrics[i].szDesc));
-        SetTextAlign(hdc, TA_RIGHT | TA_TOP);
-        TextOut(hdc, x + 22 * ioWndData.cxCaps + 40 * ioWndData.cxChar, y, szBuffer,wsprintf(szBuffer, TEXT("%5d"), GetSystemMetrics(sysmetrics[i].iIndex)));
-        SetTextAlign(hdc, TA_LEFT | TA_TOP);
+        iPaintBeg = max(0, iVertPos + ps.rcPaint.top / ioWndData.cyChar);
+        iPaintEnd = min((ioWndData.bufferSize/xMax),iVertPos + ps.rcPaint.bottom / ioWndData.cyChar);
+
+        for( y = 0; y < (iPaintEnd-iPaintBeg); y++ )
+        {
+            TextOut( hdc, 0, y * ioWndData.cyChar, (ioWndData.bufferPtr + (iPaintBeg+y)*xMax ), xMax );
+        }
     }
 
-    EndPaint(hwnd, &ps);
-#else
-    /* 表示バッファを表示し直す */
-    hdc = BeginPaint( hwnd, &ps );
-    SelectObject( hdc, CreateFont(0, 0, 0, 0, 0, 0, 0, 0, ioWndData.dwCharSet, 0, 0, 0, FIXED_PITCH, NULL) );
-    for( y = 0; y < ioWndData.cyBuffer; y++ )
-    {
-        TextOut( hdc, 0, y * ioWndData.cyChar, (ioWndData.bufferPtr + y * ioWndData.cxBuffer + 0), ioWndData.cxBuffer );
-    }
     DeleteObject( SelectObject(hdc, GetStockObject(SYSTEM_FONT)) );
     EndPaint( hwnd, &ps );
-#endif
 
     return 0;
 }
@@ -378,9 +393,9 @@ ioOnSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     /* Set vertical scroll bar range and page size */
     si.cbSize = sizeof(si);
     si.fMask  = SIF_RANGE | SIF_PAGE;
-    si.nMin   = 0;
-    si.nMax   = NUMLINES - 1;
-    si.nPage  = ioWndData.cyClient / ioWndData.cyChar;
+    si.nMin   = 0;                                     /* 範囲の最小値 */
+    si.nMax   = 300;                                   /* 範囲の最大値 */
+    si.nPage  = ioWndData.cyClient / ioWndData.cyChar; /* ページサイズ */
     SetScrollInfo( hwnd, SB_VERT, &si, TRUE );
 
     /* Set horizontal scroll bar range and page size*/
@@ -394,25 +409,6 @@ ioOnSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     ioWndData.cxBuffer = max( 1, ioWndData.cxClient / ioWndData.cxChar );
     ioWndData.cyBuffer = max( 1, ioWndData.cyClient / ioWndData.cyChar );
 
-    if( ioWndData.bufferPtr != NULL )
-    {
-        free( ioWndData.bufferPtr );
-    }
-    else
-    {
-        /* do nothing */
-    }
-
-    ioWndData.bufferPtr = (TCHAR *) malloc( ioWndData.cxBuffer * ioWndData.cxBuffer * sizeof(TCHAR) );
-
-    for( y=0; y<ioWndData.cyBuffer; y++ )
-    {
-        for( x=0; x<ioWndData.cxBuffer; x++ )
-        {
-            ioWndBufferOut( x,y,' ' );
-        }
-    }
-
     ioWndData.xCaret = 0;
     ioWndData.yCaret = 0;
 
@@ -424,10 +420,6 @@ ioOnSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     {
         /* do nothing */
     }
-
-#if 0 /* 必要？*/
-    InvalidateRect( hwnd, NULL, TRUE );
-#endif
 
     return 0;
 }
@@ -556,6 +548,7 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     HDC          hdc;
     int i;
 
+#if 0
     for( i=0; i<(int) LOWORD(lParam); i++ )
     {
         switch( wParam )
@@ -604,6 +597,7 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         }
     }
     SetCaretPos( ioWndData.xCaret * ioWndData.cxChar, ioWndData.yCaret * ioWndData.cyChar );
+#endif
 
     return rtn;
 }
@@ -682,20 +676,17 @@ ioOnVscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     SCROLLINFO si;
     int iVertPos;
 
-    /* Get all the vertial scroll bar information */
     si.cbSize = sizeof(si);
     si.fMask  = SIF_ALL;
-    GetScrollInfo( hwnd, SB_VERT, &si );
-
-    /* Save the position for comparison later on */
-    iVertPos = si.nPos;
+    GetScrollInfo( hwnd, SB_VERT, &si ); /* スクロールバー情報取得 */
+    iVertPos = si.nPos;                  /* 現在の位置               */
 
     switch( LOWORD(wParam) )
     {
     case SB_TOP:
         si.nPos = si.nMin;
         break;
-     case SB_BOTTOM:
+    case SB_BOTTOM:
         si.nPos = si.nMax;
         break;
     case SB_LINEUP:
@@ -716,14 +707,11 @@ ioOnVscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     default:
         break;
     }
-    /* Set the position and then retrieve it.  Due to adjustments */
-    /* by Windows it may not be the same as the value set. */
     si.fMask = SIF_POS;
-    SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
-    GetScrollInfo(hwnd, SB_VERT, &si);
+    SetScrollInfo(hwnd, SB_VERT, &si, TRUE); /* スクロールバー情報セット＆再描画 */
+    GetScrollInfo(hwnd, SB_VERT, &si);       /* スクロールバー情報再取得         */
 
-    /* If the position has changed, scroll the window and update it */
-    if(si.nPos != iVertPos)
+    if( si.nPos != iVertPos )
     {
         ScrollWindow(hwnd, 0, ioWndData.cyChar * (iVertPos - si.nPos),NULL, NULL);
         UpdateWindow(hwnd);
