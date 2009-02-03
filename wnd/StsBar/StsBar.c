@@ -58,17 +58,26 @@ StsBarSize( int cxClient,int cyClient )
 /********************************************************************************
  * 内容  : ステータスバーへの文字列セット
  * 引数  : STS_BAR_ID id
- * 引数  : TCHAR* strPtr
- * 引数  : int length
+ * 引数  : PTSTR ptstrFormat, ...
  * 戻り値: なし
  ***************************************/
 void
-StsBarSetText( STS_BAR_ID id, TCHAR* strPtr, int length )
+StsBarSetText( STS_BAR_ID id, PTSTR ptstrFormat, ... )
 {
-    TCHAR buf[50];
+    TCHAR szBuf[50];
     RECT  RectSbar;
+    va_list vaArgs;
 
-    strncpy( buf, strPtr, min(50,length) );
-    SendMessage(hwndSbar, SB_SETTEXT, id, (LPARAM)buf);
-    GetClientRect(hwndSbar, &RectSbar);
+    va_start(vaArgs, ptstrFormat);
+    if( wvsprintf(szBuf, ptstrFormat, vaArgs) != EOF )
+    {
+        SendMessage(hwndSbar, SB_SETTEXT, id, (LPARAM)szBuf);
+        GetClientRect(hwndSbar, &RectSbar);
+    }
+    else
+    {
+        /* do nothing */
+    }
+    va_end(vaArgs);
+
 }

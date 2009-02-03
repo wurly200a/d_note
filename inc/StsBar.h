@@ -27,11 +27,10 @@ void StsBarSize( int cxClient,int cyClient );
 /********************************************************************************
  * 内容  : ステータスバーへの文字列セット
  * 引数  : STS_BAR_ID id
- * 引数  : TCHAR* strPtr
- * 引数  : int length
- * 戻り値: void
+ * 引数  : PTSTR ptstrFormat, ...
+ * 戻り値: なし
  ***************************************/
-void StsBarSetText( STS_BAR_ID id, TCHAR* strPtr, int length );
+void StsBarSetText( STS_BAR_ID id, PTSTR ptstrFormat, ... );
 
 #define STS_BAR_H
 #endif /* STS_BAR_H */

@@ -5,6 +5,7 @@
 
 /* 外部関数定義 */
 #include "WinMain.h"
+#include "StsBar.h"
 
 /* 外部変数定義 */
 
@@ -353,6 +354,8 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     /* Get horizontal scroll bar position */
     GetScrollInfo(hwnd, SB_HORZ, &si);
     iHorzPos = si.nPos;
+
+    StsBarSetText( STS_BAR_1,"Vpos:%d,Hpos:%d",iVertPos,iHorzPos);
 
     if( ioWndData.bufferSize >= 16 )
     {

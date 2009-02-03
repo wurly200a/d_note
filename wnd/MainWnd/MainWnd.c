@@ -225,8 +225,6 @@ onPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 static LRESULT
 onSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
-    TCHAR buf[50];
-
     mainWndData.cxClient = LOWORD( lParam );
     mainWndData.cyClient = HIWORD( lParam );
 
@@ -234,8 +232,7 @@ onSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     SomeCtrlSize( mainWndData.cxClient, mainWndData.cyChar   ); /* コントロール   */
     StsBarSize  ( mainWndData.cxClient, mainWndData.cyChar   ); /* ステータスバー */
 
-    wsprintf(buf,"%d,%d",mainWndData.cxClient,mainWndData.cyClient);
-    StsBarSetText( STS_BAR_1,buf,sizeof(buf) );
+    StsBarSetText( STS_BAR_0,"x:%d,y:%d",mainWndData.cxClient,mainWndData.cyClient);
 
     return 0;
 }
@@ -297,6 +294,8 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             SetWindowText( SomeCtrlGetHWND(SOME_CTRL_FILENAME), FileGetName(FILE_ID_BIN) );
             dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
             IoWndPrint( dataPtr,dwSize );
+
+            StsBarSetText( STS_BAR_2,"FileSize:%d byte",dwSize);
         }
         else
         {
