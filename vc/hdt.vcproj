@@ -123,6 +123,9 @@
 			RelativePath="..\wnd\SomeCtrl\SomeCtrl.c">
 		</File>
 		<File
+			RelativePath="..\wnd\StsBar\StsBar.c">
+		</File>
+		<File
 			RelativePath="..\sys\WinMain\WinMain.c">
 		</File>
 	</Files>

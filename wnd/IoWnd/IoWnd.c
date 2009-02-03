@@ -107,7 +107,7 @@ IoWndCreate( HWND hWnd )
 BOOL
 IoWndSize( int cxClient, int cyClient )
 {
-    MoveWindow( hWndIo,0,70,cxClient,cyClient-70, TRUE);
+    MoveWindow( hWndIo,0,70,cxClient,cyClient-90, TRUE);
 }
 
 /********************************************************************************

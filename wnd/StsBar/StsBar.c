@@ -1,0 +1,74 @@
+/* 共通インクルードファイル */
+#include "common.h"
+/* 個別インクルードファイル */
+
+/* 外部関数定義 */
+#include "WinMain.h"
+
+/* 外部変数定義 */
+
+/* 内部関数定義 */
+#include "StsBar.h"
+
+/* 内部変数定義 */
+static HWND hwndSbar;
+static int sbarColWidth[STS_BAR_MAX+1] = { 100, 200, 300, 400, -1 };
+
+/********************************************************************************
+ * 内容  : ステータスバー生成
+ * 引数  : HWND hwnd 親ウィンドウのハンドラ
+ * 戻り値: HWND
+ ***************************************/
+HWND
+StsBarCreate( HWND hwnd )
+{
+    hwndSbar = CreateWindowEx(0,
+                              STATUSCLASSNAME, NULL,
+                              WS_CHILD | SBS_SIZEGRIP | WS_CLIPSIBLINGS | SBT_NOBORDERS,
+                              0, 0, 0, 0,
+                              hwnd, (HMENU)1500, GetHinst(), NULL);
+    if( hwndSbar != NULL )
+    {
+        SendMessage(hwndSbar, SB_SETPARTS, sizeof(sbarColWidth)/sizeof(int), (LPARAM)sbarColWidth);
+        ShowWindow(hwndSbar, SW_SHOW);
+    }
+    else
+    {
+        /* do nothing */
+    }
+
+    return hwndSbar;
+}
+
+/********************************************************************************
+ * 内容  : ステータスバーのサイズ調整
+ * 引数  : int cxClient
+ * 引数  : int cyClient
+ * 戻り値: void
+ ***************************************/
+void
+StsBarSize( int cxClient,int cyClient )
+{
+    RECT  RectSbar;
+
+    SendMessage(hwndSbar, WM_SIZE, SIZE_RESTORED, MAKELPARAM(cxClient, cyClient));
+    GetClientRect(hwndSbar, &RectSbar);
+}
+
+/********************************************************************************
+ * 内容  : ステータスバーへの文字列セット
+ * 引数  : STS_BAR_ID id
+ * 引数  : TCHAR* strPtr
+ * 引数  : int length
+ * 戻り値: なし
+ ***************************************/
+void
+StsBarSetText( STS_BAR_ID id, TCHAR* strPtr, int length )
+{
+    TCHAR buf[50];
+    RECT  RectSbar;
+
+    strncpy( buf, strPtr, min(50,length) );
+    SendMessage(hwndSbar, SB_SETTEXT, id, (LPARAM)buf);
+    GetClientRect(hwndSbar, &RectSbar);
+}

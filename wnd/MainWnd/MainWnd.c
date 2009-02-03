@@ -8,6 +8,7 @@
 #include "IoWnd.h"
 #include "SomeCtrl.h"
 #include "File.h"
+#include "StsBar.h"
 
 /* 外部変数定義 */
 
@@ -32,10 +33,7 @@ static LRESULT onDefault      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM l
 
 /* 内部変数定義 */
 static HWND hwndMain; /* メインウィンドウのハンドラ */
-static HWND hwndSbar;
 static S_MAINWND_DATA mainWndData;
-
-static int sbarColWidth[5] = { 100, 200, 300, 400, -1 };
 
 /* *INDENT-OFF* */
 static LRESULT (*wndProcTbl[MAINWND_MAX])( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam ) =
@@ -194,13 +192,10 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     ReleaseDC( hwnd,hdc );
 
     mainWndData.hWndIo = IoWndCreate( hwnd );
-#if 0
-    mainWndData.execute = 0;
-#endif
-    FileInitialize( hwnd );
 
-    /* コントロールをまとめて生成 */
-    SomeCtrlCreate( hwnd );
+    FileInitialize( hwnd ); /* ファイル初期化     */
+    SomeCtrlCreate( hwnd ); /* コントロールを生成 */
+    StsBarCreate  ( hwnd ); /* ステータスバー生成 */
 
     return rtn;
 }
@@ -230,13 +225,17 @@ onPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 static LRESULT
 onSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
+    TCHAR buf[50];
+
     mainWndData.cxClient = LOWORD( lParam );
     mainWndData.cyClient = HIWORD( lParam );
 
-    /* コントロールをまとめて調整 */
-    SomeCtrlSize( mainWndData.cxClient, mainWndData.cyChar );
+    IoWndSize   ( mainWndData.cxClient, mainWndData.cyClient );
+    SomeCtrlSize( mainWndData.cxClient, mainWndData.cyChar   ); /* コントロール   */
+    StsBarSize  ( mainWndData.cxClient, mainWndData.cyChar   ); /* ステータスバー */
 
-    IoWndSize( mainWndData.cxClient, mainWndData.cyClient );
+    wsprintf(buf,"%d,%d",mainWndData.cxClient,mainWndData.cyClient);
+    StsBarSetText( STS_BAR_1,buf,sizeof(buf) );
 
     return 0;
 }
