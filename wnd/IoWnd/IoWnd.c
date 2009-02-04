@@ -135,61 +135,60 @@ IoWndDestroy( void )
 void
 IoWndPrint( TCHAR* strPtr, int length )
 {
-    int i;
+    DWORD i,j;
 
-#if 1
     if( ioWndData.bufferPtr != NULL )
     {
         free( ioWndData.bufferPtr );
+        ioWndData.bufferPtr = NULL;
         ioWndData.bufferSize = 0;
+        ioWndData.lineMax   = 0;
+        ioWndData.columnMax = 0;
     }
     else
     {
         /* do nothing */
     }
-    ioWndData.bufferPtr = (TCHAR *) malloc( (length * sizeof(TCHAR)) );
 
-    if( ioWndData.bufferPtr != NULL )
+    if( (strPtr != NULL) && (length > 0) )
     {
-        ioWndData.bufferSize = length;
+        ioWndData.bufferPtr = (TCHAR *) malloc( (length * sizeof(TCHAR)) );
 
-        for( i=0; i<length; i++ )
+        if( ioWndData.bufferPtr != NULL )
         {
-            *(ioWndData.bufferPtr+i) = *(strPtr+i);
+            ioWndData.bufferSize = length;
+
+            for( i=0,j=0; i<length; i++ )
+            {
+                *(ioWndData.bufferPtr+i) = *(strPtr+i);
+                if( *(strPtr+i) == '\n' )
+                {
+                    (ioWndData.lineMax)++; /* 改行の数をカウント */
+                    ioWndData.columnMax = max( ioWndData.columnMax, j );
+                    j=0;
+                }
+                else
+                {
+                    j++;
+                }
+            }
+
+            if( ioWndData.lineMax==0 )
+            { /* 改行が無かった場合 */
+                ioWndData.lineMax   = 1;
+                ioWndData.columnMax = ioWndData.bufferSize;
+            }
+        }
+        else
+        {
+            /* error */
         }
     }
     else
     {
         /* error */
     }
-#else
-    for( i=0; i<length; i++ )
-    {
-        ioWndBufferOut( ioWndData.xCaret, ioWndData.yCaret, *strPtr );
-
-        /* キャレットの位置を進める */
-        if( ++ioWndData.xCaret == ioWndData.cxBuffer )
-        {
-            ioWndData.xCaret = 0;
-
-            if( ++ioWndData.yCaret == ioWndData.cyBuffer )
-            {
-                ioWndData.yCaret = 0;
-            }
-            else
-            {
-                /* do nothing */
-            }
-
-        }
-        else
-        {
-            /* do nothing */
-        }
-
-        strPtr++;
-    }
-#endif
+    StsBarSetText( STS_BAR_0,"%d bytes,%d lines",ioWndData.bufferSize,ioWndData.lineMax);
 
     SendMessage( hWndIo, WM_PAINT, 0, 0 );
     InvalidateRect( hWndIo, NULL, TRUE );
@@ -337,10 +336,11 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     PAINTSTRUCT  ps;
     HDC          hdc;
-    int y,xMax,yMax;
+    int y,xMax,yMax,xSum;
     SCROLLINFO  si;
-    int         iPaintBeg,iPaintEnd,iHorzPos,iVertPos,x,i;
+    int         iPaintBeg,iPaintEnd,iHorzPos,iVertPos,x,i,columnSize,columnSum;
     TCHAR       szBuffer[10] ;
+    TCHAR       *lineEndPtr;
 
     hdc = BeginPaint( hwnd, &ps );
     SelectObject( hdc, CreateFont(0, 0, 0, 0, 0, 0, 0, 0, ioWndData.dwCharSet, 0, 0, 0, FIXED_PITCH, NULL) );
@@ -355,18 +355,30 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     GetScrollInfo(hwnd, SB_HORZ, &si);
     iHorzPos = si.nPos;
 
-    StsBarSetText( STS_BAR_1,"Vpos:%d,Hpos:%d",iVertPos,iHorzPos);
-
-    if( ioWndData.bufferSize >= 16 )
+    if( ioWndData.bufferSize )
     {
-        xMax = min(ioWndData.cxBuffer,16);
-
         iPaintBeg = max(0, iVertPos + ps.rcPaint.top / ioWndData.cyChar);
-        iPaintEnd = min((ioWndData.bufferSize/xMax),iVertPos + ps.rcPaint.bottom / ioWndData.cyChar);
+        iPaintEnd = min(ioWndData.lineMax,iVertPos + ps.rcPaint.bottom / ioWndData.cyChar);
 
-        for( y = 0; y < (iPaintEnd-iPaintBeg); y++ )
+        StsBarSetText( STS_BAR_1,"Beg:%d,End:%d",iPaintBeg,iPaintEnd);
+
+        for( y=0,columnSum=0; y<=iPaintEnd; y++ )
         {
-            TextOut( hdc, 0, y * ioWndData.cyChar, (ioWndData.bufferPtr + (iPaintBeg+y)*xMax ), xMax );
+            lineEndPtr = strchr( ioWndData.bufferPtr+columnSum, '\n' );
+            if( lineEndPtr != NULL )
+            {
+                columnSize = lineEndPtr - (ioWndData.bufferPtr+columnSum);
+            }
+            else
+            {
+                columnSize = ioWndData.bufferSize - columnSum;
+            }
+
+            if( (iPaintBeg <= y) && (y <= iPaintEnd) )
+            {
+                TextOut( hdc, 0, (y-iVertPos) * ioWndData.cyChar, (ioWndData.bufferPtr + columnSum), min(columnSize,ioWndData.cxBuffer) );
+            }
+            columnSum += columnSize+1;
         }
     }
 
@@ -395,18 +407,18 @@ ioOnSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     /* Set vertical scroll bar range and page size */
     si.cbSize = sizeof(si);
-    si.fMask  = SIF_RANGE | SIF_PAGE;
-    si.nMin   = 0;                                     /* 範囲の最小値 */
-    si.nMax   = 300;                                   /* 範囲の最大値 */
-    si.nPage  = ioWndData.cyClient / ioWndData.cyChar; /* ページサイズ */
+    si.fMask  = SIF_RANGE | SIF_PAGE | SIF_DISABLENOSCROLL;
+    si.nMin   = 0;                                                                /* 範囲の最小値 */
+    si.nMax   = max(ioWndData.lineMax,(ioWndData.cyClient / ioWndData.cyChar))-1; /* 範囲の最大値 */
+    si.nPage  = (ioWndData.cyClient / ioWndData.cyChar); /* ページサイズ */
     SetScrollInfo( hwnd, SB_VERT, &si, TRUE );
 
     /* Set horizontal scroll bar range and page size*/
     si.cbSize = sizeof(si);
-    si.fMask  = SIF_RANGE | SIF_PAGE;
+    si.fMask  = SIF_RANGE | SIF_PAGE | SIF_DISABLENOSCROLL;
     si.nMin   = 0;
-    si.nMax   = 2 + ioWndData.iMaxWidth / ioWndData.cxChar;
-    si.nPage  = ioWndData.cxClient / ioWndData.cxChar;
+    si.nMax   = max( ioWndData.columnMax,(ioWndData.cxClient/ioWndData.cxChar))-1;
+    si.nPage  = (ioWndData.cxClient/ioWndData.cxChar);
     SetScrollInfo( hwnd, SB_HORZ, &si, TRUE );
 
     ioWndData.cxBuffer = max( 1, ioWndData.cxClient / ioWndData.cxChar );
@@ -547,60 +559,6 @@ static LRESULT
 ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
-    PAINTSTRUCT  ps;
-    HDC          hdc;
-    int i;
-
-#if 0
-    for( i=0; i<(int) LOWORD(lParam); i++ )
-    {
-        switch( wParam )
-        {
-        case '\b':  /* backspace */
-        case '\t':  /* tab */
-        case '\n':  /* line feed */
-        case '\r':  /* carriage return */
-        case '\x1B':/* escape */
-            break;
-        default:    /* character codes */
-            /* 文字列をバッファに追加 */
-            ioWndBufferOut( ioWndData.xCaret, ioWndData.yCaret, (TCHAR)wParam );
-
-            HideCaret( hwnd );
-
-            /* 追加された文字列を出力 */
-            hdc = GetDC( hwnd );
-            SelectObject( hdc, CreateFont(0, 0, 0, 0, 0, 0, 0, 0, ioWndData.dwCharSet, 0, 0, 0, FIXED_PITCH, NULL) );
-            TextOut( hdc, ioWndData.xCaret * ioWndData.cxChar, ioWndData.yCaret * ioWndData.cyChar, (ioWndData.bufferPtr + ioWndData.yCaret * ioWndData.cxBuffer + ioWndData.xCaret), 1 );
-            DeleteObject( SelectObject(hdc, GetStockObject(SYSTEM_FONT)) );
-            ReleaseDC(hwnd, hdc);
-
-            ShowCaret(hwnd);
-
-            /* キャレットの位置を進める */
-            if( ++ioWndData.xCaret == ioWndData.cxBuffer )
-            {
-                ioWndData.xCaret = 0;
-
-                if( ++ioWndData.yCaret == ioWndData.cyBuffer )
-                {
-                    ioWndData.yCaret = 0;
-                }
-                else
-                {
-                    /* do nothing */
-                }
-
-            }
-            else
-            {
-                /* do nothing */
-            }
-            break;
-        }
-    }
-    SetCaretPos( ioWndData.xCaret * ioWndData.cxChar, ioWndData.yCaret * ioWndData.cyChar );
-#endif
 
     return rtn;
 }

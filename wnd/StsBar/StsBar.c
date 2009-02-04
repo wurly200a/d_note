@@ -12,7 +12,7 @@
 
 /* 内部変数定義 */
 static HWND hwndSbar;
-static int sbarColWidth[STS_BAR_MAX+1] = { 100, 200, 300, 400, -1 };
+static int sbarColWidth[STS_BAR_MAX+1] = { 150, 300, 450, 600, -1 };
 
 /********************************************************************************
  * 内容  : ステータスバー生成

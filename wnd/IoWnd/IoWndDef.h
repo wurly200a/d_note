@@ -34,6 +34,8 @@ typedef struct
     DWORD  dwCharSet;
     TCHAR* bufferPtr; /* 表示する文字のバッファ    */
     DWORD  bufferSize;/* 表示する文字のバッファサイズ*/
+    DWORD  lineMax;
+    DWORD  columnMax;
 
     int    cxCaps;    /*  */
     int    iMaxWidth; /* 最大文字数(X)             */
