@@ -50,5 +50,7 @@ __inline void chMB(PCSTR s) {
    MessageBoxA(GetActiveWindow(), s, szTMP, MB_OK);
 }
 
+#define nop()
+
 #define COMMON_H
 #endif /* COMMON_H */

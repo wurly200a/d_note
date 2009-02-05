@@ -336,50 +336,66 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     PAINTSTRUCT  ps;
     HDC          hdc;
-    int y,xMax,yMax,xSum;
     SCROLLINFO  si;
-    int         iPaintBeg,iPaintEnd,iHorzPos,iVertPos,x,i,columnSize,columnSum;
+    int         iPaintBeg,iPaintEnd,iHorzPos,iVertPos,x,y,columnSize,columnSum;
+    int         xPaintBeg,xPaintEnd;
     TCHAR       szBuffer[10] ;
     TCHAR       *lineEndPtr;
 
     hdc = BeginPaint( hwnd, &ps );
     SelectObject( hdc, CreateFont(0, 0, 0, 0, 0, 0, 0, 0, ioWndData.dwCharSet, 0, 0, 0, FIXED_PITCH, NULL) );
 
-    /* Get vertical scroll bar position */
     si.cbSize = sizeof(si);
     si.fMask  = SIF_POS;
-    GetScrollInfo( hwnd, SB_VERT, &si );
+    GetScrollInfo( hwnd, SB_VERT, &si ); /* 縦スクロールバーの位置を取得 */
     iVertPos = si.nPos;
-
-    /* Get horizontal scroll bar position */
-    GetScrollInfo(hwnd, SB_HORZ, &si);
+    GetScrollInfo(hwnd, SB_HORZ, &si);   /* 横スクロールバーの位置を取得 */
     iHorzPos = si.nPos;
 
     if( ioWndData.bufferSize )
-    {
+    { /* データがあれば */
         iPaintBeg = max(0, iVertPos + ps.rcPaint.top / ioWndData.cyChar);
         iPaintEnd = min(ioWndData.lineMax,iVertPos + ps.rcPaint.bottom / ioWndData.cyChar);
 
-        StsBarSetText( STS_BAR_1,"Beg:%d,End:%d",iPaintBeg,iPaintEnd);
+        xPaintBeg = max(0, iHorzPos + ps.rcPaint.left / ioWndData.cxChar);
+        xPaintEnd = min(ioWndData.columnMax,iHorzPos + ps.rcPaint.right / ioWndData.cxChar);
 
         for( y=0,columnSum=0; y<=iPaintEnd; y++ )
-        {
+        { /* バッファの最初から、再描画領域の最後まで1行ずつ処理 */
+            /* 1行の文字数取得 */
             lineEndPtr = strchr( ioWndData.bufferPtr+columnSum, '\n' );
             if( lineEndPtr != NULL )
-            {
+            { /* 改行コード有 */
                 columnSize = lineEndPtr - (ioWndData.bufferPtr+columnSum);
             }
             else
-            {
+            { /* 改行コード無 */
                 columnSize = ioWndData.bufferSize - columnSum;
             }
 
-            if( (iPaintBeg <= y) && (y <= iPaintEnd) )
-            {
+            if( iPaintBeg <= y )
+            { /* 再描画領域 */
+#if 1
                 TextOut( hdc, 0, (y-iVertPos) * ioWndData.cyChar, (ioWndData.bufferPtr + columnSum), min(columnSize,ioWndData.cxBuffer) );
+#else
+                x = xPaintBeg-iHorzPos;
+
+                TextOut( hdc, x, (y-iVertPos) * ioWndData.cyChar, (ioWndData.bufferPtr + columnSum) + xPaintBeg, xPaintEnd-xPaintBeg );
+
+                StsBarSetText( STS_BAR_1,"Beg:%d,End:%d",xPaintBeg,xPaintEnd);
+                StsBarSetText( STS_BAR_0,"x:%d,iHorzPos:%d,c:%d,b:%d",x,iHorzPos,columnSize,ioWndData.cxBuffer);
+#endif
             }
-            columnSum += columnSize+1;
+            else
+            { /* 再描画領域でない */
+                nop();
+            }
+            columnSum += columnSize+1; /* 文字数を加算 */
         }
+    }
+    else
+    {
+        nop();
     }
 
     DeleteObject( SelectObject(hdc, GetStockObject(SYSTEM_FONT)) );
