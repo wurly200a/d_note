@@ -20,9 +20,9 @@ HWND StsBarCreate( HWND hwnd );
  * 内容  : ステータスバーのサイズ調整
  * 引数  : int cxClient
  * 引数  : int cyClient
- * 戻り値: void
+ * 戻り値: LONG 縦方向のサイズ
  ***************************************/
-void StsBarSize( int cxClient,int cyClient );
+LONG StsBarSize( int cxClient,int cyClient );
 
 /********************************************************************************
  * 内容  : ステータスバーへの文字列セット

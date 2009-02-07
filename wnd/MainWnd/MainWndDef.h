@@ -28,6 +28,7 @@ typedef struct
     int  cxChar;
     int  cyChar;
     int  cxCaps;
+    HMENU hMenu;
     HWND hWndIo;
 } S_MAINWND_DATA;
 

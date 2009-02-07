@@ -2,6 +2,7 @@
 #include "common.h"
 /* 個別インクルードファイル */
 #include "MainWndDef.h"
+#include "MainWndMenu.h"
 
 /* 外部関数定義 */
 #include "WinMain.h"
@@ -66,6 +67,7 @@ MainWndCreate( int nCmdShow )
     WNDCLASS wc = {0};
     HINSTANCE hInst = GetHinst();
     PTSTR pAppName = GetAppName();
+    HMENU hMenuPopup;
 
     /* メインウィンドウクラス */
     wc.style            = CS_HREDRAW | CS_VREDRAW;
@@ -85,6 +87,31 @@ MainWndCreate( int nCmdShow )
         return FALSE;
     }
 
+    mainWndData.hMenu = CreateMenu();
+
+    hMenuPopup = CreateMenu();
+    AppendMenu( hMenuPopup, MF_STRING, IDM_FILE_NEW , TEXT("新規(&N)") );
+    AppendMenu( hMenuPopup, MF_STRING, IDM_FILE_OPEN, TEXT("開く(&O)...") );
+    AppendMenu( mainWndData.hMenu, MF_POPUP, (UINT_PTR)hMenuPopup, TEXT("ファイル(&F)") );
+
+    hMenuPopup = CreateMenu();
+    AppendMenu( hMenuPopup, MF_STRING, IDM_EDIT_UNDO , TEXT("元に戻す(&U)") );
+    AppendMenu( mainWndData.hMenu, MF_POPUP, (UINT_PTR)hMenuPopup, TEXT("編集(&E)") );
+
+    hMenuPopup = CreateMenu();
+    AppendMenu( hMenuPopup, MF_STRING, IDM_FORMAT_WRAP , TEXT("右端で折り返す(&W)") );
+    AppendMenu( hMenuPopup, MF_STRING, IDM_FORMAT_FONT , TEXT("フォント(&F)...") );
+    AppendMenu( mainWndData.hMenu, MF_POPUP, (UINT_PTR)hMenuPopup, TEXT("書式(&O)") );
+
+    hMenuPopup = CreateMenu();
+    AppendMenu( hMenuPopup, MF_STRING, IDM_VIEW_STS_BAR, TEXT("ステータス バー(&S)") );
+    AppendMenu( mainWndData.hMenu, MF_POPUP, (UINT_PTR)hMenuPopup, TEXT("表示(&V)") );
+
+    hMenuPopup = CreateMenu();
+    AppendMenu( hMenuPopup, MF_STRING, IDM_HELP_HELP  , TEXT("トピックの検索(&H)") );
+    AppendMenu( hMenuPopup, MF_STRING, IDM_HELP_ABOUT , TEXT("バージョン情報(&A)") );
+    AppendMenu( mainWndData.hMenu, MF_POPUP, (UINT_PTR)hMenuPopup, TEXT("ヘルプ(&H)") );
+
     /* メインウィンドウを作成 */
     InitCommonControls(); /* commctrl.hのインクルード、comctl32.libのプロジェクトへの参加が必要 */
     hwndMain = CreateWindowEx( /* WS_EX_OVERLAPPEDWINDOW | */ WS_EX_ACCEPTFILES,
@@ -92,7 +119,7 @@ MainWndCreate( int nCmdShow )
                                WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS /* | WS_VSCROLL | WS_HSCROLL*/,
                                CW_USEDEFAULT, CW_USEDEFAULT,
                                WND_WIDTH    , WND_HEIGHT,
-                               NULL, NULL, hInst, NULL);
+                               NULL, mainWndData.hMenu, hInst, NULL);
 
     if( hwndMain == NULL )
     {
@@ -194,7 +221,9 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     mainWndData.hWndIo = IoWndCreate( hwnd );
 
     FileInitialize( hwnd ); /* ファイル初期化     */
+#if 0
     SomeCtrlCreate( hwnd ); /* コントロールを生成 */
+#endif
     StsBarCreate  ( hwnd ); /* ステータスバー生成 */
 
     return rtn;
@@ -225,12 +254,16 @@ onPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 static LRESULT
 onSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
+    LONG topSizeSum=0,bottomSizeSum=0;
+
     mainWndData.cxClient = LOWORD( lParam );
     mainWndData.cyClient = HIWORD( lParam );
 
-    IoWndSize   ( mainWndData.cxClient, mainWndData.cyClient );
-    SomeCtrlSize( mainWndData.cxClient, mainWndData.cyChar   ); /* コントロール   */
-    StsBarSize  ( mainWndData.cxClient, mainWndData.cyChar   ); /* ステータスバー */
+#if 0
+    topSizeSum += SomeCtrlSize( mainWndData.cxClient, mainWndData.cyChar ); /* コントロール   */
+#endif
+    bottomSizeSum += StsBarSize( mainWndData.cxClient, mainWndData.cyChar ); /* ステータスバー */
+    IoWndSize( 0, topSizeSum, mainWndData.cxClient, mainWndData.cyClient - topSizeSum - bottomSizeSum );
 
     return 0;
 }
@@ -286,6 +319,18 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     switch( LOWORD(wParam) )
     {
+    case IDM_FILE_OPEN:
+        if( FileOpenDlg( hwnd,FILE_ID_BIN ) )
+        {
+            dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
+            IoWndPrint( dataPtr,dwSize );
+        }
+        else
+        {
+            /* キャンセルされた。又はエラー */
+        }
+        break;
+#if 0
     case (SOME_CTRL_FILEOPEN_BUTTON+SOME_CTRL_ID_OFFSET):
         if( FileOpenDlg( hwnd,FILE_ID_BIN ) )
         {
@@ -297,6 +342,10 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         {
             /* キャンセルされた。又はエラー */
         }
+        break;
+#endif
+    case IDM_VIEW_STS_BAR:
+        CheckMenuItem( mainWndData.hMenu, IDM_VIEW_STS_BAR, MF_CHECKED );
         break;
     default:
         break;

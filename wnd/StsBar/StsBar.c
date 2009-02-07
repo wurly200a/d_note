@@ -44,15 +44,17 @@ StsBarCreate( HWND hwnd )
  * 内容  : ステータスバーのサイズ調整
  * 引数  : int cxClient
  * 引数  : int cyClient
- * 戻り値: void
+ * 戻り値: LONG 縦方向のサイズ
  ***************************************/
-void
+LONG
 StsBarSize( int cxClient,int cyClient )
 {
     RECT  RectSbar;
 
     SendMessage(hwndSbar, WM_SIZE, SIZE_RESTORED, MAKELPARAM(cxClient, cyClient));
     GetClientRect(hwndSbar, &RectSbar);
+
+    return (RectSbar.bottom - RectSbar.top);
 }
 
 /********************************************************************************
@@ -79,5 +81,4 @@ StsBarSetText( STS_BAR_ID id, PTSTR ptstrFormat, ... )
         /* do nothing */
     }
     va_end(vaArgs);
-
 }

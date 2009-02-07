@@ -22,9 +22,9 @@ BOOL SomeCtrlCreate( HWND hwnd );
  * 内容  : 登録された全てのコントロールのサイズを調整する
  * 引数  : int cxClient
  * 引数  : int cyClient
- * 戻り値: BOOL
+ * 戻り値: LONG コントロールを配置する矩形の縦方向のサイズ
  ***************************************/
-BOOL SomeCtrlSize( int cxClient,int cyClient );
+LONG SomeCtrlSize( int cxClient,int cyClient );
 
 /********************************************************************************
  * 内容  : コントロールのウィンドウハンドラを取得する

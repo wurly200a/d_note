@@ -103,14 +103,16 @@ IoWndCreate( HWND hWnd )
 
 /********************************************************************************
  * 内容  : IOウィンドウのサイズ変更
+ * 引数  : int x
+ * 引数  : int y
  * 引数  : int cxClient
  * 引数  : int cyClient
  * 戻り値: BOOL
  ***************************************/
 BOOL
-IoWndSize( int cxClient, int cyClient )
+IoWndSize( int x, int y, int cxClient, int cyClient )
 {
-    MoveWindow( hWndIo,0,70,cxClient,cyClient-90, TRUE);
+    MoveWindow( hWndIo,x,y,cxClient,cyClient, TRUE);
 }
 
 /********************************************************************************
