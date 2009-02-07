@@ -31,6 +31,8 @@ static LRESULT ioOnMouseActivate( HWND hwnd, UINT message, WPARAM wParam, LPARAM
 static LRESULT ioOnMouseWheel   ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT ioOnDefault      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
+static void setAllScrollInfo( void );
+
 /* 内部変数定義 */
 static HWND hWndIo; /* ウィンドウのハンドラ */
 static S_IOWND_DATA ioWndData;
@@ -190,6 +192,7 @@ IoWndPrint( TCHAR* strPtr, int length )
     }
     StsBarSetText( STS_BAR_0,"%d bytes,%d lines",ioWndData.bufferSize,ioWndData.lineMax);
 
+    setAllScrollInfo();
     SendMessage( hWndIo, WM_PAINT, 0, 0 );
     InvalidateRect( hWndIo, NULL, TRUE );
 }
@@ -357,9 +360,6 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         iPaintBeg = max(0, iVertPos + ps.rcPaint.top / ioWndData.cyChar);
         iPaintEnd = min(ioWndData.lineMax,iVertPos + ps.rcPaint.bottom / ioWndData.cyChar);
 
-        xPaintBeg = max(0, iHorzPos + ps.rcPaint.left / ioWndData.cxChar);
-        xPaintEnd = min(ioWndData.columnMax,iHorzPos + ps.rcPaint.right / ioWndData.cxChar);
-
         for( y=0,columnSum=0; y<=iPaintEnd; y++ )
         { /* バッファの最初から、再描画領域の最後まで1行ずつ処理 */
             /* 1行の文字数取得 */
@@ -375,16 +375,7 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
             if( iPaintBeg <= y )
             { /* 再描画領域 */
-#if 1
-                TextOut( hdc, 0, (y-iVertPos) * ioWndData.cyChar, (ioWndData.bufferPtr + columnSum), min(columnSize,ioWndData.cxBuffer) );
-#else
-                x = xPaintBeg-iHorzPos;
-
-                TextOut( hdc, x, (y-iVertPos) * ioWndData.cyChar, (ioWndData.bufferPtr + columnSum) + xPaintBeg, xPaintEnd-xPaintBeg );
-
-                StsBarSetText( STS_BAR_1,"Beg:%d,End:%d",xPaintBeg,xPaintEnd);
-                StsBarSetText( STS_BAR_0,"x:%d,iHorzPos:%d,c:%d,b:%d",x,iHorzPos,columnSize,ioWndData.cxBuffer);
-#endif
+                TextOut( hdc, 0, (y-iVertPos) * ioWndData.cyChar, ioWndData.bufferPtr + columnSum + iHorzPos, min((columnSize - iHorzPos),ioWndData.cxBuffer) );
             }
             else
             { /* 再描画領域でない */
@@ -416,26 +407,11 @@ static LRESULT
 ioOnSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     int x,y;
-    SCROLLINFO si;
 
     ioWndData.cxClient = LOWORD( lParam );
     ioWndData.cyClient = HIWORD( lParam );
 
-    /* Set vertical scroll bar range and page size */
-    si.cbSize = sizeof(si);
-    si.fMask  = SIF_RANGE | SIF_PAGE | SIF_DISABLENOSCROLL;
-    si.nMin   = 0;                                                                /* 範囲の最小値 */
-    si.nMax   = max(ioWndData.lineMax,(ioWndData.cyClient / ioWndData.cyChar))-1; /* 範囲の最大値 */
-    si.nPage  = (ioWndData.cyClient / ioWndData.cyChar); /* ページサイズ */
-    SetScrollInfo( hwnd, SB_VERT, &si, TRUE );
-
-    /* Set horizontal scroll bar range and page size*/
-    si.cbSize = sizeof(si);
-    si.fMask  = SIF_RANGE | SIF_PAGE | SIF_DISABLENOSCROLL;
-    si.nMin   = 0;
-    si.nMax   = max( ioWndData.columnMax,(ioWndData.cxClient/ioWndData.cxChar))-1;
-    si.nPage  = (ioWndData.cxClient/ioWndData.cxChar);
-    SetScrollInfo( hwnd, SB_HORZ, &si, TRUE );
+    setAllScrollInfo();
 
     ioWndData.cxBuffer = max( 1, ioWndData.cxClient / ioWndData.cxChar );
     ioWndData.cyBuffer = max( 1, ioWndData.cyClient / ioWndData.cyChar );
@@ -633,6 +609,7 @@ ioOnHscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     if( si.nPos != iHorzPos )
     {
         ScrollWindow( hwnd, ioWndData.cxChar * (iHorzPos - si.nPos), 0, NULL, NULL );
+        InvalidateRect( hWndIo, NULL, TRUE );
     }
 
     return rtn;
@@ -802,4 +779,31 @@ static LRESULT
 ioOnDefault( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     return DefWindowProc( hwnd, message, wParam, lParam );
+}
+
+/********************************************************************************
+ * 内容  : スクロール情報のセット
+ * 引数  : なし
+ * 戻り値: なし
+ ***************************************/
+static void
+setAllScrollInfo( void )
+{
+    SCROLLINFO si;
+
+    /* Set vertical scroll bar range and page size */
+    si.cbSize = sizeof(si);
+    si.fMask  = SIF_RANGE | SIF_PAGE | SIF_DISABLENOSCROLL;
+    si.nMin   = 0;                                                                /* 範囲の最小値 */
+    si.nMax   = max(ioWndData.lineMax,(ioWndData.cyClient / ioWndData.cyChar))-1; /* 範囲の最大値 */
+    si.nPage  = (ioWndData.cyClient / ioWndData.cyChar); /* ページサイズ */
+    SetScrollInfo( hWndIo, SB_VERT, &si, TRUE );
+
+    /* Set horizontal scroll bar range and page size*/
+    si.cbSize = sizeof(si);
+    si.fMask  = SIF_RANGE | SIF_PAGE | SIF_DISABLENOSCROLL;
+    si.nMin   = 0;
+    si.nMax   = max( ioWndData.columnMax,(ioWndData.cxClient/ioWndData.cxChar))-1;
+    si.nPage  = (ioWndData.cxClient/ioWndData.cxChar);
+    SetScrollInfo( hWndIo, SB_HORZ, &si, TRUE );
 }
