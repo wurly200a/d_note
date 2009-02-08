@@ -224,7 +224,7 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 #if 0
     SomeCtrlCreate( hwnd ); /* コントロールを生成 */
 #endif
-    StsBarCreate  ( hwnd ); /* ステータスバー生成 */
+    StsBarCreate( hwnd, FALSE ); /* ステータスバー生成、デフォルト非表示 */
 
     return rtn;
 }
@@ -316,6 +316,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     LRESULT rtn = 0;
     DWORD dwSize;
     PBYTE dataPtr;
+    MENUITEMINFO menuItemInfo;
 
     switch( LOWORD(wParam) )
     {
@@ -345,7 +346,20 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         break;
 #endif
     case IDM_VIEW_STS_BAR:
-        CheckMenuItem( mainWndData.hMenu, IDM_VIEW_STS_BAR, MF_CHECKED );
+        menuItemInfo.cbSize = sizeof(MENUITEMINFO);
+        menuItemInfo.fMask  = MIIM_STATE;
+        GetMenuItemInfo( mainWndData.hMenu, IDM_VIEW_STS_BAR, FALSE, &menuItemInfo );
+        if( menuItemInfo.fState & MFS_CHECKED )
+        {
+            CheckMenuItem( mainWndData.hMenu, IDM_VIEW_STS_BAR, MF_UNCHECKED );
+            StsBarShowWindow( FALSE );
+        }
+        else
+        {
+            CheckMenuItem( mainWndData.hMenu, IDM_VIEW_STS_BAR, MF_CHECKED );
+            StsBarShowWindow( TRUE );
+        }
+        SendMessage(hwnd,WM_SIZE,0,MAKELONG(mainWndData.cxClient,mainWndData.cyClient));
         break;
     default:
         break;

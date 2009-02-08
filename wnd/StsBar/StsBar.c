@@ -12,15 +12,17 @@
 
 /* 内部変数定義 */
 static HWND hwndSbar;
-static int sbarColWidth[STS_BAR_MAX+1] = { 150, 300, 450, 600, -1 };
+static int sbarColWidth[STS_BAR_MAX+1];
+static BOOL fSbarEnable;
 
 /********************************************************************************
  * 内容  : ステータスバー生成
  * 引数  : HWND hwnd 親ウィンドウのハンドラ
+ * 引数  : BOOL fShow デフォルト表示するか否か
  * 戻り値: HWND
  ***************************************/
 HWND
-StsBarCreate( HWND hwnd )
+StsBarCreate( HWND hwnd, BOOL fShow )
 {
     hwndSbar = CreateWindowEx(0,
                               STATUSCLASSNAME, NULL,
@@ -29,12 +31,18 @@ StsBarCreate( HWND hwnd )
                               hwnd, (HMENU)1500, GetHinst(), NULL);
     if( hwndSbar != NULL )
     {
-        SendMessage(hwndSbar, SB_SETPARTS, sizeof(sbarColWidth)/sizeof(int), (LPARAM)sbarColWidth);
-        ShowWindow(hwndSbar, SW_SHOW);
+        if( fShow )
+        {
+            StsBarShowWindow( TRUE );
+        }
+        else
+        {
+            StsBarShowWindow( FALSE );
+        }
     }
     else
     {
-        /* do nothing */
+        nop();
     }
 
     return hwndSbar;
@@ -49,12 +57,27 @@ StsBarCreate( HWND hwnd )
 LONG
 StsBarSize( int cxClient,int cyClient )
 {
-    RECT  RectSbar;
+    RECT RectSbar;
+    int i;
+    LONG vertSize = 0;
 
+    sbarColWidth[STS_BAR_0]   = cxClient - (cxClient/4);
+    sbarColWidth[STS_BAR_MAX] = -1;
+
+    SendMessage(hwndSbar, SB_SETPARTS, sizeof(sbarColWidth)/sizeof(int), (LPARAM)sbarColWidth);
     SendMessage(hwndSbar, WM_SIZE, SIZE_RESTORED, MAKELPARAM(cxClient, cyClient));
     GetClientRect(hwndSbar, &RectSbar);
 
-    return (RectSbar.bottom - RectSbar.top);
+    if( fSbarEnable )
+    {
+        vertSize = RectSbar.bottom - RectSbar.top;
+    }
+    else
+    {
+        nop();
+    }
+
+    return vertSize;
 }
 
 /********************************************************************************
@@ -81,4 +104,35 @@ StsBarSetText( STS_BAR_ID id, PTSTR ptstrFormat, ... )
         /* do nothing */
     }
     va_end(vaArgs);
+}
+
+/********************************************************************************
+ * 内容  : ステータスバーの表示
+ * 引数  : BOOL fShow
+ * 戻り値: BOOL
+ ***************************************/
+BOOL
+StsBarShowWindow( BOOL fShow )
+{
+    BOOL rtn = FALSE;
+
+    if( hwndSbar != NULL )
+    {
+        if( fShow )
+        {
+            fSbarEnable = TRUE;
+            rtn = ShowWindow(hwndSbar, SW_SHOW);
+        }
+        else
+        {
+            fSbarEnable = FALSE;
+            rtn = ShowWindow(hwndSbar, SW_HIDE);
+        }
+    }
+    else
+    {
+        nop();
+    }
+
+    return rtn;
 }
