@@ -146,7 +146,7 @@ FileOpenDlg( HWND hwnd, FILE_ID id )
 }
 
 /********************************************************************************
- * 内容  : ファイル名称を取得する
+ * 内容  : ファイル名称(フルパス)を取得する
  * 引数  : FILE_ID id
  * 戻り値: PTSTR
  ***************************************/
@@ -158,6 +158,28 @@ FileGetName( FILE_ID id )
     if( (id < FILE_ID_MAX) && (fileList[id].init == TRUE) )
     {
         rtn = fileList[id].pFileName;
+    }
+    else
+    {
+        rtn = &nullStr;
+    }
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : ファイル名称を取得する
+ * 引数  : FILE_ID id
+ * 戻り値: PTSTR
+ ***************************************/
+PTSTR
+FileGetTitleName( FILE_ID id )
+{
+    PTSTR rtn;
+
+    if( (id < FILE_ID_MAX) && (fileList[id].init == TRUE) )
+    {
+        rtn = fileList[id].pTitleName;
     }
     else
     {

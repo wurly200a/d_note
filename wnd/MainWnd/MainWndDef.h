@@ -14,6 +14,8 @@ typedef enum
     MAINWND_ON_HSCROLL   , /* WM_HSCROLL       */
     MAINWND_ON_VSCROLL   , /* WM_VSCROLL       */
     MAINWND_ON_MOUSEWHEEL, /* WM_MOUSEWHEEL    */
+    MAINWND_ON_SETFOCUS  , /* WM_SETFOCUS      */
+    MAINWND_ON_KILLFOCUS , /* WM_KILLFOCUS     */
     MAINWND_ON_APP       , /* WM_APP           */
     MAINWND_ON_DEFAULT   , /* default          */
     MAINWND_MAX

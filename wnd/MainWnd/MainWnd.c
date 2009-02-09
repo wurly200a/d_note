@@ -29,8 +29,12 @@ static LRESULT onChar         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM l
 static LRESULT onHscroll      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onVscroll      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onMouseWheel   ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onSetFocus     ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onKillFocus    ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onApp          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onDefault      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+
+void doCaption( HWND hwnd, TCHAR* szTitleName );
 
 /* 内部変数定義 */
 static HWND hwndMain; /* メインウィンドウのハンドラ */
@@ -51,6 +55,8 @@ static LRESULT (*wndProcTbl[MAINWND_MAX])( HWND hwnd, UINT message, WPARAM wPara
     onHscroll      , /* WM_HSCROLL          */
     onVscroll      , /* WM_VSCROLL          */
     onMouseWheel   , /* WM_MOUSEWHEEL       */
+    onSetFocus     , /* WM_SETFOCUS         */
+    onKillFocus    , /* WM_KILLFOCUS        */
     onApp          , /* WM_APP              */
     onDefault        /* default             */
 };
@@ -90,27 +96,71 @@ MainWndCreate( int nCmdShow )
     mainWndData.hMenu = CreateMenu();
 
     hMenuPopup = CreateMenu();
-    AppendMenu( hMenuPopup, MF_STRING, IDM_FILE_NEW , TEXT("新規(&N)") );
-    AppendMenu( hMenuPopup, MF_STRING, IDM_FILE_OPEN, TEXT("開く(&O)...") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_NEW       , TEXT("新規(&N)") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_OPEN      , TEXT("開く(&O)...") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_SAVE      , TEXT("上書き保存(&S)") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_SAVE_AS   , TEXT("名前を付けて保存(&A)...") );
+    AppendMenu( hMenuPopup, MF_SEPARATOR, 0                  , NULL );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_PAGE      , TEXT("ページ設定(&U)...") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_PRINT     , TEXT("印刷(&P)...") );
+    AppendMenu( hMenuPopup, MF_SEPARATOR, 0                  , NULL );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_EXIT      , TEXT("終了(&X)") );
     AppendMenu( mainWndData.hMenu, MF_POPUP, (UINT_PTR)hMenuPopup, TEXT("ファイル(&F)") );
 
+    EnableMenuItem( mainWndData.hMenu, IDM_FILE_SAVE      , MF_GRAYED );
+    EnableMenuItem( mainWndData.hMenu, IDM_FILE_SAVE_AS   , MF_GRAYED );
+    EnableMenuItem( mainWndData.hMenu, IDM_FILE_PAGE      , MF_GRAYED );
+    EnableMenuItem( mainWndData.hMenu, IDM_FILE_PRINT     , MF_GRAYED );
+
     hMenuPopup = CreateMenu();
-    AppendMenu( hMenuPopup, MF_STRING, IDM_EDIT_UNDO , TEXT("元に戻す(&U)") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_UNDO       , TEXT("元に戻す(&U)") );
+    AppendMenu( hMenuPopup, MF_SEPARATOR, 0                   , NULL );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_CUT        , TEXT("切り取り(&T)") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_COPY       , TEXT("コピー(&C)") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_PASTE      , TEXT("貼り付け(&P)") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_DELETE     , TEXT("削除(&L)") );
+    AppendMenu( hMenuPopup, MF_SEPARATOR, 0                   , NULL );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_FIND       , TEXT("検索(&F)...") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_FIND_NEXT  , TEXT("次を検索(&N)") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_REPLACE    , TEXT("置換(&R)...") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_GOTO_LINE  , TEXT("行へ移動(&G)...") );
+    AppendMenu( hMenuPopup, MF_SEPARATOR, 0                   , NULL );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_SELECT_ALL , TEXT("全て選択(&A)") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_DATETIME   , TEXT("日付と時刻(&D)") );
     AppendMenu( mainWndData.hMenu, MF_POPUP, (UINT_PTR)hMenuPopup, TEXT("編集(&E)") );
+
+    EnableMenuItem( mainWndData.hMenu, IDM_EDIT_UNDO       , MF_GRAYED );
+    EnableMenuItem( mainWndData.hMenu, IDM_EDIT_CUT        , MF_GRAYED );
+    EnableMenuItem( mainWndData.hMenu, IDM_EDIT_COPY       , MF_GRAYED );
+    EnableMenuItem( mainWndData.hMenu, IDM_EDIT_PASTE      , MF_GRAYED );
+    EnableMenuItem( mainWndData.hMenu, IDM_EDIT_DELETE     , MF_GRAYED );
+    EnableMenuItem( mainWndData.hMenu, IDM_EDIT_FIND       , MF_GRAYED );
+    EnableMenuItem( mainWndData.hMenu, IDM_EDIT_FIND_NEXT  , MF_GRAYED );
+    EnableMenuItem( mainWndData.hMenu, IDM_EDIT_REPLACE    , MF_GRAYED );
+    EnableMenuItem( mainWndData.hMenu, IDM_EDIT_GOTO_LINE  , MF_GRAYED );
+    EnableMenuItem( mainWndData.hMenu, IDM_EDIT_SELECT_ALL , MF_GRAYED );
+    EnableMenuItem( mainWndData.hMenu, IDM_EDIT_DATETIME   , MF_GRAYED );
 
     hMenuPopup = CreateMenu();
     AppendMenu( hMenuPopup, MF_STRING, IDM_FORMAT_WRAP , TEXT("右端で折り返す(&W)") );
     AppendMenu( hMenuPopup, MF_STRING, IDM_FORMAT_FONT , TEXT("フォント(&F)...") );
     AppendMenu( mainWndData.hMenu, MF_POPUP, (UINT_PTR)hMenuPopup, TEXT("書式(&O)") );
 
+    EnableMenuItem( mainWndData.hMenu, IDM_FORMAT_WRAP , MF_GRAYED );
+    EnableMenuItem( mainWndData.hMenu, IDM_FORMAT_FONT , MF_GRAYED );
+
     hMenuPopup = CreateMenu();
     AppendMenu( hMenuPopup, MF_STRING, IDM_VIEW_STS_BAR, TEXT("ステータス バー(&S)") );
     AppendMenu( mainWndData.hMenu, MF_POPUP, (UINT_PTR)hMenuPopup, TEXT("表示(&V)") );
 
     hMenuPopup = CreateMenu();
-    AppendMenu( hMenuPopup, MF_STRING, IDM_HELP_HELP  , TEXT("トピックの検索(&H)") );
-    AppendMenu( hMenuPopup, MF_STRING, IDM_HELP_ABOUT , TEXT("バージョン情報(&A)") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_HELP_HELP  , TEXT("トピックの検索(&H)") );
+    AppendMenu( hMenuPopup, MF_SEPARATOR, 0              , NULL );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_HELP_ABOUT , TEXT("バージョン情報(&A)") );
     AppendMenu( mainWndData.hMenu, MF_POPUP, (UINT_PTR)hMenuPopup, TEXT("ヘルプ(&H)") );
+
+    EnableMenuItem( mainWndData.hMenu, IDM_HELP_HELP  , MF_GRAYED );
+    EnableMenuItem( mainWndData.hMenu, IDM_HELP_ABOUT , MF_GRAYED );
 
     /* メインウィンドウを作成 */
     InitCommonControls(); /* commctrl.hのインクルード、comctl32.libのプロジェクトへの参加が必要 */
@@ -184,6 +234,8 @@ convertMSGtoINDEX( UINT message )
     case WM_HSCROLL      :rtn = MAINWND_ON_HSCROLL      ;break;
     case WM_VSCROLL      :rtn = MAINWND_ON_VSCROLL      ;break;
     case WM_MOUSEWHEEL   :rtn = MAINWND_ON_MOUSEWHEEL   ;break;
+    case WM_SETFOCUS     :rtn = MAINWND_ON_SETFOCUS     ;break;
+    case WM_KILLFOCUS    :rtn = MAINWND_ON_KILLFOCUS    ;break;
     default              :rtn = MAINWND_ON_DEFAULT      ;break;
     }
     /* *INDENT-ON* */
@@ -225,6 +277,8 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     SomeCtrlCreate( hwnd ); /* コントロールを生成 */
 #endif
     StsBarCreate( hwnd, FALSE ); /* ステータスバー生成、デフォルト非表示 */
+
+    doCaption( hwnd, "" );
 
     return rtn;
 }
@@ -316,15 +370,21 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     LRESULT rtn = 0;
     DWORD dwSize;
     PBYTE dataPtr;
+    INT iMenuFlags;
     MENUITEMINFO menuItemInfo;
 
     switch( LOWORD(wParam) )
     {
+    case IDM_FILE_NEW:
+        IoWndPrint( NULL, 0 );
+        doCaption( hwnd, "" );
+        break;
     case IDM_FILE_OPEN:
         if( FileOpenDlg( hwnd,FILE_ID_BIN ) )
         {
             dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
             IoWndPrint( dataPtr,dwSize );
+            doCaption( hwnd, FileGetTitleName(FILE_ID_BIN) );
         }
         else
         {
@@ -346,6 +406,19 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         break;
 #endif
     case IDM_VIEW_STS_BAR:
+#if 1
+        iMenuFlags = GetMenuState( mainWndData.hMenu, IDM_VIEW_STS_BAR, MF_BYCOMMAND );
+        if( iMenuFlags & MF_CHECKED )
+        {
+            CheckMenuItem( mainWndData.hMenu, IDM_VIEW_STS_BAR, MF_UNCHECKED );
+            StsBarShowWindow( FALSE );
+        }
+        else
+        {
+            CheckMenuItem( mainWndData.hMenu, IDM_VIEW_STS_BAR, MF_CHECKED );
+            StsBarShowWindow( TRUE );
+        }
+#else
         menuItemInfo.cbSize = sizeof(MENUITEMINFO);
         menuItemInfo.fMask  = MIIM_STATE;
         GetMenuItemInfo( mainWndData.hMenu, IDM_VIEW_STS_BAR, FALSE, &menuItemInfo );
@@ -359,7 +432,12 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             CheckMenuItem( mainWndData.hMenu, IDM_VIEW_STS_BAR, MF_CHECKED );
             StsBarShowWindow( TRUE );
         }
+#endif
         SendMessage(hwnd,WM_SIZE,0,MAKELONG(mainWndData.cxClient,mainWndData.cyClient));
+        break;
+
+    case IDM_FILE_EXIT:
+        SendMessage( hwnd, WM_CLOSE, 0, 0 );
         break;
     default:
         break;
@@ -467,6 +545,42 @@ onMouseWheel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 }
 
 /********************************************************************************
+ * 内容  : WM_SETFOCUS を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+onSetFocus( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+
+    SendMessage(mainWndData.hWndIo,message,wParam,lParam);
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : WM_KILLFOCUS を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+onKillFocus( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+
+    SendMessage(mainWndData.hWndIo,message,wParam,lParam);
+
+    return rtn;
+}
+
+/********************************************************************************
  * 内容  : WM_APP の処理
  * 引数  : HWND hwnd
  * 引数  : UINT message
@@ -500,4 +614,20 @@ static LRESULT
 onDefault( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     return DefWindowProc( hwnd, message, wParam, lParam );
+}
+
+/********************************************************************************
+ * 内容  :
+ * 引数  : HWND hwnd
+ * 引数  : TCHAR* szTitleName
+ * 戻り値: なし
+ ***************************************/
+void
+doCaption( HWND hwnd, TCHAR* szTitleName )
+{
+     TCHAR szCaption[64 + MAX_PATH];
+
+     wsprintf( szCaption, TEXT ("%s - %s"), (szTitleName[0] ? szTitleName : TEXT("無題")),GetAppName() );
+
+     SetWindowText( hwnd, szCaption );
 }
