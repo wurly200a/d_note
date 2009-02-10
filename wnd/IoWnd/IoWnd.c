@@ -32,6 +32,7 @@ static LRESULT ioOnMouseWheel   ( HWND hwnd, UINT message, WPARAM wParam, LPARAM
 static LRESULT ioOnDefault      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
 static void setAllScrollInfo( void );
+static void printCaretPos( void );
 
 /* 内部変数定義 */
 static HWND hWndIo; /* ウィンドウのハンドラ */
@@ -194,6 +195,9 @@ IoWndPrint( TCHAR* strPtr, int length )
     }
     StsBarSetText( STS_BAR_0,"%d bytes,%d lines",ioWndData.bufferSize,ioWndData.lineMax);
 
+    ioWndData.xCaret = 0;
+    ioWndData.yCaret = 0;
+
     setAllScrollInfo();
     SendMessage( hWndIo, WM_PAINT, 0, 0 );
     InvalidateRect( hWndIo, NULL, TRUE );
@@ -342,7 +346,8 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     PAINTSTRUCT  ps;
     HDC          hdc;
     SCROLLINFO  si;
-    int         iPaintBeg,iPaintEnd,iHorzPos,iVertPos,x,y,columnSize,columnSum;
+    int         iHorzPos,iVertPos;
+    int         iPaintBeg,iPaintEnd,x,y,columnSize,columnSum;
     int         xPaintBeg,xPaintEnd;
     TCHAR       szBuffer[10] ;
     TCHAR       *lineEndPtr;
@@ -394,6 +399,9 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     DeleteObject( SelectObject(hdc, GetStockObject(SYSTEM_FONT)) );
     EndPaint( hwnd, &ps );
 
+    ioWndData.iVertPos = iVertPos;
+    ioWndData.iHorzPos = iHorzPos;
+
     return 0;
 }
 
@@ -418,12 +426,10 @@ ioOnSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     ioWndData.cxBuffer = max( 1, ioWndData.cxClient / ioWndData.cxChar );
     ioWndData.cyBuffer = max( 1, ioWndData.cyClient / ioWndData.cyChar );
 
-    ioWndData.xCaret = 0;
-    ioWndData.yCaret = 0;
-
     if( hwnd == GetFocus() )
     {
         SetCaretPos( ioWndData.xCaret * ioWndData.cxChar, ioWndData.yCaret * ioWndData.cyChar );
+        printCaretPos();
     }
     else
     {
@@ -537,6 +543,7 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     }
 
     SetCaretPos( ioWndData.xCaret * ioWndData.cxChar, ioWndData.yCaret * ioWndData.cyChar);
+    printCaretPos();
 
     return rtn;
 }
@@ -614,6 +621,9 @@ ioOnHscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         InvalidateRect( hWndIo, NULL, TRUE );
     }
 
+    GetScrollInfo( hwnd, SB_HORZ, &si );
+    ioWndData.iHorzPos = si.nPos;
+
     return rtn;
 }
 
@@ -672,6 +682,9 @@ ioOnVscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         ScrollWindow(hwnd, 0, ioWndData.cyChar * (iVertPos - si.nPos),NULL, NULL);
         UpdateWindow(hwnd);
     }
+
+    GetScrollInfo(hwnd, SB_VERT, &si);
+    ioWndData.iVertPos = si.nPos;
 
     return rtn;
 }
@@ -808,4 +821,15 @@ setAllScrollInfo( void )
     si.nMax   = max( ioWndData.columnMax,(ioWndData.cxClient/ioWndData.cxChar))-1;
     si.nPage  = (ioWndData.cxClient/ioWndData.cxChar);
     SetScrollInfo( hWndIo, SB_HORZ, &si, TRUE );
+}
+
+/********************************************************************************
+ * 内容  : カーソル位置をステータスバーに出力
+ * 引数  : void
+ * 戻り値: void
+ ***************************************/
+static void
+printCaretPos( void )
+{
+    StsBarSetText( STS_BAR_MAX,"   %d 行、%d 列",ioWndData.iVertPos + ioWndData.yCaret,ioWndData.iHorzPos + ioWndData.xCaret);
 }

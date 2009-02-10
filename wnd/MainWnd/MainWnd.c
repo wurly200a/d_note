@@ -276,7 +276,8 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 #if 0
     SomeCtrlCreate( hwnd ); /* コントロールを生成 */
 #endif
-    StsBarCreate( hwnd, FALSE ); /* ステータスバー生成、デフォルト非表示 */
+    StsBarCreate( hwnd, TRUE ); /* ステータスバー生成、デフォルト表示 */
+    CheckMenuItem( mainWndData.hMenu, IDM_VIEW_STS_BAR, MF_CHECKED );
 
     doCaption( hwnd, "" );
 
@@ -557,7 +558,7 @@ onSetFocus( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
-    SendMessage(mainWndData.hWndIo,message,wParam,lParam);
+    SetFocus(mainWndData.hWndIo);
 
     return rtn;
 }

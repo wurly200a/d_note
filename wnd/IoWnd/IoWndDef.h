@@ -41,6 +41,8 @@ typedef struct
     int    iMaxWidth; /* 最大文字数(X)             */
     int    iAccumDelta;
     int    iDeltaPerLine;
+    int    iHorzPos;     /* スクロールバーの横位置  */
+    int    iVertPos;     /* スクロールバーの縦位置  */
 } S_IOWND_DATA;
 
 #define IOWND_DEF_H
