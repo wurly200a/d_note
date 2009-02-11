@@ -19,7 +19,10 @@ typedef struct tag_iownd_buffer_data
     TCHAR                        *dataPtr;
 } S_IOWND_BUFF_DATA;
 
-S_IOWND_BUFF_DATA ioWndBuffQueTop;
+S_IOWND_BUFF_DATA ioWndBuffListTop;
+
+TCHAR *ioWndBuffDataPtr;
+DWORD ioWndBuffDataSize;
 DWORD ioWndBuffLineMax;
 DWORD ioWndBuffColumnMax;
 
@@ -31,11 +34,12 @@ DWORD ioWndBuffColumnMax;
 void
 IoWndBuffInit( void )
 {
-    if( ioWndBuffQueTop.dataPtr != NULL )
+    if( ioWndBuffDataPtr != NULL )
     {
-        free( ioWndBuffQueTop.dataPtr );
-        ioWndBuffQueTop.dataPtr  = NULL;
-        ioWndBuffQueTop.dataSize = 0;
+        free( ioWndBuffDataPtr );
+
+        ioWndBuffDataPtr = NULL;
+        ioWndBuffDataSize = 0;
         ioWndBuffLineMax = 0;
         ioWndBuffColumnMax = 0;
     }
@@ -54,41 +58,41 @@ IoWndBuffInit( void )
 void
 IoWndBuffSet( TCHAR* strPtr, DWORD length )
 {
-    DWORD i,j;
+    DWORD i,ColumnCnt;
 
     IoWndBuffInit();
 
     if( (strPtr != NULL) && (length > 0) )
     {
-        ioWndBuffQueTop.dataPtr = (TCHAR *) malloc( (length * sizeof(TCHAR)) );
+        ioWndBuffDataPtr = (TCHAR *) malloc( (length * sizeof(TCHAR)) );
 
-        if( ioWndBuffQueTop.dataPtr != NULL )
-        {
-            ioWndBuffQueTop.dataSize = length;
+        if( ioWndBuffDataPtr != NULL )
+        { /* メモリ獲得できた */
+            ioWndBuffDataSize = length;
 
-            for( i=0,j=0; i<length; i++ )
+            for( i=0,ColumnCnt=0; i<length; i++ )
             {
-                *(ioWndBuffQueTop.dataPtr+i) = *(strPtr+i);
+                *(ioWndBuffDataPtr+i) = *(strPtr+i);
                 if( *(strPtr+i) == '\n' )
                 {
                     (ioWndBuffLineMax)++; /* 改行の数をカウント */
-                    ioWndBuffColumnMax = max( ioWndBuffColumnMax, j );
-                    j=0;
+                    ioWndBuffColumnMax = max( ioWndBuffColumnMax, ColumnCnt );
+                    ColumnCnt=0;
                 }
                 else
                 {
-                    j++;
+                    ColumnCnt++;
                 }
             }
 
             if( ioWndBuffLineMax==0 )
             { /* 改行が無かった場合 */
                 ioWndBuffLineMax  = 1;
-                ioWndBuffColumnMax = ioWndBuffQueTop.dataSize;
+                ioWndBuffColumnMax = ioWndBuffDataSize;
             }
         }
         else
-        {
+        { /* メモリ獲得できなかった */
             nop(); /* error */
         }
     }
@@ -106,7 +110,7 @@ IoWndBuffSet( TCHAR* strPtr, DWORD length )
 TCHAR *
 IoWndGetBuffPtr( void )
 {
-    return ioWndBuffQueTop.dataPtr;
+    return ioWndBuffDataPtr;
 }
 
 /********************************************************************************
@@ -117,7 +121,7 @@ IoWndGetBuffPtr( void )
 DWORD
 IoWndGetBuffSize( void )
 {
-    return ioWndBuffQueTop.dataSize;
+    return ioWndBuffDataSize;
 }
 
 /********************************************************************************
