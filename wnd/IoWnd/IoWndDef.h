@@ -32,11 +32,6 @@ typedef struct
     int    cxBuffer;  /* 表示可能な文字数(X)       */
     int    cyBuffer;  /* 表示可能な文字数(Y)       */
     DWORD  dwCharSet;
-    TCHAR* bufferPtr; /* 表示する文字のバッファ    */
-    DWORD  bufferSize;/* 表示する文字のバッファサイズ*/
-    DWORD  lineMax;
-    DWORD  columnMax;
-
     int    cxCaps;    /*  */
     int    iMaxWidth; /* 最大文字数(X)             */
     int    iAccumDelta;

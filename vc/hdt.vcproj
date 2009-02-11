@@ -117,6 +117,9 @@
 			RelativePath="..\wnd\IoWnd\IoWnd.c">
 		</File>
 		<File
+			RelativePath="..\wnd\IoWnd\IoWndBuffer.c">
+		</File>
+		<File
 			RelativePath="..\wnd\MainWnd\MainWnd.c">
 		</File>
 		<File

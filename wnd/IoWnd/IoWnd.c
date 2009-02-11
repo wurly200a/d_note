@@ -6,6 +6,7 @@
 /* 外部関数定義 */
 #include "WinMain.h"
 #include "StsBar.h"
+#include "IoWndBuffer.h"
 
 /* 外部変数定義 */
 
@@ -13,7 +14,6 @@
 #include "IoWnd.h"
 LRESULT CALLBACK IoWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static IOWND_INDEX ioWndConvertMSGtoINDEX( UINT message );
-static void ioWndBufferOut( int x, int y, TCHAR c );
 static LRESULT ioOnCreate       ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT ioOnPaint        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT ioOnSize         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
@@ -140,60 +140,9 @@ IoWndDestroy( void )
 void
 IoWndPrint( TCHAR* strPtr, int length )
 {
-    DWORD i,j;
+    IoWndBuffSet( strPtr, length );
 
-    if( ioWndData.bufferPtr != NULL )
-    {
-        free( ioWndData.bufferPtr );
-        ioWndData.bufferPtr = NULL;
-        ioWndData.bufferSize = 0;
-        ioWndData.lineMax   = 0;
-        ioWndData.columnMax = 0;
-    }
-    else
-    {
-        /* do nothing */
-    }
-
-    if( (strPtr != NULL) && (length > 0) )
-    {
-        ioWndData.bufferPtr = (TCHAR *) malloc( (length * sizeof(TCHAR)) );
-
-        if( ioWndData.bufferPtr != NULL )
-        {
-            ioWndData.bufferSize = length;
-
-            for( i=0,j=0; i<length; i++ )
-            {
-                *(ioWndData.bufferPtr+i) = *(strPtr+i);
-                if( *(strPtr+i) == '\n' )
-                {
-                    (ioWndData.lineMax)++; /* 改行の数をカウント */
-                    ioWndData.columnMax = max( ioWndData.columnMax, j );
-                    j=0;
-                }
-                else
-                {
-                    j++;
-                }
-            }
-
-            if( ioWndData.lineMax==0 )
-            { /* 改行が無かった場合 */
-                ioWndData.lineMax   = 1;
-                ioWndData.columnMax = ioWndData.bufferSize;
-            }
-        }
-        else
-        {
-            /* error */
-        }
-    }
-    else
-    {
-        /* error */
-    }
-    StsBarSetText( STS_BAR_0,"%d bytes,%d lines",ioWndData.bufferSize,ioWndData.lineMax);
+    StsBarSetText( STS_BAR_0,"%d bytes,%d lines",IoWndGetBuffSize(),IoWndGetLineMaxSize() );
 
     ioWndData.xCaret = 0;
     ioWndData.yCaret = 0;
@@ -264,26 +213,6 @@ ioWndConvertMSGtoINDEX( UINT message )
 }
 
 /********************************************************************************
- * 内容  : 表示バッファに出力する
- * 引数  : int   x 表示バッファの出力位置(X)
- * 引数  : int   y 表示バッファの出力位置(Y)
- * 引数  : TCHAR c 出力する文字列
- * 戻り値: なし
- ***************************************/
-static void
-ioWndBufferOut( int x, int y, TCHAR c )
-{
-    if( ioWndData.bufferPtr != NULL )
-    {
-        *(ioWndData.bufferPtr + y * ioWndData.cxBuffer + x) = c;
-    }
-    else
-    {
-        /* do nothing */
-    }
-}
-
-/********************************************************************************
  * 内容  : WM_CREATE の処理
  * 引数  : HWND hwnd
  * 引数  : UINT message
@@ -300,8 +229,7 @@ ioOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     int iDelta;          /* for MouseWheel */
     ULONG ulScrollLines; /* for MouseWheel */
 
-    ioWndData.bufferPtr  = NULL;
-    ioWndData.bufferSize = 0;
+    IoWndBuffInit();
     ioWndData.dwCharSet = DEFAULT_CHARSET;
 
     hdc = GetDC( hwnd );
@@ -351,6 +279,8 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     int         xPaintBeg,xPaintEnd;
     TCHAR       szBuffer[10] ;
     TCHAR       *lineEndPtr;
+    TCHAR* bufferPtr  = IoWndGetBuffPtr();
+    DWORD  bufferSize = IoWndGetBuffSize();;
 
     hdc = BeginPaint( hwnd, &ps );
     SelectObject( hdc, CreateFont(0, 0, 0, 0, 0, 0, 0, 0, ioWndData.dwCharSet, 0, 0, 0, FIXED_PITCH, NULL) );
@@ -362,27 +292,27 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     GetScrollInfo(hwnd, SB_HORZ, &si);   /* 横スクロールバーの位置を取得 */
     iHorzPos = si.nPos;
 
-    if( ioWndData.bufferSize )
+    if( bufferSize )
     { /* データがあれば */
         iPaintBeg = max(0, iVertPos + ps.rcPaint.top / ioWndData.cyChar);
-        iPaintEnd = min(ioWndData.lineMax,iVertPos + ps.rcPaint.bottom / ioWndData.cyChar);
+        iPaintEnd = min(IoWndGetLineMaxSize(),iVertPos + ps.rcPaint.bottom / ioWndData.cyChar);
 
         for( y=0,columnSum=0; y<=iPaintEnd; y++ )
         { /* バッファの最初から、再描画領域の最後まで1行ずつ処理 */
             /* 1行の文字数取得 */
-            lineEndPtr = strchr( ioWndData.bufferPtr+columnSum, '\n' );
+            lineEndPtr = strchr( bufferPtr+columnSum, '\n' );
             if( lineEndPtr != NULL )
             { /* 改行コード有 */
-                columnSize = lineEndPtr - (ioWndData.bufferPtr+columnSum);
+                columnSize = lineEndPtr - (bufferPtr+columnSum);
             }
             else
             { /* 改行コード無 */
-                columnSize = ioWndData.bufferSize - columnSum;
+                columnSize = bufferSize - columnSum;
             }
 
             if( iPaintBeg <= y )
             { /* 再描画領域 */
-                TextOut( hdc, 0, (y-iVertPos) * ioWndData.cyChar, ioWndData.bufferPtr + columnSum + iHorzPos, min((columnSize - iHorzPos),ioWndData.cxBuffer) );
+                TextOut( hdc, 0, (y-iVertPos) * ioWndData.cyChar, bufferPtr + columnSum + iHorzPos, min((columnSize - iHorzPos),ioWndData.cxBuffer) );
             }
             else
             { /* 再描画領域でない */
@@ -466,14 +396,7 @@ ioOnClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 static LRESULT
 ioOnDestroy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
-    if( ioWndData.bufferPtr != NULL )
-    {
-        free( ioWndData.bufferPtr );
-    }
-    else
-    {
-        /* do nothing */
-    }
+    IoWndBuffInit();
 
     PostQuitMessage(0); /* WM_QUITメッセージをポストする */
     return 0;
@@ -810,7 +733,7 @@ setAllScrollInfo( void )
     si.cbSize = sizeof(si);
     si.fMask  = SIF_RANGE | SIF_PAGE | SIF_DISABLENOSCROLL;
     si.nMin   = 0;                                                                /* 範囲の最小値 */
-    si.nMax   = max(ioWndData.lineMax,(ioWndData.cyClient / ioWndData.cyChar))-1; /* 範囲の最大値 */
+    si.nMax   = max(IoWndGetLineMaxSize(),(ioWndData.cyClient / ioWndData.cyChar))-1; /* 範囲の最大値 */
     si.nPage  = (ioWndData.cyClient / ioWndData.cyChar); /* ページサイズ */
     SetScrollInfo( hWndIo, SB_VERT, &si, TRUE );
 
@@ -818,7 +741,7 @@ setAllScrollInfo( void )
     si.cbSize = sizeof(si);
     si.fMask  = SIF_RANGE | SIF_PAGE | SIF_DISABLENOSCROLL;
     si.nMin   = 0;
-    si.nMax   = max( ioWndData.columnMax,(ioWndData.cxClient/ioWndData.cxChar))-1;
+    si.nMax   = max( IoWndGetColumnMaxSize(),(ioWndData.cxClient/ioWndData.cxChar))-1;
     si.nPage  = (ioWndData.cxClient/ioWndData.cxChar);
     SetScrollInfo( hWndIo, SB_HORZ, &si, TRUE );
 }
