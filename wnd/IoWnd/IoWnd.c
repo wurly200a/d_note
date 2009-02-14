@@ -114,6 +114,8 @@ BOOL
 IoWndSize( int x, int y, int cxClient, int cyClient )
 {
     MoveWindow( hWndIo,x,y,cxClient,cyClient, TRUE);
+
+    return TRUE;
 }
 
 /********************************************************************************
@@ -140,7 +142,7 @@ IoWndDestroy( void )
 void
 IoWndPrint( TCHAR* strPtr, int length )
 {
-    IoWndBuffSet( strPtr, length );
+    IoWndBuffSetLinkedList( strPtr, length );
 
     StsBarSetText( STS_BAR_0,"%d bytes,%d lines",IoWndGetBuffSize(),IoWndGetLineMaxSize() );
 
@@ -271,16 +273,12 @@ ioOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 static LRESULT
 ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
-    PAINTSTRUCT  ps;
-    HDC          hdc;
+    PAINTSTRUCT ps;
+    HDC         hdc;
     SCROLLINFO  si;
     int         iHorzPos,iVertPos;
-    int         iPaintBeg,iPaintEnd,x,y,columnSize,columnSum;
-    int         xPaintBeg,xPaintEnd;
-    TCHAR       szBuffer[10] ;
-    TCHAR       *lineEndPtr;
-    TCHAR* bufferPtr  = IoWndGetBuffPtr();
-    DWORD  bufferSize = IoWndGetBuffSize();;
+    int         iPaintBeg,iPaintEnd,y;
+    S_IOWND_BUFF_DATA *lineBuffPtr;
 
     hdc = BeginPaint( hwnd, &ps );
     SelectObject( hdc, CreateFont(0, 0, 0, 0, 0, 0, 0, 0, ioWndData.dwCharSet, 0, 0, 0, FIXED_PITCH, NULL) );
@@ -292,38 +290,27 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     GetScrollInfo(hwnd, SB_HORZ, &si);   /* 横スクロールバーの位置を取得 */
     iHorzPos = si.nPos;
 
-    if( bufferSize )
-    { /* データがあれば */
-        iPaintBeg = max(0, iVertPos + ps.rcPaint.top / ioWndData.cyChar);
-        iPaintEnd = min(IoWndGetLineMaxSize(),iVertPos + ps.rcPaint.bottom / ioWndData.cyChar);
+    iPaintBeg = max(0, iVertPos + ps.rcPaint.top / ioWndData.cyChar);
+    iPaintEnd = min(IoWndGetLineMaxSize(),iVertPos + ps.rcPaint.bottom / ioWndData.cyChar);
 
-        for( y=0,columnSum=0; y<=iPaintEnd; y++ )
-        { /* バッファの最初から、再描画領域の最後まで1行ずつ処理 */
-            /* 1行の文字数取得 */
-            lineEndPtr = strchr( bufferPtr+columnSum, '\n' );
-            if( lineEndPtr != NULL )
-            { /* 改行コード有 */
-                columnSize = lineEndPtr - (bufferPtr+columnSum);
+    for( y=iPaintBeg; y<=iPaintEnd; y++ )
+    { /* 再描画領域のみ1行ずつ処理 */
+        lineBuffPtr = IoWndBuffGetLinePtr(y); /* 対象行のデータ取得 */
+        if( lineBuffPtr != NULL )
+        {
+            if( iHorzPos < lineBuffPtr->dataSize )
+            {
+                TextOut( hdc, 0, (y-iVertPos) * ioWndData.cyChar, lineBuffPtr->data + iHorzPos, min(((lineBuffPtr->dataSize)-iHorzPos),ioWndData.cxBuffer) );
             }
             else
-            { /* 改行コード無 */
-                columnSize = bufferSize - columnSum;
-            }
-
-            if( iPaintBeg <= y )
-            { /* 再描画領域 */
-                TextOut( hdc, 0, (y-iVertPos) * ioWndData.cyChar, bufferPtr + columnSum + iHorzPos, min((columnSize - iHorzPos),ioWndData.cxBuffer) );
-            }
-            else
-            { /* 再描画領域でない */
+            { /* 横スクロール位置が文字サイズを超えている */
                 nop();
             }
-            columnSum += columnSize+1; /* 文字数を加算 */
         }
-    }
-    else
-    {
-        nop();
+        else
+        {
+            break;
+        }
     }
 
     DeleteObject( SelectObject(hdc, GetStockObject(SYSTEM_FONT)) );
@@ -346,8 +333,6 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 static LRESULT
 ioOnSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
-    int x,y;
-
     ioWndData.cxClient = LOWORD( lParam );
     ioWndData.cyClient = HIWORD( lParam );
 
