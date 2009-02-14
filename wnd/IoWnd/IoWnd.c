@@ -31,6 +31,7 @@ static LRESULT ioOnMouseActivate( HWND hwnd, UINT message, WPARAM wParam, LPARAM
 static LRESULT ioOnMouseWheel   ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT ioOnDefault      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
+static void getAllScrollInfo( void );
 static void setAllScrollInfo( void );
 static void printCaretPos( void );
 
@@ -275,7 +276,6 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     PAINTSTRUCT ps;
     HDC         hdc;
-    SCROLLINFO  si;
     int         iHorzPos,iVertPos;
     int         iPaintBeg,iPaintEnd,y;
     S_IOWND_BUFF_DATA *lineBuffPtr;
@@ -283,12 +283,9 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     hdc = BeginPaint( hwnd, &ps );
     SelectObject( hdc, CreateFont(0, 0, 0, 0, 0, 0, 0, 0, ioWndData.dwCharSet, 0, 0, 0, FIXED_PITCH, NULL) );
 
-    si.cbSize = sizeof(si);
-    si.fMask  = SIF_POS;
-    GetScrollInfo( hwnd, SB_VERT, &si ); /* 縦スクロールバーの位置を取得 */
-    iVertPos = si.nPos;
-    GetScrollInfo(hwnd, SB_HORZ, &si);   /* 横スクロールバーの位置を取得 */
-    iHorzPos = si.nPos;
+    getAllScrollInfo();
+    iHorzPos = ioWndData.iHorzPos;
+    iVertPos = ioWndData.iVertPos;
 
     iPaintBeg = max(0, iVertPos + ps.rcPaint.top / ioWndData.cyChar);
     iPaintEnd = min(IoWndGetLineMaxSize(),iVertPos + ps.rcPaint.bottom / ioWndData.cyChar);
@@ -315,9 +312,6 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     DeleteObject( SelectObject(hdc, GetStockObject(SYSTEM_FONT)) );
     EndPaint( hwnd, &ps );
-
-    ioWndData.iVertPos = iVertPos;
-    ioWndData.iHorzPos = iHorzPos;
 
     return 0;
 }
@@ -610,7 +604,7 @@ ioOnSetFocus( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
-    CreateCaret( hwnd,NULL,ioWndData.cxChar,ioWndData.cyChar );
+    CreateCaret( hwnd,NULL,1,ioWndData.cyChar ); /* 幅=1,高さ=文字サイズ */
     SetCaretPos( ioWndData.xCaret * ioWndData.cxChar, ioWndData.yCaret * ioWndData.cyChar);
     ShowCaret( hwnd );
 
@@ -729,6 +723,25 @@ setAllScrollInfo( void )
     si.nMax   = max( IoWndGetColumnMaxSize(),(ioWndData.cxClient/ioWndData.cxChar))-1;
     si.nPage  = (ioWndData.cxClient/ioWndData.cxChar);
     SetScrollInfo( hWndIo, SB_HORZ, &si, TRUE );
+}
+
+/********************************************************************************
+ * 内容  : スクロール情報の取得
+ * 引数  : なし
+ * 戻り値: なし
+ ***************************************/
+static void
+getAllScrollInfo( void )
+{
+    SCROLLINFO si;
+
+    si.cbSize = sizeof(si);
+    si.fMask  = SIF_POS;
+    GetScrollInfo( hWndIo, SB_VERT, &si ); /* 縦スクロールバーの位置を取得 */
+    ioWndData.iVertPos = si.nPos;
+
+    GetScrollInfo( hWndIo, SB_HORZ, &si);   /* 横スクロールバーの位置を取得 */
+    ioWndData.iHorzPos = si.nPos;
 }
 
 /********************************************************************************
