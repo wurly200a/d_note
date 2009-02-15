@@ -88,7 +88,7 @@ IoWndCreate( HWND hWnd )
         return (HWND)NULL;
     }
 
-    hWndIo = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW | WS_EX_ACCEPTFILES,
+    hWndIo = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW /* | WS_EX_ACCEPTFILES*/,
                                  "ioWndClass", "IO Window",
                                  WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL,
                                  CW_USEDEFAULT, CW_USEDEFAULT,

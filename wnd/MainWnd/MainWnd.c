@@ -31,6 +31,7 @@ static LRESULT onVscroll      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM l
 static LRESULT onMouseWheel   ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onSetFocus     ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onKillFocus    ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onDropFiles    ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onApp          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onDefault      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
@@ -57,6 +58,7 @@ static LRESULT (*wndProcTbl[MAINWND_MAX])( HWND hwnd, UINT message, WPARAM wPara
     onMouseWheel   , /* WM_MOUSEWHEEL       */
     onSetFocus     , /* WM_SETFOCUS         */
     onKillFocus    , /* WM_KILLFOCUS        */
+    onDropFiles    , /* WM_DROPFILES        */
     onApp          , /* WM_APP              */
     onDefault        /* default             */
 };
@@ -236,6 +238,7 @@ convertMSGtoINDEX( UINT message )
     case WM_MOUSEWHEEL   :rtn = MAINWND_ON_MOUSEWHEEL   ;break;
     case WM_SETFOCUS     :rtn = MAINWND_ON_SETFOCUS     ;break;
     case WM_KILLFOCUS    :rtn = MAINWND_ON_KILLFOCUS    ;break;
+    case WM_DROPFILES    :rtn = MAINWND_ON_DROPFILES    ;break;
     default              :rtn = MAINWND_ON_DEFAULT      ;break;
     }
     /* *INDENT-ON* */
@@ -577,6 +580,32 @@ onKillFocus( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     LRESULT rtn = 0;
 
     SendMessage(mainWndData.hWndIo,message,wParam,lParam);
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : WM_DROPFILES を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+onDropFiles( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+    static TCHAR szFileName[1024];
+    DWORD dwSize;
+    PBYTE dataPtr;
+
+    DragQueryFile( wParam, 0, szFileName, sizeof(szFileName) );
+
+    FileSetName( FILE_ID_BIN, szFileName, FALSE );
+    dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
+    IoWndPrint( dataPtr,dwSize );
+    doCaption( hwnd, FileGetTitleName(FILE_ID_BIN) );
 
     return rtn;
 }

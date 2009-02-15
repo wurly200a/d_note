@@ -238,6 +238,8 @@ FileSetName( FILE_ID id, PTSTR ptstrFileName, BOOL bCat )
         {
             lstrcpy( (PTSTR)fileList[id].pDirPath , (PTSTR) fileList[id].pFileName);
             *( (strrchr(fileList[id].pDirPath,'\\')) + 1 ) = '\0';
+
+            lstrcpy( (PTSTR)fileList[id].pTitleName , (PTSTR)(strrchr(fileList[id].pFileName,'\\'))+1 );
         }
         else
         {

@@ -16,6 +16,7 @@ typedef enum
     MAINWND_ON_MOUSEWHEEL, /* WM_MOUSEWHEEL    */
     MAINWND_ON_SETFOCUS  , /* WM_SETFOCUS      */
     MAINWND_ON_KILLFOCUS , /* WM_KILLFOCUS     */
+    MAINWND_ON_DROPFILES , /* WM_DROPFILES     */
     MAINWND_ON_APP       , /* WM_APP           */
     MAINWND_ON_DEFAULT   , /* default          */
     MAINWND_MAX
