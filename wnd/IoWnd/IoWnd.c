@@ -29,6 +29,13 @@ static LRESULT ioOnSetFocus     ( HWND hwnd, UINT message, WPARAM wParam, LPARAM
 static LRESULT ioOnKillFocus    ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT ioOnMouseActivate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT ioOnMouseWheel   ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnMouseMove    ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnLbuttonDown  ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnMbuttonDown  ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnRbuttonDown  ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnLbuttonUp    ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnMbuttonUp    ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnRbuttonUp    ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT ioOnDefault      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
 static void getAllScrollInfo( void );
@@ -57,6 +64,13 @@ static LRESULT (*ioWndProcTbl[IOWND_MAX])( HWND hwnd, UINT message, WPARAM wPara
     ioOnKillFocus    , /* WM_KILLFOCUS     */
     ioOnMouseActivate, /* WM_MOUSEACTIVATE */
     ioOnMouseWheel   , /* WM_MOUSEWHEEL    */
+    ioOnMouseMove    , /* WM_MOUSEMOVE     */
+    ioOnLbuttonDown  , /* WM_LBUTTONDOWN   */
+    ioOnMbuttonDown  , /* WM_MBUTTONDOWN   */
+    ioOnRbuttonDown  , /* WM_RBUTTONDOWN   */
+    ioOnLbuttonUp    , /* WM_LBUTTONUP     */
+    ioOnMbuttonUp    , /* WM_MBUTTONUP     */
+    ioOnRbuttonUp    , /* WM_RBUTTONUP     */
     ioOnDefault        /* default          */
 };
 /* *INDENT-ON* */
@@ -77,7 +91,7 @@ IoWndCreate( HWND hWnd )
     wc.lpfnWndProc      = (WNDPROC) IoWndProc;
     wc.hInstance        = hInst;
     wc.hIcon            = LoadIcon( hInst, pAppName );
-    wc.hCursor          = LoadCursor(NULL, IDC_ARROW);
+    wc.hCursor          = LoadCursor(NULL, IDC_IBEAM);
     wc.hbrBackground    = (HBRUSH) GetStockObject(WHITE_BRUSH);
     wc.lpszClassName    = "ioWndClass";
     wc.lpszMenuName     = NULL;
@@ -208,6 +222,13 @@ ioWndConvertMSGtoINDEX( UINT message )
     case WM_KILLFOCUS    :rtn = IOWND_ON_KILLFOCUS    ;break;
     case WM_MOUSEACTIVATE:rtn = IOWND_ON_MOUSEACTIVATE;break;
     case WM_MOUSEWHEEL   :rtn = IOWND_ON_MOUSEWHEEL   ;break;
+    case WM_MOUSEMOVE    :rtn = IOWND_ON_MOUSEMOVE    ;break;
+    case WM_LBUTTONDOWN  :rtn = IOWND_ON_LBUTTONDOWN  ;break;
+    case WM_MBUTTONDOWN  :rtn = IOWND_ON_MBUTTONDOWN  ;break;
+    case WM_RBUTTONDOWN  :rtn = IOWND_ON_RBUTTONDOWN  ;break;
+    case WM_LBUTTONUP    :rtn = IOWND_ON_LBUTTONUP    ;break;
+    case WM_MBUTTONUP    :rtn = IOWND_ON_MBUTTONUP    ;break;
+    case WM_RBUTTONUP    :rtn = IOWND_ON_RBUTTONUP    ;break;
     default              :rtn = IOWND_ON_DEFAULT      ;break;
     }
     /* *INDENT-ON* */
@@ -425,6 +446,22 @@ static LRESULT
 ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
+    DWORD buffLinePos,buffColumnPos,columnMax;
+    S_IOWND_BUFF_DATA *lineBuffPtr;
+
+    getAllScrollInfo();
+
+    buffLinePos = ioWndData.iVertPos + ioWndData.yCaret;
+    lineBuffPtr = IoWndBuffGetLinePtr(buffLinePos);
+
+    if( lineBuffPtr != NULL )
+    {
+        columnMax = lineBuffPtr->dataSize - 2;
+    }
+    else
+    {
+        columnMax = 0;
+    }
 
     switch(wParam)
     {
@@ -432,7 +469,15 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         ioWndData.xCaret = max( ioWndData.xCaret - 1, 0 );
         break;
     case VK_RIGHT:
-        ioWndData.xCaret = min( ioWndData.xCaret + 1, ioWndData.cxBuffer - 1 );
+        if( (ioWndData.xCaret + 1) > columnMax )
+        {
+            ioWndData.yCaret = min( ioWndData.yCaret + 1, ioWndData.cyBuffer - 1 );
+            ioWndData.xCaret = 0;
+        }
+        else
+        {
+            ioWndData.xCaret = min( ioWndData.xCaret + 1, ioWndData.cxBuffer - 1 );
+        }
         break;
     case VK_UP:
         ioWndData.yCaret = max( ioWndData.yCaret - 1, 0 );
@@ -680,6 +725,118 @@ ioOnMouseWheel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     {
         /* do nothing */
     }
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : WM_MOUSEMOVE を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+ioOnMouseMove( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : WM_LBUTTONDOWN を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+ioOnLbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : WM_MBUTTONDOWN を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+ioOnMbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : WM_RBUTTONDOWN を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+ioOnRbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : WM_LBUTTONUP を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+ioOnLbuttonUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : WM_MBUTTONUP を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+ioOnMbuttonUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : WM_RBUTTONUP を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+ioOnRbuttonUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
 
     return rtn;
 }
