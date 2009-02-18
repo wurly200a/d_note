@@ -38,6 +38,7 @@ static LRESULT ioOnMbuttonUp    ( HWND hwnd, UINT message, WPARAM wParam, LPARAM
 static LRESULT ioOnRbuttonUp    ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT ioOnDefault      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
+static void updateTextMetrics( HWND hwnd );
 static void getAllScrollInfo( void );
 static void setAllScrollInfo( void );
 static void printCaretPos( void );
@@ -78,15 +79,18 @@ static LRESULT (*ioWndProcTbl[IOWND_MAX])( HWND hwnd, UINT message, WPARAM wPara
 
 /********************************************************************************
  * 内容  : IOウィンドウクラスの登録、ウィンドウの生成
- * 引数  : int nCmdShow
+ * 引数  : HWND hWnd
+ * 引数  : LOGFONT *logFontPtr
  * 戻り値: HWND
  ***************************************/
 HWND
-IoWndCreate( HWND hWnd )
+IoWndCreate( HWND hWnd, LOGFONT *logFontPtr )
 {
     WNDCLASS wc = {0};
     HINSTANCE hInst = GetHinst();
     PTSTR pAppName = GetAppName();
+
+    ioWndData.logFontPtr = logFontPtr;
 
     wc.lpfnWndProc      = (WNDPROC) IoWndProc;
     wc.hInstance        = hInst;
@@ -115,6 +119,20 @@ IoWndCreate( HWND hWnd )
     }
 
     return hWndIo;
+}
+
+/********************************************************************************
+ * 内容  : IOウィンドウのフォント変更
+ * 引数  : LOGFONT *logFontPtr
+ * 戻り値: なし
+ ***************************************/
+void IoWndChangeFont( LOGFONT *logFontPtr )
+{
+    ioWndData.logFontPtr = logFontPtr;
+
+    updateTextMetrics( hWndIo );
+    SendMessage(hWndIo,WM_SIZE,0,MAKELONG(ioWndData.cxClient,ioWndData.cyClient));
+    InvalidateRect( hWndIo, NULL, TRUE );
 }
 
 /********************************************************************************
@@ -248,26 +266,12 @@ static LRESULT
 ioOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
-    HDC        hdc;
-    TEXTMETRIC tm;
     int iDelta;          /* for MouseWheel */
     ULONG ulScrollLines; /* for MouseWheel */
 
+    updateTextMetrics( hwnd );
+
     IoWndBuffInit();
-    ioWndData.dwCharSet = DEFAULT_CHARSET;
-
-    hdc = GetDC( hwnd );
-    SelectObject( hdc, CreateFont(0, 0, 0, 0, 0, 0, 0, 0, ioWndData.dwCharSet, 0, 0, 0, FIXED_PITCH, NULL) );
-
-    GetTextMetrics( hdc, &tm );
-    ioWndData.cxChar = tm.tmAveCharWidth;
-    ioWndData.cxCaps = (tm.tmPitchAndFamily & 1 ? 3 : 2) * ioWndData.cxChar / 2;
-    ioWndData.cyChar = tm.tmHeight + tm.tmExternalLeading;
-
-    DeleteObject( SelectObject( hdc, GetStockObject(SYSTEM_FONT)) );
-    ReleaseDC( hwnd, hdc );
-
-    ioWndData.iMaxWidth = 40 * ioWndData.cxChar * 22 * ioWndData.cxCaps;
 
     /* for MouseWheel */
     SystemParametersInfo(SPI_GETWHEELSCROLLLINES,0, &ulScrollLines, 0);
@@ -300,9 +304,10 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     int         iHorzPos,iVertPos;
     int         iPaintBeg,iPaintEnd,y;
     S_IOWND_BUFF_DATA *lineBuffPtr;
+    RECT        rt;
 
     hdc = BeginPaint( hwnd, &ps );
-    SelectObject( hdc, CreateFont(0, 0, 0, 0, 0, 0, 0, 0, ioWndData.dwCharSet, 0, 0, 0, FIXED_PITCH, NULL) );
+    SelectObject( hdc, CreateFontIndirect(ioWndData.logFontPtr) );
 
     getAllScrollInfo();
     iHorzPos = ioWndData.iHorzPos;
@@ -318,7 +323,15 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         {
             if( iHorzPos < lineBuffPtr->dataSize )
             {
+#if 1
+                rt.top    = (y-iVertPos) * ioWndData.cyChar;
+                rt.bottom = (y-iVertPos) * ioWndData.cyChar + ioWndData.cyChar;
+                rt.left   = 0;
+                rt.right  = 0 + (ioWndData.cxChar*(min(((lineBuffPtr->dataSize)-iHorzPos),ioWndData.cxBuffer)));
+                DrawText( hdc, lineBuffPtr->data + iHorzPos, min(((lineBuffPtr->dataSize)-iHorzPos),ioWndData.cxBuffer), &rt, DT_SINGLELINE );
+#else
                 TextOut( hdc, 0, (y-iVertPos) * ioWndData.cyChar, lineBuffPtr->data + iHorzPos, min(((lineBuffPtr->dataSize)-iHorzPos),ioWndData.cxBuffer) );
+#endif
             }
             else
             { /* 横スクロール位置が文字サイズを超えている */
@@ -853,6 +866,29 @@ static LRESULT
 ioOnDefault( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     return DefWindowProc( hwnd, message, wParam, lParam );
+}
+
+/********************************************************************************
+ * 内容  : テキストメトリクスの更新
+ * 引数  : HWND hwnd
+ * 戻り値: なし
+ ***************************************/
+static void
+updateTextMetrics( HWND hwnd )
+{
+    HDC        hdc;
+    TEXTMETRIC tm;
+
+    hdc = GetDC( hwnd );
+    SelectObject( hdc, CreateFontIndirect(ioWndData.logFontPtr) );
+
+    GetTextMetrics( hdc, &tm );
+    ioWndData.cxChar = tm.tmAveCharWidth;
+    ioWndData.cxCaps = (tm.tmPitchAndFamily & 1 ? 3 : 2) * ioWndData.cxChar / 2;
+    ioWndData.cyChar = tm.tmHeight + tm.tmExternalLeading;
+
+    DeleteObject( SelectObject( hdc, GetStockObject(SYSTEM_FONT) ) );
+    ReleaseDC( hwnd, hdc );
 }
 
 /********************************************************************************

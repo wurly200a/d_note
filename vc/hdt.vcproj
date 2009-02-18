@@ -114,6 +114,9 @@
 			RelativePath="..\sys\File\File.c">
 		</File>
 		<File
+			RelativePath="..\sys\Font\Font.c">
+		</File>
+		<File
 			RelativePath="..\wnd\IoWnd\IoWnd.c">
 		</File>
 		<File

@@ -227,21 +227,13 @@ getLineLength( TCHAR *dataPtr, DWORD maxLength )
             (*(dataPtr+i-1) == '\r') &&
             (*(dataPtr+i)   == '\n') )
         {
+            i++;
             break;
         }
         else
         {
             nop();
         }
-    }
-
-    if( i>0 )
-    {
-        i++;
-    }
-    else
-    {
-        nop();
     }
 
     return i;

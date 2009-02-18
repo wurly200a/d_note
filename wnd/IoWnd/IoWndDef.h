@@ -40,11 +40,11 @@ typedef struct
     int    cyBuffer;  /* 表示可能な文字数(Y)       */
     DWORD  dwCharSet;
     int    cxCaps;    /*  */
-    int    iMaxWidth; /* 最大文字数(X)             */
     int    iAccumDelta;
     int    iDeltaPerLine;
     int    iHorzPos;     /* スクロールバーの横位置  */
     int    iVertPos;     /* スクロールバーの縦位置  */
+    LOGFONT *logFontPtr;
 } S_IOWND_DATA;
 
 #define IOWND_DEF_H

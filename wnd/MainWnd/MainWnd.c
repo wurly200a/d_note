@@ -10,6 +10,7 @@
 #include "SomeCtrl.h"
 #include "File.h"
 #include "StsBar.h"
+#include "Font.h"
 
 /* 外部変数定義 */
 
@@ -149,7 +150,6 @@ MainWndCreate( int nCmdShow )
     AppendMenu( mainWndData.hMenu, MF_POPUP, (UINT_PTR)hMenuPopup, TEXT("書式(&O)") );
 
     EnableMenuItem( mainWndData.hMenu, IDM_FORMAT_WRAP , MF_GRAYED );
-    EnableMenuItem( mainWndData.hMenu, IDM_FORMAT_FONT , MF_GRAYED );
 
     hMenuPopup = CreateMenu();
     AppendMenu( hMenuPopup, MF_STRING, IDM_VIEW_STS_BAR, TEXT("ステータス バー(&S)") );
@@ -273,9 +273,11 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     DeleteObject(hFont);
     ReleaseDC( hwnd,hdc );
 
-    mainWndData.hWndIo = IoWndCreate( hwnd );
 
     FileInitialize( hwnd ); /* ファイル初期化     */
+    FontInit();
+
+    mainWndData.hWndIo = IoWndCreate( hwnd, FontGetLogFont(FONT_ID_IO) );
 #if 0
     SomeCtrlCreate( hwnd ); /* コントロールを生成 */
 #endif
@@ -409,6 +411,18 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         }
         break;
 #endif
+
+    case IDM_FORMAT_FONT:
+        if( FontChooseFont( hwnd, FONT_ID_IO ) )
+        {
+            IoWndChangeFont( FontGetLogFont(FONT_ID_IO) );
+        }
+        else
+        {
+            nop();
+        }
+        break;
+
     case IDM_VIEW_STS_BAR:
 #if 1
         iMenuFlags = GetMenuState( mainWndData.hMenu, IDM_VIEW_STS_BAR, MF_BYCOMMAND );
