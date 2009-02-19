@@ -25,8 +25,40 @@
 
 #define IDM_VIEW_STS_BAR                40041
 
-#define IDM_HELP_HELP                   40051
-#define IDM_HELP_ABOUT                  40052
+#define IDM_EXTEND_NEWLINE_CRLF         40051
+#define IDM_EXTEND_NEWLINE_LF           40052
+#define IDM_EXTEND_NEWLINE_CR           40053
+
+#define IDM_HELP_HELP                   40061
+#define IDM_HELP_ABOUT                  40062
+
+/********************************************************************************
+ * 内容  : メニューの生成
+ * 引数  : なし
+ * 戻り値: HMENU
+ ***************************************/
+HMENU MenuCreate( void );
+
+/********************************************************************************
+ * 内容  : 指定の項目がチェックされているか問い合わせ
+ * 引数  : UINT itemID
+ * 戻り値: BOOL
+ ***************************************/
+BOOL MenuInqItemChecked( UINT itemID );
+
+/********************************************************************************
+ * 内容  : 指定の項目のチェックを付ける
+ * 引数  : UINT itemID
+ * 戻り値: なし
+ ***************************************/
+void MenuCheckItem( UINT itemID );
+
+/********************************************************************************
+ * 内容  : 指定の項目のチェックを外す
+ * 引数  : UINT itemID
+ * 戻り値: なし
+ ***************************************/
+void MenuUnCheckItem( UINT itemID );
 
 #define MAINWND_MENU_H
 #endif /* MAINWND_MENU_H */

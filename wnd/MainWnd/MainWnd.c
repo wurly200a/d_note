@@ -76,7 +76,6 @@ MainWndCreate( int nCmdShow )
     WNDCLASS wc = {0};
     HINSTANCE hInst = GetHinst();
     PTSTR pAppName = GetAppName();
-    HMENU hMenuPopup;
 
     /* メインウィンドウクラス */
     wc.style            = CS_HREDRAW | CS_VREDRAW;
@@ -96,74 +95,6 @@ MainWndCreate( int nCmdShow )
         return FALSE;
     }
 
-    mainWndData.hMenu = CreateMenu();
-
-    hMenuPopup = CreateMenu();
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_NEW       , TEXT("新規(&N)") );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_OPEN      , TEXT("開く(&O)...") );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_SAVE      , TEXT("上書き保存(&S)") );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_SAVE_AS   , TEXT("名前を付けて保存(&A)...") );
-    AppendMenu( hMenuPopup, MF_SEPARATOR, 0                  , NULL );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_PAGE      , TEXT("ページ設定(&U)...") );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_PRINT     , TEXT("印刷(&P)...") );
-    AppendMenu( hMenuPopup, MF_SEPARATOR, 0                  , NULL );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_EXIT      , TEXT("終了(&X)") );
-    AppendMenu( mainWndData.hMenu, MF_POPUP, (UINT_PTR)hMenuPopup, TEXT("ファイル(&F)") );
-
-    EnableMenuItem( mainWndData.hMenu, IDM_FILE_SAVE      , MF_GRAYED );
-    EnableMenuItem( mainWndData.hMenu, IDM_FILE_SAVE_AS   , MF_GRAYED );
-    EnableMenuItem( mainWndData.hMenu, IDM_FILE_PAGE      , MF_GRAYED );
-    EnableMenuItem( mainWndData.hMenu, IDM_FILE_PRINT     , MF_GRAYED );
-
-    hMenuPopup = CreateMenu();
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_UNDO       , TEXT("元に戻す(&U)") );
-    AppendMenu( hMenuPopup, MF_SEPARATOR, 0                   , NULL );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_CUT        , TEXT("切り取り(&T)") );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_COPY       , TEXT("コピー(&C)") );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_PASTE      , TEXT("貼り付け(&P)") );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_DELETE     , TEXT("削除(&L)") );
-    AppendMenu( hMenuPopup, MF_SEPARATOR, 0                   , NULL );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_FIND       , TEXT("検索(&F)...") );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_FIND_NEXT  , TEXT("次を検索(&N)") );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_REPLACE    , TEXT("置換(&R)...") );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_GOTO_LINE  , TEXT("行へ移動(&G)...") );
-    AppendMenu( hMenuPopup, MF_SEPARATOR, 0                   , NULL );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_SELECT_ALL , TEXT("全て選択(&A)") );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_DATETIME   , TEXT("日付と時刻(&D)") );
-    AppendMenu( mainWndData.hMenu, MF_POPUP, (UINT_PTR)hMenuPopup, TEXT("編集(&E)") );
-
-    EnableMenuItem( mainWndData.hMenu, IDM_EDIT_UNDO       , MF_GRAYED );
-    EnableMenuItem( mainWndData.hMenu, IDM_EDIT_CUT        , MF_GRAYED );
-    EnableMenuItem( mainWndData.hMenu, IDM_EDIT_COPY       , MF_GRAYED );
-    EnableMenuItem( mainWndData.hMenu, IDM_EDIT_PASTE      , MF_GRAYED );
-    EnableMenuItem( mainWndData.hMenu, IDM_EDIT_DELETE     , MF_GRAYED );
-    EnableMenuItem( mainWndData.hMenu, IDM_EDIT_FIND       , MF_GRAYED );
-    EnableMenuItem( mainWndData.hMenu, IDM_EDIT_FIND_NEXT  , MF_GRAYED );
-    EnableMenuItem( mainWndData.hMenu, IDM_EDIT_REPLACE    , MF_GRAYED );
-    EnableMenuItem( mainWndData.hMenu, IDM_EDIT_GOTO_LINE  , MF_GRAYED );
-    EnableMenuItem( mainWndData.hMenu, IDM_EDIT_SELECT_ALL , MF_GRAYED );
-    EnableMenuItem( mainWndData.hMenu, IDM_EDIT_DATETIME   , MF_GRAYED );
-
-    hMenuPopup = CreateMenu();
-    AppendMenu( hMenuPopup, MF_STRING, IDM_FORMAT_WRAP , TEXT("右端で折り返す(&W)") );
-    AppendMenu( hMenuPopup, MF_STRING, IDM_FORMAT_FONT , TEXT("フォント(&F)...") );
-    AppendMenu( mainWndData.hMenu, MF_POPUP, (UINT_PTR)hMenuPopup, TEXT("書式(&O)") );
-
-    EnableMenuItem( mainWndData.hMenu, IDM_FORMAT_WRAP , MF_GRAYED );
-
-    hMenuPopup = CreateMenu();
-    AppendMenu( hMenuPopup, MF_STRING, IDM_VIEW_STS_BAR, TEXT("ステータス バー(&S)") );
-    AppendMenu( mainWndData.hMenu, MF_POPUP, (UINT_PTR)hMenuPopup, TEXT("表示(&V)") );
-
-    hMenuPopup = CreateMenu();
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_HELP_HELP  , TEXT("トピックの検索(&H)") );
-    AppendMenu( hMenuPopup, MF_SEPARATOR, 0              , NULL );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_HELP_ABOUT , TEXT("バージョン情報(&A)") );
-    AppendMenu( mainWndData.hMenu, MF_POPUP, (UINT_PTR)hMenuPopup, TEXT("ヘルプ(&H)") );
-
-    EnableMenuItem( mainWndData.hMenu, IDM_HELP_HELP  , MF_GRAYED );
-    EnableMenuItem( mainWndData.hMenu, IDM_HELP_ABOUT , MF_GRAYED );
-
     /* メインウィンドウを作成 */
     InitCommonControls(); /* commctrl.hのインクルード、comctl32.libのプロジェクトへの参加が必要 */
     hwndMain = CreateWindowEx( /* WS_EX_OVERLAPPEDWINDOW | */ WS_EX_ACCEPTFILES,
@@ -171,7 +102,7 @@ MainWndCreate( int nCmdShow )
                                WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS /* | WS_VSCROLL | WS_HSCROLL*/,
                                CW_USEDEFAULT, CW_USEDEFAULT,
                                WND_WIDTH    , WND_HEIGHT,
-                               NULL, mainWndData.hMenu, hInst, NULL);
+                               NULL, MenuCreate(), hInst, NULL);
 
     if( hwndMain == NULL )
     {
@@ -282,7 +213,8 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     SomeCtrlCreate( hwnd ); /* コントロールを生成 */
 #endif
     StsBarCreate( hwnd, TRUE ); /* ステータスバー生成、デフォルト表示 */
-    CheckMenuItem( mainWndData.hMenu, IDM_VIEW_STS_BAR, MF_CHECKED );
+
+    MenuCheckItem( IDM_VIEW_STS_BAR ); /* メニュー項目にチェックを付ける */
 
     doCaption( hwnd, "" );
 
@@ -376,8 +308,6 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     LRESULT rtn = 0;
     DWORD dwSize;
     PBYTE dataPtr;
-    INT iMenuFlags;
-    MENUITEMINFO menuItemInfo;
 
     switch( LOWORD(wParam) )
     {
@@ -424,33 +354,16 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         break;
 
     case IDM_VIEW_STS_BAR:
-#if 1
-        iMenuFlags = GetMenuState( mainWndData.hMenu, IDM_VIEW_STS_BAR, MF_BYCOMMAND );
-        if( iMenuFlags & MF_CHECKED )
+        if( MenuInqItemChecked(IDM_VIEW_STS_BAR) )
         {
-            CheckMenuItem( mainWndData.hMenu, IDM_VIEW_STS_BAR, MF_UNCHECKED );
+            MenuUnCheckItem( IDM_VIEW_STS_BAR );
             StsBarShowWindow( FALSE );
         }
         else
         {
-            CheckMenuItem( mainWndData.hMenu, IDM_VIEW_STS_BAR, MF_CHECKED );
+            MenuCheckItem( IDM_VIEW_STS_BAR );
             StsBarShowWindow( TRUE );
         }
-#else
-        menuItemInfo.cbSize = sizeof(MENUITEMINFO);
-        menuItemInfo.fMask  = MIIM_STATE;
-        GetMenuItemInfo( mainWndData.hMenu, IDM_VIEW_STS_BAR, FALSE, &menuItemInfo );
-        if( menuItemInfo.fState & MFS_CHECKED )
-        {
-            CheckMenuItem( mainWndData.hMenu, IDM_VIEW_STS_BAR, MF_UNCHECKED );
-            StsBarShowWindow( FALSE );
-        }
-        else
-        {
-            CheckMenuItem( mainWndData.hMenu, IDM_VIEW_STS_BAR, MF_CHECKED );
-            StsBarShowWindow( TRUE );
-        }
-#endif
         SendMessage(hwnd,WM_SIZE,0,MAKELONG(mainWndData.cxClient,mainWndData.cyClient));
         break;
 
