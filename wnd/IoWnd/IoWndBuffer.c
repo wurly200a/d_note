@@ -10,16 +10,23 @@
 /* 内部関数定義 */
 #include "IoWndBuffer.h"
 static DWORD getLineLength( TCHAR *dataPtr, DWORD maxLength );
-static void ioWndBuffAddLinkedList( S_IOWND_BUFF_DATA *dataPtr );
-static void ioWndBuffClearLinkedList( void );
+static void addLinkedList( S_BUFF_LINE_DATA *dataPtr );
+static void clearLinkedList( void );
+static S_BUFF_LINE_DATA *getBuffLine( TCHAR *dataPtr, DWORD maxLength );
 
 /* 内部変数定義 */
-S_IOWND_BUFF_DATA *ioWndBuffListTopPtr;
+S_BUFF_LINE_DATA *ioWndBuffListTopPtr;
 
-TCHAR *ioWndBuffDataPtr;
-DWORD ioWndBuffDataSize;
-DWORD ioWndBuffLineMax;
-DWORD ioWndBuffColumnMax;
+typedef struct
+{
+    TCHAR *DataPtr   ;
+    DWORD DataSize   ;
+    DWORD LineMax    ;
+    DWORD ColumnMax  ;
+    UINT  NewLineType;
+} S_IOWND_BUFF_DATA;
+
+S_IOWND_BUFF_DATA ioWndBuffData;
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファの初期化
@@ -29,20 +36,22 @@ DWORD ioWndBuffColumnMax;
 void
 IoWndBuffInit( void )
 {
-    if( ioWndBuffDataPtr != NULL )
+    if( ioWndBuffData.DataPtr != NULL )
     {
-        free( ioWndBuffDataPtr );
-        ioWndBuffDataPtr = NULL;
+        free( ioWndBuffData.DataPtr );
+        ioWndBuffData.DataPtr = NULL;
     }
     else
     {
         nop();
     }
-    ioWndBuffClearLinkedList();
+    clearLinkedList();
 
-    ioWndBuffDataSize = 0;
-    ioWndBuffLineMax = 0;
-    ioWndBuffColumnMax = 0;
+    ioWndBuffData.DataSize = 0;
+    ioWndBuffData.LineMax = 0;
+    ioWndBuffData.ColumnMax = 0;
+
+    ioWndBuffData.NewLineType = IOWND_BUFF_NEWLINE_CRLF;
 }
 
 /********************************************************************************
@@ -54,87 +63,31 @@ IoWndBuffInit( void )
 void
 IoWndBuffSetLinkedList( TCHAR* strPtr, DWORD length )
 {
-    S_IOWND_BUFF_DATA *dataPtr;
-    DWORD lineLength,lineLengthSum = 0;
+    S_BUFF_LINE_DATA *dataPtr;
+    DWORD lineLengthSum = 0;
 
     IoWndBuffInit();
 
     if( (strPtr != NULL) && (length > 0) )
     {
-        ioWndBuffDataSize = length;
+        ioWndBuffData.DataSize = length;
 
         while( lineLengthSum < length )
         {
-            lineLength = getLineLength( strPtr+lineLengthSum, length - lineLengthSum );
-            dataPtr = (S_IOWND_BUFF_DATA *)malloc( sizeof(S_IOWND_BUFF_DATA) + (lineLength * sizeof(TCHAR)) );
+            dataPtr = (S_BUFF_LINE_DATA *)getBuffLine( strPtr+lineLengthSum, length - lineLengthSum );
 
             if( dataPtr != NULL )
             {
-                dataPtr->dataSize = lineLength;
-                memcpy( dataPtr->data, (strPtr+lineLengthSum), lineLength );
-                ioWndBuffAddLinkedList( dataPtr );
+                addLinkedList( dataPtr );
+
+                ioWndBuffData.ColumnMax = max( ioWndBuffData.ColumnMax, dataPtr->dataSize );
+                (ioWndBuffData.LineMax)++; /* 改行の数をカウント */
+                lineLengthSum += dataPtr->dataSize;
             }
             else
             {
-                nop(); /* error */
+                break;
             }
-
-            ioWndBuffColumnMax = max( ioWndBuffColumnMax, lineLength );
-            (ioWndBuffLineMax)++; /* 改行の数をカウント */
-            lineLengthSum += lineLength;
-        }
-    }
-    else
-    {
-        nop(); /* error */
-    }
-}
-
-/********************************************************************************
- * 内容  : IOウィンドウバッファへのデータ追加
- * 引数  : TCHAR* strPtr
- * 引数  : DWORD  length
- * 戻り値: なし
- ***************************************/
-void
-IoWndBuffSet( TCHAR* strPtr, DWORD length )
-{
-    DWORD i,ColumnCnt;
-
-    IoWndBuffInit();
-
-    if( (strPtr != NULL) && (length > 0) )
-    {
-        ioWndBuffDataPtr = (TCHAR *) malloc( (length * sizeof(TCHAR)) );
-
-        if( ioWndBuffDataPtr != NULL )
-        { /* メモリ獲得できた */
-            ioWndBuffDataSize = length;
-
-            for( i=0,ColumnCnt=0; i<length; i++ )
-            {
-                *(ioWndBuffDataPtr+i) = *(strPtr+i);
-                if( *(strPtr+i) == '\n' )
-                {
-                    (ioWndBuffLineMax)++; /* 改行の数をカウント */
-                    ioWndBuffColumnMax = max( ioWndBuffColumnMax, ColumnCnt );
-                    ColumnCnt=0;
-                }
-                else
-                {
-                    ColumnCnt++;
-                }
-            }
-
-            if( ioWndBuffLineMax==0 )
-            { /* 改行が無かった場合 */
-                ioWndBuffLineMax  = 1;
-                ioWndBuffColumnMax = ioWndBuffDataSize;
-            }
-        }
-        else
-        { /* メモリ獲得できなかった */
-            nop(); /* error */
         }
     }
     else
@@ -149,9 +102,9 @@ IoWndBuffSet( TCHAR* strPtr, DWORD length )
  * 戻り値: なし
  ***************************************/
 static void
-ioWndBuffClearLinkedList( void )
+clearLinkedList( void )
 {
-    S_IOWND_BUFF_DATA *nowPtr,*nextPtr;
+    S_BUFF_LINE_DATA *nowPtr,*nextPtr;
 
     if( ioWndBuffListTopPtr == NULL )
     { /* 1つもつながれてなければ */
@@ -178,13 +131,13 @@ ioWndBuffClearLinkedList( void )
 
 /********************************************************************************
  * 内容  : 連結リストにデータを追加する
- * 引数  : S_IOWND_BUFF_DATA *dataPtr
+ * 引数  : S_BUFF_LINE_DATA *dataPtr
  * 戻り値: なし
  ***************************************/
 static void
-ioWndBuffAddLinkedList( S_IOWND_BUFF_DATA *dataPtr )
+addLinkedList( S_BUFF_LINE_DATA *dataPtr )
 {
-    S_IOWND_BUFF_DATA *nowPtr,*nextPtr;
+    S_BUFF_LINE_DATA *nowPtr,*nextPtr;
 
     if( ioWndBuffListTopPtr == NULL )
     {
@@ -211,43 +164,80 @@ ioWndBuffAddLinkedList( S_IOWND_BUFF_DATA *dataPtr )
 }
 
 /********************************************************************************
- * 内容  : 改行までの長さを取得
+ * 内容  : バッファ行データを取得
  * 引数  : TCHAR *dataPtr  データの先頭
  * 引数  : DWORD maxLength 最大長さ
- * 戻り値: DWORD
+ * 戻り値: S_BUFF_LINE_DATA *
  ***************************************/
-static DWORD
-getLineLength( TCHAR *dataPtr, DWORD maxLength )
+static S_BUFF_LINE_DATA *
+getBuffLine( TCHAR *dataPtr, DWORD maxLength )
 {
+    S_BUFF_LINE_DATA *listPtr = NULL;
     DWORD i;
+    INT   newLineCodeSize = 0;
 
     for( i=0; i<maxLength; i++ )
     {
-        if( (i>0) &&
-            (*(dataPtr+i-1) == '\r') &&
-            (*(dataPtr+i)   == '\n') )
+        if( ioWndBuffData.NewLineType == IOWND_BUFF_NEWLINE_CRLF )
         {
-            i++;
-            break;
+            if( (i>0) &&
+                (*(dataPtr+i-1) == '\r') &&
+                (*(dataPtr+i)   == '\n') )
+            {
+                i++;
+                newLineCodeSize = 2;
+                break;
+            }
+            else
+            {
+                nop();
+            }
+        }
+        else if( ioWndBuffData.NewLineType == IOWND_BUFF_NEWLINE_LF )
+        {
+            if( (*(dataPtr+i) == '\n') )
+            {
+                i++;
+                newLineCodeSize = 1;
+                break;
+            }
+            else
+            {
+                nop();
+            }
+        }
+        else if( ioWndBuffData.NewLineType == IOWND_BUFF_NEWLINE_CR )
+        {
+            if( (*(dataPtr+i) == '\r') )
+            {
+                i++;
+                newLineCodeSize = 1;
+                break;
+            }
+            else
+            {
+                nop();
+            }
         }
         else
-        {
+        { /* IOWND_BUFF_NEWLINE_NONE */
             nop();
         }
     }
 
-    return i;
-}
+    listPtr = (S_BUFF_LINE_DATA *)malloc( sizeof(S_BUFF_LINE_DATA) + (i * sizeof(TCHAR)) );
+    if( listPtr != NULL )
+    {
+        listPtr->dataSize = i;
+        listPtr->newLineCodeSize = newLineCodeSize;
+        memcpy( listPtr->data, dataPtr, i );
+    }
+    else
+    {
+        nop();
+    }
 
-/********************************************************************************
- * 内容  : IOウィンドウバッファのデータポインタ取得
- * 引数  : なし
- * 戻り値: TCHAR *
- ***************************************/
-TCHAR *
-IoWndGetBuffPtr( void )
-{
-    return ioWndBuffDataPtr;
+    return listPtr;
 }
 
 /********************************************************************************
@@ -258,7 +248,7 @@ IoWndGetBuffPtr( void )
 DWORD
 IoWndGetBuffSize( void )
 {
-    return ioWndBuffDataSize;
+    return ioWndBuffData.DataSize;
 }
 
 /********************************************************************************
@@ -269,7 +259,7 @@ IoWndGetBuffSize( void )
 DWORD
 IoWndGetLineMaxSize( void )
 {
-    return ioWndBuffLineMax;
+    return ioWndBuffData.LineMax;
 }
 
 /********************************************************************************
@@ -280,18 +270,18 @@ IoWndGetLineMaxSize( void )
 DWORD
 IoWndGetColumnMaxSize( void )
 {
-    return ioWndBuffColumnMax;
+    return ioWndBuffData.ColumnMax;
 }
 
 /********************************************************************************
  * 内容  : 指定行のデータアドレス取得
  * 引数  : DWORD lineNum
- * 戻り値: S_IOWND_BUFF_DATA *
+ * 戻り値: S_BUFF_LINE_DATA *
  ***************************************/
-S_IOWND_BUFF_DATA *
+S_BUFF_LINE_DATA *
 IoWndBuffGetLinePtr( DWORD lineNum )
 {
-    S_IOWND_BUFF_DATA *nowPtr,*nextPtr,*rtnPtr = NULL;
+    S_BUFF_LINE_DATA *nowPtr,*nextPtr,*rtnPtr = NULL;
     DWORD i;
 
     if( ioWndBuffListTopPtr == NULL )
@@ -317,4 +307,15 @@ IoWndBuffGetLinePtr( DWORD lineNum )
     }
 
     return rtnPtr;
+}
+
+/********************************************************************************
+ * 内容  : IOウィンドウバッファの改行コードセット
+ * 引数  : UINT newLineType
+ * 戻り値: なし
+ ***************************************/
+void
+IoWndBuffSetNewLineCode( UINT newLineType )
+{
+    ioWndBuffData.NewLineType = newLineType;
 }

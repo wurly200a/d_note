@@ -303,7 +303,7 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     HDC         hdc;
     int         iHorzPos,iVertPos;
     int         iPaintBeg,iPaintEnd,y;
-    S_IOWND_BUFF_DATA *lineBuffPtr;
+    S_BUFF_LINE_DATA *lineBuffPtr;
     RECT        rt;
 
     hdc = BeginPaint( hwnd, &ps );
@@ -328,7 +328,7 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                 rt.bottom = (y-iVertPos) * ioWndData.cyChar + ioWndData.cyChar;
                 rt.left   = 0;
                 rt.right  = 0 + (ioWndData.cxChar*(min(((lineBuffPtr->dataSize)-iHorzPos),ioWndData.cxBuffer)));
-                DrawText( hdc, lineBuffPtr->data + iHorzPos, min(((lineBuffPtr->dataSize)-iHorzPos),ioWndData.cxBuffer), &rt, DT_SINGLELINE );
+                DrawText( hdc, lineBuffPtr->data + iHorzPos, min(((lineBuffPtr->dataSize)-(lineBuffPtr->newLineCodeSize)-iHorzPos),ioWndData.cxBuffer), &rt, DT_SINGLELINE );
 #else
                 TextOut( hdc, 0, (y-iVertPos) * ioWndData.cyChar, lineBuffPtr->data + iHorzPos, min(((lineBuffPtr->dataSize)-iHorzPos),ioWndData.cxBuffer) );
 #endif
@@ -460,7 +460,7 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
     DWORD buffLinePos,buffColumnPos,columnMax;
-    S_IOWND_BUFF_DATA *lineBuffPtr;
+    S_BUFF_LINE_DATA *lineBuffPtr;
 
     getAllScrollInfo();
 
@@ -469,7 +469,7 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     if( lineBuffPtr != NULL )
     {
-        columnMax = lineBuffPtr->dataSize - 2;
+        columnMax = lineBuffPtr->dataSize - lineBuffPtr->newLineCodeSize;
     }
     else
     {
