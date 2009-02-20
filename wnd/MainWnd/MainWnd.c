@@ -214,7 +214,8 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 #endif
     StsBarCreate( hwnd, TRUE ); /* ステータスバー生成、デフォルト表示 */
 
-    MenuCheckItem( IDM_VIEW_STS_BAR ); /* メニュー項目にチェックを付ける */
+    MenuCheckItem( IDM_VIEW_STS_BAR );
+    MenuCheckItem( IDM_EXTEND_NEWLINE_CRLF );
 
     doCaption( hwnd, "" );
 
@@ -312,14 +313,14 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     switch( LOWORD(wParam) )
     {
     case IDM_FILE_NEW:
-        IoWndPrint( NULL, 0 );
+        IoWndDataSet( NULL, 0 );
         doCaption( hwnd, "" );
         break;
     case IDM_FILE_OPEN:
         if( FileOpenDlg( hwnd,FILE_ID_BIN ) )
         {
             dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
-            IoWndPrint( dataPtr,dwSize );
+            IoWndDataSet( dataPtr,dwSize );
             doCaption( hwnd, FileGetTitleName(FILE_ID_BIN) );
         }
         else
@@ -333,7 +334,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         {
             SetWindowText( SomeCtrlGetHWND(SOME_CTRL_FILENAME), FileGetName(FILE_ID_BIN) );
             dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
-            IoWndPrint( dataPtr,dwSize );
+            IoWndDataSet( dataPtr,dwSize );
         }
         else
         {
@@ -365,6 +366,48 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             StsBarShowWindow( TRUE );
         }
         SendMessage(hwnd,WM_SIZE,0,MAKELONG(mainWndData.cxClient,mainWndData.cyClient));
+        break;
+
+    case IDM_EXTEND_NEWLINE_CRLF:
+        if( IoWndNewLineCodeSet(NEWLINECODE_CRLF) )
+        {
+            IoWndInvalidateRect();
+        }
+        else
+        {
+            nop();
+        }
+        MenuCheckItem  ( IDM_EXTEND_NEWLINE_CRLF );
+        MenuUnCheckItem( IDM_EXTEND_NEWLINE_LF   );
+        MenuUnCheckItem( IDM_EXTEND_NEWLINE_CR   );
+        break;
+
+    case IDM_EXTEND_NEWLINE_LF  :
+        if( IoWndNewLineCodeSet(NEWLINECODE_LF) )
+        {
+            IoWndInvalidateRect();
+        }
+        else
+        {
+            nop();
+        }
+        MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_CRLF );
+        MenuCheckItem    ( IDM_EXTEND_NEWLINE_LF   );
+        MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_CR   );
+        break;
+
+    case IDM_EXTEND_NEWLINE_CR  :
+        if( IoWndNewLineCodeSet(NEWLINECODE_CR) )
+        {
+            IoWndInvalidateRect();
+        }
+        else
+        {
+            nop();
+        }
+        MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_CRLF );
+        MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_LF   );
+        MenuCheckItem    ( IDM_EXTEND_NEWLINE_CR   );
         break;
 
     case IDM_FILE_EXIT:
@@ -531,7 +574,7 @@ onDropFiles( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     FileSetName( FILE_ID_BIN, szFileName, FALSE );
     dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
-    IoWndPrint( dataPtr,dwSize );
+    IoWndDataSet( dataPtr,dwSize );
     doCaption( hwnd, FileGetTitleName(FILE_ID_BIN) );
 
     return rtn;

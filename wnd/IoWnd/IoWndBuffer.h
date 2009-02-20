@@ -17,12 +17,12 @@ typedef struct tag_buffer_line_data
 void IoWndBuffInit( void );
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファ(連結リスト)へのデータ追加
- * 引数  : TCHAR* strPtr
+ * 内容  : IOウィンドウバッファのデータセット
+ * 引数  : TCHAR* dataPtr
  * 引数  : DWORD  length
  * 戻り値: なし
  ***************************************/
-void IoWndBuffSetLinkedList( TCHAR* strPtr, DWORD length );
+void IoWndBuffDataSet( TCHAR* dataPtr, DWORD length );
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのデータサイズ取得
@@ -52,16 +52,19 @@ DWORD IoWndGetColumnMaxSize( void );
  ***************************************/
 S_BUFF_LINE_DATA *IoWndBuffGetLinePtr( DWORD lineNum );
 
-#define IOWND_BUFF_NEWLINE_CRLF 0
-#define IOWND_BUFF_NEWLINE_LF   1
-#define IOWND_BUFF_NEWLINE_CR   2
-#define IOWND_BUFF_NEWLINE_NONE 3
+enum
+{
+    IOWND_BUFF_NEWLINE_CRLF= 0,
+    IOWND_BUFF_NEWLINE_LF  ,
+    IOWND_BUFF_NEWLINE_CR  ,
+    IOWND_BUFF_NEWLINE_NONE,
+};
 /********************************************************************************
  * 内容  : IOウィンドウバッファの改行コードセット
  * 引数  : UINT newLineType
- * 戻り値: なし
+ * 戻り値: BOOL (TRUE:データが変更された)
  ***************************************/
-void IoWndBuffSetNewLineCode( UINT newLineType );
+BOOL IoWndBuffSetNewLineCode( UINT newLineType );
 
 #define IOWND_BUFFER_H
 #endif /* IOWND_BUFFER_H */

@@ -33,12 +33,34 @@ BOOL IoWndSize( int x, int y, int cxClient, int cyClient );
 void IoWndDestroy( void );
 
 /********************************************************************************
- * 内容  : 文字列出力
- * 引数  : TCHAR* strPtr
- * 引数  : int length
+ * 内容  : IOウィンドウのデータセット
+ * 引数  : TCHAR* dataPtr
+ * 引数  : DWORD  length
  * 戻り値: なし
  ***************************************/
-void IoWndPrint( TCHAR* strPtr, int length );
+void IoWndDataSet( TCHAR* dataPtr, DWORD length );
+
+/********************************************************************************
+ * 内容  : IOウィンドウの矩形無効化
+ * 引数  : なし
+ * 戻り値: なし
+ ***************************************/
+void IoWndInvalidateRect( void );
+
+enum
+{
+    NEWLINECODE_CRLF = 0,
+    NEWLINECODE_LF   ,
+    NEWLINECODE_CR   ,
+    NEWLINECODE_NONE ,
+};
+typedef UINT NEWLINECODE_TYPE;
+/********************************************************************************
+ * 内容  : IOウィンドウの改行コードセット
+ * 引数  : NEWLINECODE_TYPE newLineCodeType
+ * 戻り値: BOOL (TRUE:データが変更された)
+ ***************************************/
+BOOL IoWndNewLineCodeSet( NEWLINECODE_TYPE newLineCodeType );
 
 #define IOWND_H
 #endif /* IOWND_H */

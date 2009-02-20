@@ -167,15 +167,15 @@ IoWndDestroy( void )
 }
 
 /********************************************************************************
- * 内容  : 文字列出力
- * 引数  : TCHAR* strPtr
- * 引数  : int length
+ * 内容  : IOウィンドウのデータセット
+ * 引数  : TCHAR* dataPtr
+ * 引数  : DWORD  length
  * 戻り値: なし
  ***************************************/
 void
-IoWndPrint( TCHAR* strPtr, int length )
+IoWndDataSet( TCHAR* dataPtr, DWORD length )
 {
-    IoWndBuffSetLinkedList( strPtr, length );
+    IoWndBuffDataSet( dataPtr, length );
 
     StsBarSetText( STS_BAR_0,"%d bytes,%d lines",IoWndGetBuffSize(),IoWndGetLineMaxSize() );
 
@@ -183,8 +183,29 @@ IoWndPrint( TCHAR* strPtr, int length )
     ioWndData.yCaret = 0;
 
     setAllScrollInfo();
-    SendMessage( hWndIo, WM_PAINT, 0, 0 );
+    IoWndInvalidateRect();
+}
+
+/********************************************************************************
+ * 内容  : IOウィンドウの矩形無効化
+ * 引数  : なし
+ * 戻り値: なし
+ ***************************************/
+void
+IoWndInvalidateRect( void )
+{
     InvalidateRect( hWndIo, NULL, TRUE );
+}
+
+/********************************************************************************
+ * 内容  : IOウィンドウの改行コードセット
+ * 引数  : NEWLINECODE_TYPE newLineCodeType
+ * 戻り値: BOOL (TRUE:データが変更された)
+ ***************************************/
+BOOL
+IoWndNewLineCodeSet( NEWLINECODE_TYPE newLineCodeType )
+{
+    return IoWndBuffSetNewLineCode( newLineCodeType );
 }
 
 /********************************************************************************
