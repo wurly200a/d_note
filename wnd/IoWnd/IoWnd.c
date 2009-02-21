@@ -480,23 +480,11 @@ static LRESULT
 ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
-    DWORD buffLinePos,buffColumnPos,columnMax,lineMax;
     S_BUFF_LINE_DATA *lineBuffPtr;
 
     getAllScrollInfo();
 
-    lineMax = IoWndGetLineMaxSize();
-    buffLinePos = ioWndData.iVertPos + ioWndData.yCaret;
-    lineBuffPtr = IoWndBuffGetLinePtr(buffLinePos);
-
-    if( lineBuffPtr != NULL )
-    {
-        columnMax = lineBuffPtr->dataSize - lineBuffPtr->newLineCodeSize;
-    }
-    else
-    {
-        columnMax = 0;
-    }
+    lineBuffPtr = IoWndBuffGetLinePtr( ioWndData.iVertPos + ioWndData.yCaret );
 
     switch(wParam)
     {
@@ -521,11 +509,15 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         }
         break;
     case VK_RIGHT:
-        if( ioWndData.xCaret == columnMax )
+        if( lineBuffPtr == NULL )
+        {
+            nop();
+        }
+        else if( (lineBuffPtr != NULL) &&
+                 (ioWndData.xCaret == (lineBuffPtr->dataSize - lineBuffPtr->newLineCodeSize)) )
         {
             if( (lineBuffPtr != NULL) &&
-                (lineBuffPtr->nextPtr != NULL) &&
-                (ioWndData.yCaret < lineMax) )
+                (lineBuffPtr->nextPtr != NULL) )
             {
                 ioWndData.xCaret = 0;
                 ioWndData.yCaret = min( ioWndData.yCaret + 1, ioWndData.cyBuffer - 1 );
@@ -555,8 +547,7 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         break;
     case VK_DOWN:
         if( (lineBuffPtr != NULL) &&
-            (lineBuffPtr->nextPtr != NULL) &&
-            (ioWndData.yCaret < lineMax) )
+            (lineBuffPtr->nextPtr != NULL) )
         {
             ioWndData.xCaret = min( min( ioWndData.xCaret ,(lineBuffPtr->nextPtr->dataSize - lineBuffPtr->nextPtr->newLineCodeSize)), ioWndData.cxBuffer - 1 );
             ioWndData.yCaret = min( ioWndData.yCaret + 1, ioWndData.cyBuffer - 1 );
