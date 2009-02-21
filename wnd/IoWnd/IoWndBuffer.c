@@ -64,6 +64,26 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length )
                 break;
             }
         }
+
+        if( (lineDataPtr != NULL) &&
+            (lineDataPtr->newLineCodeSize) )
+        { /* 最後の行に改行コードがあった場合、データ0、改行コード0のデータを追加 */
+            lineDataPtr = (S_BUFF_LINE_DATA *)malloc( sizeof(S_BUFF_LINE_DATA) );
+            if( lineDataPtr != NULL )
+            {
+                lineDataPtr->dataSize = 0;
+                lineDataPtr->newLineCodeSize = 0;
+                addLinkedList( lineDataPtr );
+            }
+            else
+            {
+                nop();
+            }
+        }
+        else
+        {
+            nop();
+        }
     }
     else
     {
@@ -109,6 +129,7 @@ addLinkedList( S_BUFF_LINE_DATA *dataPtr )
 
     if( ioWndBuffListTopPtr == NULL )
     {
+        dataPtr->prevPtr = NULL;
         dataPtr->nextPtr = NULL;
         ioWndBuffListTopPtr = dataPtr;
     }
@@ -120,6 +141,7 @@ addLinkedList( S_BUFF_LINE_DATA *dataPtr )
 
             if( nextPtr == NULL )
             { /* 次につながれているデータ無し */
+                dataPtr->prevPtr = nowPtr;
                 dataPtr->nextPtr = NULL;
                 nowPtr->nextPtr = dataPtr;
             }
@@ -140,7 +162,7 @@ addLinkedList( S_BUFF_LINE_DATA *dataPtr )
 static S_BUFF_LINE_DATA *
 getBuffLine( TCHAR *dataPtr, DWORD maxLength )
 {
-    S_BUFF_LINE_DATA *listPtr = NULL;
+    S_BUFF_LINE_DATA *lineDataPtr = NULL;
     DWORD i;
     INT   newLineCodeSize = 0;
 
@@ -193,19 +215,19 @@ getBuffLine( TCHAR *dataPtr, DWORD maxLength )
         }
     }
 
-    listPtr = (S_BUFF_LINE_DATA *)malloc( sizeof(S_BUFF_LINE_DATA) + (i * sizeof(TCHAR)) );
-    if( listPtr != NULL )
+    lineDataPtr = (S_BUFF_LINE_DATA *)malloc( sizeof(S_BUFF_LINE_DATA) + (i * sizeof(TCHAR)) );
+    if( lineDataPtr != NULL )
     {
-        listPtr->dataSize = i;
-        listPtr->newLineCodeSize = newLineCodeSize;
-        memcpy( listPtr->data, dataPtr, i );
+        lineDataPtr->dataSize = i;
+        lineDataPtr->newLineCodeSize = newLineCodeSize;
+        memcpy( lineDataPtr->data, dataPtr, i );
     }
     else
     {
         nop();
     }
 
-    return listPtr;
+    return lineDataPtr;
 }
 
 /********************************************************************************
