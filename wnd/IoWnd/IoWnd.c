@@ -499,8 +499,7 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             else
             { /* 左にスクロールして表示する文字無し */
                 if( (lineBuffPtr != NULL) &&
-                    (lineBuffPtr->prevPtr != NULL) &&
-                    (ioWndData.yCaret > 0) )
+                    (lineBuffPtr->prevPtr != NULL) )
                 { /* 前行有り */
                     if( (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize) > (ioWndData.cxBuffer - 1) )
                     { /* 前行の文字数は、表示可能領域より大きい */
@@ -519,7 +518,22 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                     { /* 前行の文字数は、表示可能領域内 */
                         ioWndData.xCaret = (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize);
                     }
-                    ioWndData.yCaret = ioWndData.yCaret - 1;
+
+                    if( ioWndData.yCaret == 0 )
+                    { /* キャレットはすでに一番上 */
+                        if( ioWndData.iVertPos > 0 )
+                        { /* 上にスクロールして表示する文字があれば */
+                            SendMessage(hwnd, WM_VSCROLL, SB_LINEUP, 0);
+                        }
+                        else
+                        { /* 上にスクロールして表示する文字無し */
+                            nop();
+                        }
+                    }
+                    else
+                    { /* キャレットは一番上ではない */
+                        ioWndData.yCaret = max( ioWndData.yCaret - 1, 0 );
+                    }
                 }
                 else
                 { /* 前行無し */
@@ -544,7 +558,6 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                 if( (lineBuffPtr->nextPtr != NULL) )
                 { /* 次行があれば */
                     ioWndData.xCaret = 0;
-                    ioWndData.yCaret = min( ioWndData.yCaret + 1, ioWndData.cyBuffer - 1 );
                     /* スクロール情報セット(ここから) */
                     si.cbSize = sizeof(si);
                     si.fMask  = SIF_POS;
@@ -553,6 +566,15 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                     SetScrollInfo( hwnd, SB_HORZ, &si, TRUE );
                     IoWndInvalidateRect();
                     /* スクロール情報セット(ここまで) */
+
+                    if( ioWndData.yCaret == (ioWndData.cyBuffer - 1) )
+                    { /* キャレットはすでに一番下 */
+                        SendMessage(hwnd, WM_VSCROLL, SB_LINEDOWN, 0);
+                    }
+                    else
+                    { /* キャレットは一番下ではない */
+                        (ioWndData.yCaret)++;
+                    }
                 }
                 else
                 {
@@ -577,7 +599,22 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         if( (lineBuffPtr != NULL) &&
             (lineBuffPtr->prevPtr != NULL) )
         { /* 前行有り */
-            ioWndData.xCaret = min( min( ioWndData.xCaret ,(lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize - ioWndData.iHorzPos)), ioWndData.cxBuffer - 1 );
+            if( ioWndData.iHorzPos > (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize) )
+            {
+                ioWndData.xCaret = (ioWndData.cxBuffer - 1);
+                /* スクロール情報セット(ここから) */
+                si.cbSize = sizeof(si);
+                si.fMask  = SIF_POS;
+                GetScrollInfo( hWndIo, SB_HORZ, &si );
+                si.nPos = (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize) - (ioWndData.cxBuffer - 1);
+                SetScrollInfo( hwnd, SB_HORZ, &si, TRUE );
+                IoWndInvalidateRect();
+                /* スクロール情報セット(ここまで) */
+            }
+            else
+            {
+                ioWndData.xCaret = min( min( ioWndData.xCaret ,(lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize - ioWndData.iHorzPos)), ioWndData.cxBuffer - 1 );
+            }
 
             if( ioWndData.yCaret == 0 )
             { /* キャレットはすでに一番上 */
@@ -604,7 +641,22 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         if( (lineBuffPtr != NULL) &&
             (lineBuffPtr->nextPtr != NULL) )
         { /* 次行有り */
-            ioWndData.xCaret = min( min( ioWndData.xCaret ,(lineBuffPtr->nextPtr->dataSize - lineBuffPtr->nextPtr->newLineCodeSize - ioWndData.iHorzPos)), ioWndData.cxBuffer - 1 );
+            if( ioWndData.iHorzPos > (lineBuffPtr->nextPtr->dataSize - lineBuffPtr->nextPtr->newLineCodeSize) )
+            {
+                ioWndData.xCaret = (ioWndData.cxBuffer - 1);
+                /* スクロール情報セット(ここから) */
+                si.cbSize = sizeof(si);
+                si.fMask  = SIF_POS;
+                GetScrollInfo( hWndIo, SB_HORZ, &si );
+                si.nPos = (lineBuffPtr->nextPtr->dataSize - lineBuffPtr->nextPtr->newLineCodeSize) - (ioWndData.cxBuffer - 1);
+                SetScrollInfo( hwnd, SB_HORZ, &si, TRUE );
+                IoWndInvalidateRect();
+                /* スクロール情報セット(ここまで) */
+            }
+            else
+            {
+                ioWndData.xCaret = min( min( ioWndData.xCaret ,(lineBuffPtr->nextPtr->dataSize - lineBuffPtr->nextPtr->newLineCodeSize - ioWndData.iHorzPos)), ioWndData.cxBuffer - 1 );
+            }
 
             if( ioWndData.yCaret == (ioWndData.cyBuffer - 1) )
             { /* キャレットはすでに一番下 */
