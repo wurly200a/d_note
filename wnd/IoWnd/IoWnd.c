@@ -1,6 +1,7 @@
 /* 共通インクルードファイル */
 #include "common.h"
 /* 個別インクルードファイル */
+#include "mbctype.h"
 #include "IoWndDef.h"
 
 /* 外部関数定義 */
@@ -309,6 +310,44 @@ ioOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     return rtn;
 }
 
+#define SINGLE_CHAR      0
+#define DOUBLE_CHAR_HIGH 1
+#define DOUBLE_CHAR_LOW  2
+/********************************************************************************
+ * 内容  : キャラクタセットの判断(Shift_JISの場合)
+ * 引数  : TCHAR *dataPtr  データの先頭ポインタ
+ * 引数  : DWORD maxLength データの最大長さ
+ * 引数  : DWORD offset    判断したい文字の先頭からのオフセット(0 origin)
+ * 戻り値: int
+ ***************************************/
+static int
+detectCharSet( TCHAR *dataPtr, DWORD maxLength, DWORD offset )
+{
+    DWORD i;
+    int charType;
+
+    for( i=0,charType=SINGLE_CHAR; (i<=offset)&&(i<maxLength); i++ )
+    {
+        if( charType == DOUBLE_CHAR_HIGH )
+        {
+            charType = DOUBLE_CHAR_LOW;
+        }
+        else
+        {
+            if( ( (BYTE)(*(dataPtr+i)) <= (BYTE)0x80) || (((BYTE)0xA0 <= (BYTE)(*(dataPtr+i))) && ((BYTE)(*(dataPtr+i)) <= (BYTE)0xDF)) )
+            {
+                charType = SINGLE_CHAR;
+            }
+            else
+            {
+                charType = DOUBLE_CHAR_HIGH;
+            }
+        }
+    }
+
+    return charType;
+}
+
 /********************************************************************************
  * 内容  : WM_PAINT の処理
  * 引数  : HWND hwnd
@@ -325,7 +364,9 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     int         iHorzPos,iVertPos;
     int         iPaintBeg,iPaintEnd,y;
     S_BUFF_LINE_DATA *lineBuffPtr;
-    RECT        rt;
+    int         x,charType;
+    DWORD       offset,lineLength,dispLength;
+    TCHAR       *dataPtr;
 
     hdc = BeginPaint( hwnd, &ps );
     SelectObject( hdc, CreateFontIndirect(ioWndData.logFontPtr) );
@@ -342,20 +383,45 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         lineBuffPtr = IoWndBuffGetLinePtr(y); /* 対象行のデータ取得 */
         if( lineBuffPtr != NULL )
         {
-            if( iHorzPos < lineBuffPtr->dataSize )
-            {
-#if 1
-                rt.top    = (y-iVertPos) * ioWndData.cyChar;
-                rt.bottom = (y-iVertPos) * ioWndData.cyChar + ioWndData.cyChar;
-                rt.left   = 0;
-                rt.right  = 0 + (ioWndData.cxChar*(min(((lineBuffPtr->dataSize)-iHorzPos),ioWndData.cxBuffer)));
-                DrawText( hdc, lineBuffPtr->data + iHorzPos, min(((lineBuffPtr->dataSize)-(lineBuffPtr->newLineCodeSize)-iHorzPos),ioWndData.cxBuffer), &rt, DT_SINGLELINE );
-#else
-                TextOut( hdc, 0, (y-iVertPos) * ioWndData.cyChar, lineBuffPtr->data + iHorzPos, min(((lineBuffPtr->dataSize)-iHorzPos),ioWndData.cxBuffer) );
-#endif
+            lineLength = lineBuffPtr->dataSize-lineBuffPtr->newLineCodeSize; /* 1行内の文字数 */
+
+            if( iHorzPos < lineLength )
+            { /* 横スクロール位置が文字数未満(表示範囲に出力する文字有り) */
+                dispLength = min(lineLength-iHorzPos,ioWndData.cxBuffer+1);
+
+                if( (detectCharSet(lineBuffPtr->data,lineLength,iHorzPos)) == DOUBLE_CHAR_LOW )
+                { /* 表示開始文字が DOUBLE下位 */
+                    x = -(ioWndData.cxChar);              /* 上位byteから出力        */
+                    offset = iHorzPos - 1;                /* 上位byteから出力        */
+                    dataPtr = lineBuffPtr->data + offset;
+                    dispLength++;                         /* 表示文字数が1個多くなる */
+                }
+                else
+                { /* 表示開始文字はSINGLE or DOUBLE上位 */
+                    x = 0;
+                    offset = iHorzPos;
+                    dataPtr = lineBuffPtr->data + offset;
+                }
+
+                if( (detectCharSet(dataPtr,(lineLength-offset),dispLength-1)) == DOUBLE_CHAR_HIGH )
+                { /* 表示終了文字が DOUBLE上位 */
+                    dispLength++; /* DOUBLE下位も表示 */
+                }
+                else
+                {
+                    nop();
+                }
+
+                TextOut(
+                    hdc,
+                    x,                               /* x座標 */
+                    (y-iVertPos) * ioWndData.cyChar, /* y座標 */
+                    dataPtr,                         /* 文字列へのポインタ */
+                    dispLength                       /* 文字数 */
+                    );
             }
             else
-            { /* 横スクロール位置が文字サイズを超えている */
+            {  /* 横スクロール位置が文字数以上(表示範囲に出力する文字無し) */
                 nop();
             }
         }
