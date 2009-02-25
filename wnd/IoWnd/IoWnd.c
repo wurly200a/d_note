@@ -42,6 +42,7 @@ static LRESULT ioOnDefault      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM
 static void updateTextMetrics( HWND hwnd );
 static void getAllScrollInfo( void );
 static void setAllScrollInfo( void );
+static void setScrollPos( int fnBar, DWORD nPos );
 static void printCaretPos( void );
 
 /* 内部変数定義 */
@@ -548,6 +549,7 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     LRESULT rtn = 0;
     S_BUFF_LINE_DATA *lineBuffPtr;
     SCROLLINFO si;
+    int moveAmount = 0;
 
     getAllScrollInfo();
 
@@ -556,60 +558,60 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     switch(wParam)
     {
     case VK_LEFT:
-        if( ioWndData.xCaret == 0 )
-        { /* キャレットはすでに一番左端 */
-            if( ioWndData.iHorzPos > 0 )
-            { /* 左にスクロールして表示する文字があれば */
-                SendMessage(hwnd, WM_HSCROLL, SB_LINELEFT, 0);
+        if( lineBuffPtr == NULL )
+        {
+            nop();
+        }
+        else
+        {
+            if( (detectCharSet(lineBuffPtr->data,(lineBuffPtr->dataSize - lineBuffPtr->newLineCodeSize),(ioWndData.iHorzPos + ioWndData.xCaret)-1) == DOUBLE_CHAR_LOW) )
+            { /* 前の文字で移動量を判断 */
+                moveAmount = 2;
             }
             else
-            { /* 左にスクロールして表示する文字無し */
-                if( (lineBuffPtr != NULL) &&
-                    (lineBuffPtr->prevPtr != NULL) )
-                { /* 前行有り */
-                    if( (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize) > (ioWndData.cxBuffer - 1) )
-                    { /* 前行の文字数は、表示可能領域より大きい */
-                        ioWndData.xCaret = (ioWndData.cxBuffer - 1);
+            {
+                moveAmount = 1;
+            }
 
-                        /* スクロール情報セット(ここから) */
-                        si.cbSize = sizeof(si);
-                        si.fMask  = SIF_POS;
-                        GetScrollInfo( hWndIo, SB_HORZ, &si );
-                        si.nPos = (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize) - (ioWndData.cxBuffer - 1);
-                        SetScrollInfo( hwnd, SB_HORZ, &si, TRUE );
-                        IoWndInvalidateRect();
-                        /* スクロール情報セット(ここまで) */
-                    }
-                    else
-                    { /* 前行の文字数は、表示可能領域内 */
-                        ioWndData.xCaret = (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize);
-                    }
+            if( ioWndData.xCaret < moveAmount )
+            { /* キャレットはすでに一番左端 */
+                if( ioWndData.iHorzPos > 0 )
+                { /* 左にスクロールして表示する文字があれば */
+                    setScrollPos( SB_HORZ, ioWndData.iHorzPos - moveAmount );
+                }
+                else
+                { /* 左にスクロールして表示する文字無し */
+                    if( (lineBuffPtr->prevPtr != NULL) )
+                    { /* 前行有り */
+                        if( (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize) > (ioWndData.cxBuffer - 1) )
+                        { /* 前行の文字数は、表示可能領域より大きい */
+                            ioWndData.xCaret = (ioWndData.cxBuffer - 1);
+                            setScrollPos( SB_HORZ, (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize) - (ioWndData.cxBuffer - 1) );
+                        }
+                        else
+                        { /* 前行の文字数は、表示可能領域内 */
+                            ioWndData.xCaret = (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize);
+                        }
 
-                    if( ioWndData.yCaret == 0 )
-                    { /* キャレットはすでに一番上 */
-                        if( ioWndData.iVertPos > 0 )
-                        { /* 上にスクロールして表示する文字があれば */
+                        if( ioWndData.yCaret == 0 )
+                        { /* キャレットはすでに一番上 */
                             SendMessage(hwnd, WM_VSCROLL, SB_LINEUP, 0);
                         }
                         else
-                        { /* 上にスクロールして表示する文字無し */
-                            nop();
+                        { /* キャレットは一番上ではない */
+                            ioWndData.yCaret = max( ioWndData.yCaret - 1, 0 );
                         }
                     }
                     else
-                    { /* キャレットは一番上ではない */
-                        ioWndData.yCaret = max( ioWndData.yCaret - 1, 0 );
+                    { /* 前行無し */
+                        nop();
                     }
                 }
-                else
-                { /* 前行無し */
-                    nop();
-                }
             }
-        }
-        else
-        { /* キャレットは一番左端ではない */
-            ioWndData.xCaret = max( ioWndData.xCaret - 1, 0 );
+            else
+            { /* キャレットは一番左端ではない */
+                ioWndData.xCaret = max( ioWndData.xCaret - moveAmount, 0 );
+            }
         }
         break;
     case VK_RIGHT:
@@ -619,19 +621,21 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         }
         else
         {
-            if( (ioWndData.iHorzPos + ioWndData.xCaret + 1) > (lineBuffPtr->dataSize - lineBuffPtr->newLineCodeSize) )
+            if( detectCharSet(lineBuffPtr->data,(lineBuffPtr->dataSize - lineBuffPtr->newLineCodeSize),(ioWndData.iHorzPos + ioWndData.xCaret)) == DOUBLE_CHAR_HIGH )
+            { /* 次の文字で移動量を判断 */
+                moveAmount = 2;
+            }
+            else
+            {
+                moveAmount = 1;
+            }
+
+            if( (ioWndData.iHorzPos + ioWndData.xCaret + moveAmount) > (lineBuffPtr->dataSize - lineBuffPtr->newLineCodeSize) )
             { /* 右へ1個移動すると、1行内の文字数数をオーバーする */
                 if( (lineBuffPtr->nextPtr != NULL) )
                 { /* 次行があれば */
                     ioWndData.xCaret = 0;
-                    /* スクロール情報セット(ここから) */
-                    si.cbSize = sizeof(si);
-                    si.fMask  = SIF_POS;
-                    GetScrollInfo( hWndIo, SB_HORZ, &si );
-                    si.nPos = 0;
-                    SetScrollInfo( hwnd, SB_HORZ, &si, TRUE );
-                    IoWndInvalidateRect();
-                    /* スクロール情報セット(ここまで) */
+                    setScrollPos( SB_HORZ, 0 );
 
                     if( ioWndData.yCaret == (ioWndData.cyBuffer - 1) )
                     { /* キャレットはすでに一番下 */
@@ -649,14 +653,13 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             }
             else
             { /* 右へ1個移動しても、1行内の文字数数はオーバーしない */
-                if( (ioWndData.xCaret + 1) > (ioWndData.cxBuffer - 1) )
+                if( (ioWndData.xCaret + moveAmount) > (ioWndData.cxBuffer - 1) )
                 { /* キャレットはすでに一番右端 */
-                    ioWndData.xCaret = ioWndData.cxBuffer - 1;
-                    SendMessage(hwnd, WM_HSCROLL, SB_LINERIGHT, 0);
+                    setScrollPos( SB_HORZ, ioWndData.iHorzPos + moveAmount );
                 }
                 else
                 {
-                    (ioWndData.xCaret)++;
+                    ioWndData.xCaret += moveAmount;
                 }
             }
         }
@@ -666,32 +669,18 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             (lineBuffPtr->prevPtr != NULL) )
         { /* 前行有り */
             if( ioWndData.iHorzPos > (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize) )
-            {
+            { /* 前行の最終文字が表示範囲に入っていない */
                 ioWndData.xCaret = (ioWndData.cxBuffer - 1);
-                /* スクロール情報セット(ここから) */
-                si.cbSize = sizeof(si);
-                si.fMask  = SIF_POS;
-                GetScrollInfo( hWndIo, SB_HORZ, &si );
-                si.nPos = (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize) - (ioWndData.cxBuffer - 1);
-                SetScrollInfo( hwnd, SB_HORZ, &si, TRUE );
-                IoWndInvalidateRect();
-                /* スクロール情報セット(ここまで) */
+                setScrollPos( SB_HORZ, (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize) - (ioWndData.cxBuffer - 1) );
             }
             else
-            {
+            { /* 前行の最終文字が表示範囲に入っている */
                 ioWndData.xCaret = min( min( ioWndData.xCaret ,(lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize - ioWndData.iHorzPos)), ioWndData.cxBuffer - 1 );
             }
 
             if( ioWndData.yCaret == 0 )
             { /* キャレットはすでに一番上 */
-                if( ioWndData.iVertPos > 0 )
-                { /* 上にスクロールして表示する文字があれば */
-                    SendMessage(hwnd, WM_VSCROLL, SB_LINEUP, 0);
-                }
-                else
-                { /* 上にスクロールして表示する文字無し */
-                    nop();
-                }
+                SendMessage(hwnd, WM_VSCROLL, SB_LINEUP, 0);
             }
             else
             { /* キャレットは一番上ではない */
@@ -708,19 +697,12 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             (lineBuffPtr->nextPtr != NULL) )
         { /* 次行有り */
             if( ioWndData.iHorzPos > (lineBuffPtr->nextPtr->dataSize - lineBuffPtr->nextPtr->newLineCodeSize) )
-            {
+            { /* 次行の最終文字が表示範囲に入っていない */
                 ioWndData.xCaret = (ioWndData.cxBuffer - 1);
-                /* スクロール情報セット(ここから) */
-                si.cbSize = sizeof(si);
-                si.fMask  = SIF_POS;
-                GetScrollInfo( hWndIo, SB_HORZ, &si );
-                si.nPos = (lineBuffPtr->nextPtr->dataSize - lineBuffPtr->nextPtr->newLineCodeSize) - (ioWndData.cxBuffer - 1);
-                SetScrollInfo( hwnd, SB_HORZ, &si, TRUE );
-                IoWndInvalidateRect();
-                /* スクロール情報セット(ここまで) */
+                setScrollPos( SB_HORZ, (lineBuffPtr->nextPtr->dataSize - lineBuffPtr->nextPtr->newLineCodeSize) - (ioWndData.cxBuffer - 1) );
             }
             else
-            {
+            { /* 次行の最終文字が表示範囲に入っている */
                 ioWndData.xCaret = min( min( ioWndData.xCaret ,(lineBuffPtr->nextPtr->dataSize - lineBuffPtr->nextPtr->newLineCodeSize - ioWndData.iHorzPos)), ioWndData.cxBuffer - 1 );
             }
 
@@ -1175,6 +1157,25 @@ getAllScrollInfo( void )
 
     GetScrollInfo( hWndIo, SB_HORZ, &si);   /* 横スクロールバーの位置を取得 */
     ioWndData.iHorzPos = si.nPos;
+}
+
+/********************************************************************************
+ * 内容  : スクロール位置のセット
+ * 引数  : int   fnBar スクロールバーのタイプ
+ * 引数  : DWORD nPos  位置
+ * 戻り値: なし
+ ***************************************/
+static void
+setScrollPos( int fnBar, DWORD nPos )
+{
+    SCROLLINFO si;
+
+    si.cbSize = sizeof(si);
+    si.fMask  = SIF_POS;
+    GetScrollInfo( hWndIo, fnBar, &si );
+    si.nPos   = nPos;
+    SetScrollInfo( hWndIo, fnBar, &si, TRUE );
+    IoWndInvalidateRect();
 }
 
 /********************************************************************************
