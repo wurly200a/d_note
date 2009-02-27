@@ -676,6 +676,21 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             else
             { /* 前行の最終文字が表示範囲に入っている */
                 ioWndData.xCaret = min( min( ioWndData.xCaret ,(lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize - ioWndData.iHorzPos)), ioWndData.cxBuffer - 1 );
+                if( (detectCharSet(lineBuffPtr->prevPtr->data,(lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize),(ioWndData.iHorzPos +ioWndData.xCaret)) == DOUBLE_CHAR_LOW) )
+                {
+                    if( ioWndData.xCaret == (ioWndData.cxBuffer-1) )
+                    {
+                        SendMessage(hwnd, WM_HSCROLL, SB_LINERIGHT, 0);
+                    }
+                    else
+                    {
+                        ioWndData.xCaret += 1;
+                    }
+                }
+                else
+                {
+                    nop();
+                }
             }
 
             if( ioWndData.yCaret == 0 )
@@ -704,6 +719,21 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             else
             { /* 次行の最終文字が表示範囲に入っている */
                 ioWndData.xCaret = min( min( ioWndData.xCaret ,(lineBuffPtr->nextPtr->dataSize - lineBuffPtr->nextPtr->newLineCodeSize - ioWndData.iHorzPos)), ioWndData.cxBuffer - 1 );
+                if( (detectCharSet(lineBuffPtr->nextPtr->data,(lineBuffPtr->nextPtr->dataSize - lineBuffPtr->nextPtr->newLineCodeSize),(ioWndData.iHorzPos +ioWndData.xCaret)) == DOUBLE_CHAR_LOW) )
+                {
+                    if( ioWndData.xCaret == (ioWndData.cxBuffer-1) )
+                    {
+                        SendMessage(hwnd, WM_HSCROLL, SB_LINERIGHT, 0);
+                    }
+                    else
+                    {
+                        ioWndData.xCaret += 1;
+                    }
+                }
+                else
+                {
+                    nop();
+                }
             }
 
             if( ioWndData.yCaret == (ioWndData.cyBuffer - 1) )
@@ -1127,7 +1157,7 @@ setAllScrollInfo( void )
     si.cbSize = sizeof(si);
     si.fMask  = SIF_RANGE | SIF_PAGE | SIF_DISABLENOSCROLL;
     si.nMin   = 0;                                                                /* 範囲の最小値 */
-    si.nMax   = max(IoWndGetLineMaxSize(),(ioWndData.cyClient / ioWndData.cyChar))-1; /* 範囲の最大値 */
+    si.nMax   = max(IoWndGetLineMaxSize(),(ioWndData.cyClient / ioWndData.cyChar)); /* 範囲の最大値 */
     si.nPage  = (ioWndData.cyClient / ioWndData.cyChar); /* ページサイズ */
     SetScrollInfo( hWndIo, SB_VERT, &si, TRUE );
 
@@ -1135,7 +1165,7 @@ setAllScrollInfo( void )
     si.cbSize = sizeof(si);
     si.fMask  = SIF_RANGE | SIF_PAGE | SIF_DISABLENOSCROLL;
     si.nMin   = 0;
-    si.nMax   = max( IoWndGetColumnMaxSize(),(ioWndData.cxClient/ioWndData.cxChar))-1;
+    si.nMax   = max( IoWndGetColumnMaxSize(),(ioWndData.cxClient/ioWndData.cxChar));
     si.nPage  = (ioWndData.cxClient/ioWndData.cxChar);
     SetScrollInfo( hWndIo, SB_HORZ, &si, TRUE );
 }
