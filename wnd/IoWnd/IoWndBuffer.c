@@ -366,3 +366,83 @@ IoWndBuffSetNewLineCode( UINT newLineType )
 
     return rtn;
 }
+
+/********************************************************************************
+ * 内容  : 指定行へのデータ追加
+ * 引数  : DWORD lineNum
+ * 引数  : DWORD addPos
+ * 引数  : TCHAR data
+ * 戻り値: S_BUFF_LINE_DATA *
+ ***************************************/
+S_BUFF_LINE_DATA *
+IoWndBuffAddData( DWORD lineNum, DWORD addPos, TCHAR data )
+{
+    S_BUFF_LINE_DATA *nowPtr,*nextPtr,*targetPtr = NULL,*newPtr;
+    DWORD i;
+
+    if( ioWndBuffListTopPtr == NULL )
+    {
+        nop();
+    }
+    else
+    {
+        for( i=0,nowPtr = nextPtr = ioWndBuffListTopPtr; (nowPtr != NULL) && (i<=lineNum); nowPtr=nextPtr,i++ )
+        {
+            nextPtr = nowPtr->nextPtr;
+
+            if( i == lineNum )
+            {
+                targetPtr = nowPtr;
+                break;
+            }
+            else
+            {
+                nop();
+            }
+        }
+    }
+
+    if( targetPtr != NULL )
+    {
+        newPtr = (S_BUFF_LINE_DATA *)malloc( sizeof(S_BUFF_LINE_DATA) + ((targetPtr->dataSize+1) * sizeof(TCHAR)) );
+        if( newPtr != NULL )
+        {
+            newPtr->dataSize = targetPtr->dataSize + 1;
+            newPtr->newLineCodeSize = targetPtr->newLineCodeSize;
+            memcpy( newPtr->data, targetPtr->data, addPos );
+            *(newPtr->data+addPos) = data;
+            memcpy( newPtr->data+addPos+1, targetPtr->data+addPos, (targetPtr->dataSize-addPos) );
+            newPtr->prevPtr = targetPtr->prevPtr;
+            newPtr->nextPtr = targetPtr->nextPtr;
+            if( newPtr->prevPtr != NULL )
+            {
+                (newPtr->prevPtr)->nextPtr = newPtr;
+            }
+            else
+            {
+                ioWndBuffListTopPtr = newPtr;
+            }
+            if( newPtr->nextPtr != NULL )
+            {
+                (newPtr->nextPtr)->prevPtr = newPtr;
+            }
+            else
+            {
+                nop();
+            }
+
+            free( targetPtr );
+        }
+        else
+        {
+            nop();
+        }
+    }
+    else
+    {
+        nop();
+    }
+
+    return newPtr;
+}
+

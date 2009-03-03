@@ -15,29 +15,30 @@
 #include "IoWnd.h"
 LRESULT CALLBACK IoWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static IOWND_INDEX ioWndConvertMSGtoINDEX( UINT message );
-static LRESULT ioOnCreate       ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnPaint        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnSize         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnClose        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnDestroy      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnCommand      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnKeyUp        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnKeyDown      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnChar         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnHscroll      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnVscroll      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnSetFocus     ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnKillFocus    ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnMouseActivate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnMouseWheel   ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnMouseMove    ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnLbuttonDown  ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnMbuttonDown  ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnRbuttonDown  ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnLbuttonUp    ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnMbuttonUp    ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnRbuttonUp    ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnDefault      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnCreate             ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnPaint              ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnSize               ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnClose              ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnDestroy            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnCommand            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnKeyUp              ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnKeyDown            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnChar               ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnHscroll            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnVscroll            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnSetFocus           ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnKillFocus          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnMouseActivate      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnMouseWheel         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnMouseMove          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnLbuttonDown        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnMbuttonDown        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnRbuttonDown        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnLbuttonUp          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnMbuttonUp          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnRbuttonUp          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnImeStartComposition( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnDefault            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
 static void updateTextMetrics( HWND hwnd );
 static void getAllScrollInfo( void );
@@ -52,29 +53,30 @@ static S_IOWND_DATA ioWndData;
 /* *INDENT-OFF* */
 static LRESULT (*ioWndProcTbl[IOWND_MAX])( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam ) =
 {
-    ioOnCreate       , /* WM_CREATE        */
-    ioOnPaint        , /* WM_PAINT         */
-    ioOnSize         , /* WM_SIZE          */
-    ioOnClose        , /* WM_CLOSE         */
-    ioOnDestroy      , /* WM_DESTROY       */
-    ioOnCommand      , /* WM_COMMAND       */
-    ioOnKeyUp        , /* WM_KEYUP         */
-    ioOnKeyDown      , /* WM_KEYDOWN       */
-    ioOnChar         , /* WM_CHAR          */
-    ioOnHscroll      , /* WM_HSCROLL       */
-    ioOnVscroll      , /* WM_VSCROLL       */
-    ioOnSetFocus     , /* WM_SETFOCUS      */
-    ioOnKillFocus    , /* WM_KILLFOCUS     */
-    ioOnMouseActivate, /* WM_MOUSEACTIVATE */
-    ioOnMouseWheel   , /* WM_MOUSEWHEEL    */
-    ioOnMouseMove    , /* WM_MOUSEMOVE     */
-    ioOnLbuttonDown  , /* WM_LBUTTONDOWN   */
-    ioOnMbuttonDown  , /* WM_MBUTTONDOWN   */
-    ioOnRbuttonDown  , /* WM_RBUTTONDOWN   */
-    ioOnLbuttonUp    , /* WM_LBUTTONUP     */
-    ioOnMbuttonUp    , /* WM_MBUTTONUP     */
-    ioOnRbuttonUp    , /* WM_RBUTTONUP     */
-    ioOnDefault        /* default          */
+    ioOnCreate             , /* WM_CREATE              */
+    ioOnPaint              , /* WM_PAINT               */
+    ioOnSize               , /* WM_SIZE                */
+    ioOnClose              , /* WM_CLOSE               */
+    ioOnDestroy            , /* WM_DESTROY             */
+    ioOnCommand            , /* WM_COMMAND             */
+    ioOnKeyUp              , /* WM_KEYUP               */
+    ioOnKeyDown            , /* WM_KEYDOWN             */
+    ioOnChar               , /* WM_CHAR                */
+    ioOnHscroll            , /* WM_HSCROLL             */
+    ioOnVscroll            , /* WM_VSCROLL             */
+    ioOnSetFocus           , /* WM_SETFOCUS            */
+    ioOnKillFocus          , /* WM_KILLFOCUS           */
+    ioOnMouseActivate      , /* WM_MOUSEACTIVATE       */
+    ioOnMouseWheel         , /* WM_MOUSEWHEEL          */
+    ioOnMouseMove          , /* WM_MOUSEMOVE           */
+    ioOnLbuttonDown        , /* WM_LBUTTONDOWN         */
+    ioOnMbuttonDown        , /* WM_MBUTTONDOWN         */
+    ioOnRbuttonDown        , /* WM_RBUTTONDOWN         */
+    ioOnLbuttonUp          , /* WM_LBUTTONUP           */
+    ioOnMbuttonUp          , /* WM_MBUTTONUP           */
+    ioOnRbuttonUp          , /* WM_RBUTTONUP           */
+    ioOnImeStartComposition, /* WM_IME_STARTCOMPOSITION*/
+    ioOnDefault              /* default                */
 };
 /* *INDENT-ON* */
 
@@ -248,29 +250,30 @@ ioWndConvertMSGtoINDEX( UINT message )
     /* *INDENT-OFF* */
     switch( message )
     {
-    case WM_CREATE       :rtn = IOWND_ON_CREATE       ;break;
-    case WM_PAINT        :rtn = IOWND_ON_PAINT        ;break;
-    case WM_SIZE         :rtn = IOWND_ON_SIZE         ;break;
-    case WM_CLOSE        :rtn = IOWND_ON_CLOSE        ;break;
-    case WM_DESTROY      :rtn = IOWND_ON_DESTROY      ;break;
-    case WM_COMMAND      :rtn = IOWND_ON_COMMAND      ;break;
-    case WM_KEYUP        :rtn = IOWND_ON_KEYUP        ;break;
-    case WM_KEYDOWN      :rtn = IOWND_ON_KEYDOWN      ;break;
-    case WM_CHAR         :rtn = IOWND_ON_CHAR         ;break;
-    case WM_HSCROLL      :rtn = IOWND_ON_HSCROLL      ;break;
-    case WM_VSCROLL      :rtn = IOWND_ON_VSCROLL      ;break;
-    case WM_SETFOCUS     :rtn = IOWND_ON_SETFOCUS     ;break;
-    case WM_KILLFOCUS    :rtn = IOWND_ON_KILLFOCUS    ;break;
-    case WM_MOUSEACTIVATE:rtn = IOWND_ON_MOUSEACTIVATE;break;
-    case WM_MOUSEWHEEL   :rtn = IOWND_ON_MOUSEWHEEL   ;break;
-    case WM_MOUSEMOVE    :rtn = IOWND_ON_MOUSEMOVE    ;break;
-    case WM_LBUTTONDOWN  :rtn = IOWND_ON_LBUTTONDOWN  ;break;
-    case WM_MBUTTONDOWN  :rtn = IOWND_ON_MBUTTONDOWN  ;break;
-    case WM_RBUTTONDOWN  :rtn = IOWND_ON_RBUTTONDOWN  ;break;
-    case WM_LBUTTONUP    :rtn = IOWND_ON_LBUTTONUP    ;break;
-    case WM_MBUTTONUP    :rtn = IOWND_ON_MBUTTONUP    ;break;
-    case WM_RBUTTONUP    :rtn = IOWND_ON_RBUTTONUP    ;break;
-    default              :rtn = IOWND_ON_DEFAULT      ;break;
+    case WM_CREATE              :rtn = IOWND_ON_CREATE              ;break;
+    case WM_PAINT               :rtn = IOWND_ON_PAINT               ;break;
+    case WM_SIZE                :rtn = IOWND_ON_SIZE                ;break;
+    case WM_CLOSE               :rtn = IOWND_ON_CLOSE               ;break;
+    case WM_DESTROY             :rtn = IOWND_ON_DESTROY             ;break;
+    case WM_COMMAND             :rtn = IOWND_ON_COMMAND             ;break;
+    case WM_KEYUP               :rtn = IOWND_ON_KEYUP               ;break;
+    case WM_KEYDOWN             :rtn = IOWND_ON_KEYDOWN             ;break;
+    case WM_CHAR                :rtn = IOWND_ON_CHAR                ;break;
+    case WM_HSCROLL             :rtn = IOWND_ON_HSCROLL             ;break;
+    case WM_VSCROLL             :rtn = IOWND_ON_VSCROLL             ;break;
+    case WM_SETFOCUS            :rtn = IOWND_ON_SETFOCUS            ;break;
+    case WM_KILLFOCUS           :rtn = IOWND_ON_KILLFOCUS           ;break;
+    case WM_MOUSEACTIVATE       :rtn = IOWND_ON_MOUSEACTIVATE       ;break;
+    case WM_MOUSEWHEEL          :rtn = IOWND_ON_MOUSEWHEEL          ;break;
+    case WM_MOUSEMOVE           :rtn = IOWND_ON_MOUSEMOVE           ;break;
+    case WM_LBUTTONDOWN         :rtn = IOWND_ON_LBUTTONDOWN         ;break;
+    case WM_MBUTTONDOWN         :rtn = IOWND_ON_MBUTTONDOWN         ;break;
+    case WM_RBUTTONDOWN         :rtn = IOWND_ON_RBUTTONDOWN         ;break;
+    case WM_LBUTTONUP           :rtn = IOWND_ON_LBUTTONUP           ;break;
+    case WM_MBUTTONUP           :rtn = IOWND_ON_MBUTTONUP           ;break;
+    case WM_RBUTTONUP           :rtn = IOWND_ON_RBUTTONUP           ;break;
+    case WM_IME_STARTCOMPOSITION:rtn = IOWND_ON_IME_STARTCOMPOSITION;break;
+    default                     :rtn = IOWND_ON_DEFAULT             ;break;
     }
     /* *INDENT-ON* */
 
@@ -839,6 +842,26 @@ static LRESULT
 ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
+    int i;
+
+    for( i=0; i<(int) LOWORD(lParam); i++ )
+    {
+        switch( wParam )
+        {
+        case '\b':  /* backspace */
+        case '\t':  /* tab */
+        case '\n':  /* line feed */
+        case '\r':  /* carriage return */
+        case '\x1B':/* escape */
+            break;
+        default:    /* character codes */
+            IoWndBuffAddData( ioWndData.yCaret, ioWndData.xCaret, wParam );
+            (ioWndData.xCaret)++;
+            IoWndInvalidateRect();
+            break ;
+        }
+    }
+    SetCaretPos( (ioWndData.xCaret-ioWndData.iHorzPos)*ioWndData.cxChar, (ioWndData.yCaret-ioWndData.iVertPos)*ioWndData.cyChar);
 
     return rtn;
 }
@@ -1169,6 +1192,33 @@ static LRESULT
 ioOnRbuttonUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : WM_IME_STARTCOMPOSTION を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+ioOnImeStartComposition( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+    HIMC hImc;
+    COMPOSITIONFORM cf;
+
+    cf.dwStyle = CFS_POINT;
+    cf.ptCurrentPos.x = ioWndData.xCaret * ioWndData.cxChar;
+    cf.ptCurrentPos.y = ioWndData.yCaret * ioWndData.cyChar;
+
+    hImc = ImmGetContext( hwnd );
+    ImmSetCompositionWindow( hImc, &cf );
+    ImmSetCompositionFont( hImc,ioWndData.logFontPtr );
+    ImmReleaseContext( hwnd, hImc );
 
     return rtn;
 }

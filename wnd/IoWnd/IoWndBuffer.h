@@ -66,5 +66,14 @@ enum
  ***************************************/
 BOOL IoWndBuffSetNewLineCode( UINT newLineType );
 
+/********************************************************************************
+ * 内容  : 指定行へのデータ追加
+ * 引数  : DWORD lineNum
+ * 引数  : DWORD addPos
+ * 引数  : TCHAR data
+ * 戻り値: S_BUFF_LINE_DATA *
+ ***************************************/
+S_BUFF_LINE_DATA *IoWndBuffAddData( DWORD lineNum, DWORD addPos, TCHAR data );
+
 #define IOWND_BUFFER_H
 #endif /* IOWND_BUFFER_H */

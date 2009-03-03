@@ -4,6 +4,7 @@
 #define _WIN32_WINNT 0x0500 /* for Mouse Wheel Support */
 
 #include <windows.h>
+#include <imm.h>
 #include <commctrl.h>
 #include <stdio.h>
 #include <stdarg.h>
