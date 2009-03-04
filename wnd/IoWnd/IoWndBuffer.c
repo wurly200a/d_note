@@ -12,6 +12,7 @@
 static void addLinkedList( S_BUFF_LINE_DATA *dataPtr );
 static void clearLinkedList( void );
 static S_BUFF_LINE_DATA *getBuffLine( TCHAR *dataPtr, DWORD maxLength );
+static INT getNewLineSize( void );
 
 /* 内部変数定義 */
 S_BUFF_LINE_DATA *ioWndBuffListTopPtr;
@@ -87,7 +88,17 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length )
     }
     else
     {
-        nop(); /* error */
+        lineDataPtr = (S_BUFF_LINE_DATA *)malloc( sizeof(S_BUFF_LINE_DATA) );
+        if( lineDataPtr != NULL )
+        {
+            lineDataPtr->dataSize = 0;
+            lineDataPtr->newLineCodeSize = 0;
+            addLinkedList( lineDataPtr );
+        }
+        else
+        {
+            nop();
+        }
     }
 }
 
@@ -446,3 +457,125 @@ IoWndBuffAddData( DWORD lineNum, DWORD addPos, TCHAR data )
     return newPtr;
 }
 
+/********************************************************************************
+ * 内容  : 指定行への改行追加
+ * 引数  : DWORD lineNum
+ * 引数  : DWORD addPos
+ * 引数  : TCHAR data
+ * 戻り値: S_BUFF_LINE_DATA *
+ ***************************************/
+S_BUFF_LINE_DATA *
+IoWndBuffAddNewLine( DWORD lineNum, DWORD addPos )
+{
+    S_BUFF_LINE_DATA *nowPtr,*nextPtr,*targetPtr = NULL,*newPtr,*newNextPtr;
+    DWORD i;
+
+    if( ioWndBuffListTopPtr == NULL )
+    {
+        nop();
+    }
+    else
+    {
+        for( i=0,nowPtr = nextPtr = ioWndBuffListTopPtr; (nowPtr != NULL) && (i<=lineNum); nowPtr=nextPtr,i++ )
+        {
+            nextPtr = nowPtr->nextPtr;
+
+            if( i == lineNum )
+            {
+                targetPtr = nowPtr;
+                break;
+            }
+            else
+            {
+                nop();
+            }
+        }
+    }
+
+    if( targetPtr != NULL )
+    {
+        newPtr = (S_BUFF_LINE_DATA *)malloc( sizeof(S_BUFF_LINE_DATA) + (addPos+getNewLineSize()) * sizeof(TCHAR));
+        if( newPtr != NULL )
+        {
+            newNextPtr = (S_BUFF_LINE_DATA *)malloc( sizeof(S_BUFF_LINE_DATA) + ((targetPtr->dataSize-addPos) * sizeof(TCHAR)) );
+            if( newNextPtr != NULL )
+            {
+                /* 改行より前 */
+                newPtr->dataSize = addPos+getNewLineSize();
+                newPtr->newLineCodeSize = getNewLineSize();
+                memcpy( newPtr->data, targetPtr->data, newPtr->dataSize );
+
+                newPtr->prevPtr = targetPtr->prevPtr;
+                newPtr->nextPtr = targetPtr->nextPtr;
+                if( newPtr->prevPtr != NULL )
+                {
+                    (newPtr->prevPtr)->nextPtr = newPtr;
+                }
+                else
+                {
+                    ioWndBuffListTopPtr = newPtr;
+                }
+                if( newPtr->nextPtr != NULL )
+                {
+                    (newPtr->nextPtr)->prevPtr = newPtr;
+                }
+                else
+                {
+                    nop();
+                }
+
+                /* 改行以降 */
+                newNextPtr->dataSize = targetPtr->dataSize - addPos;
+                newNextPtr->newLineCodeSize = targetPtr->newLineCodeSize;
+                memcpy( newNextPtr->data, targetPtr->data+addPos, newNextPtr->dataSize );
+
+                newNextPtr->prevPtr = newPtr;
+                newNextPtr->nextPtr = newPtr->nextPtr;
+                newPtr->nextPtr = newNextPtr;
+
+                free( targetPtr );
+            }
+            else
+            {
+                free( newPtr );
+            }
+        }
+        else
+        {
+            nop();
+        }
+    }
+    else
+    {
+        nop();
+    }
+
+    return newPtr;
+}
+
+/********************************************************************************
+ * 内容  : 改行コードサイズを取得
+ * 引数  : なし
+ * 戻り値: なし
+ ***************************************/
+static INT
+getNewLineSize( void )
+{
+    INT rtn = 0;
+
+    switch( ioWndBuffData.NewLineType )
+    {
+    case IOWND_BUFF_NEWLINE_CRLF:
+        rtn = 2;
+        break;
+    case IOWND_BUFF_NEWLINE_LF  :
+    case IOWND_BUFF_NEWLINE_CR  :
+        rtn = 1;
+        break;
+    case IOWND_BUFF_NEWLINE_NONE:
+    default:
+        break;
+    }
+
+    return rtn;
+}

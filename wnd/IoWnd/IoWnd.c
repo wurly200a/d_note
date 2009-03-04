@@ -298,6 +298,7 @@ ioOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     updateTextMetrics( hwnd );
 
     IoWndBuffInit();
+    IoWndBuffDataSet( (TCHAR*)NULL, 0 );
 
     /* for MouseWheel */
     SystemParametersInfo(SPI_GETWHEELSCROLLLINES,0, &ulScrollLines, 0);
@@ -330,7 +331,7 @@ detectCharSet( TCHAR *dataPtr, DWORD maxLength, DWORD offset )
     DWORD i;
     int charType;
 
-    for( i=0,charType=SINGLE_CHAR; (i<=offset)&&(i<maxLength); i++ )
+    for( i=0,charType=SINGLE_CHAR; i<maxLength; i++ )
     {
         if( charType == DOUBLE_CHAR_HIGH )
         {
@@ -347,6 +348,24 @@ detectCharSet( TCHAR *dataPtr, DWORD maxLength, DWORD offset )
                 charType = DOUBLE_CHAR_HIGH;
             }
         }
+
+        if( i==offset )
+        {
+            break;
+        }
+        else
+        {
+            nop();
+        }
+    }
+
+    if( i==maxLength )
+    {
+        charType = SINGLE_CHAR;
+    }
+    else
+    {
+        nop();
     }
 
     return charType;
@@ -850,9 +869,15 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         {
         case '\b':  /* backspace */
         case '\t':  /* tab */
-        case '\n':  /* line feed */
-        case '\r':  /* carriage return */
         case '\x1B':/* escape */
+            break;
+        case '\n':  /* line feed */
+            break;
+        case '\r':  /* carriage return */
+            IoWndBuffAddNewLine( ioWndData.yCaret, ioWndData.xCaret, wParam );
+            ioWndData.xCaret = 0;
+            (ioWndData.yCaret)++;
+            IoWndInvalidateRect();
             break;
         default:    /* character codes */
             IoWndBuffAddData( ioWndData.yCaret, ioWndData.xCaret, wParam );
@@ -862,6 +887,7 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         }
     }
     SetCaretPos( (ioWndData.xCaret-ioWndData.iHorzPos)*ioWndData.cxChar, (ioWndData.yCaret-ioWndData.iVertPos)*ioWndData.cyChar);
+    setAllScrollInfo();
 
     return rtn;
 }
