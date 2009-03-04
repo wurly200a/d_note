@@ -388,7 +388,7 @@ IoWndBuffSetNewLineCode( UINT newLineType )
 S_BUFF_LINE_DATA *
 IoWndBuffAddData( DWORD lineNum, DWORD addPos, TCHAR data )
 {
-    S_BUFF_LINE_DATA *nowPtr,*nextPtr,*targetPtr = NULL,*newPtr;
+    S_BUFF_LINE_DATA *nowPtr,*nextPtr,*targetPtr = NULL,*newPtr = NULL;
     DWORD i;
 
     if( ioWndBuffListTopPtr == NULL )
@@ -458,6 +458,91 @@ IoWndBuffAddData( DWORD lineNum, DWORD addPos, TCHAR data )
 }
 
 /********************************************************************************
+ * 内容  : 指定位置のデータ削除
+ * 引数  : DWORD lineNum
+ * 引数  : DWORD removePos
+ * 引数  : DWORD removeSize
+ * 戻り値: S_BUFF_LINE_DATA *
+ ***************************************/
+S_BUFF_LINE_DATA *
+IoWndBuffRemoveData( DWORD lineNum, DWORD removePos, DWORD removeSize )
+{
+    S_BUFF_LINE_DATA *nowPtr,*nextPtr,*targetPtr = NULL,*newPtr = NULL;
+    DWORD i;
+
+    if( ioWndBuffListTopPtr == NULL )
+    {
+        nop();
+    }
+    else
+    {
+        for( i=0,nowPtr = nextPtr = ioWndBuffListTopPtr; (nowPtr != NULL) && (i<=lineNum); nowPtr=nextPtr,i++ )
+        {
+            nextPtr = nowPtr->nextPtr;
+
+            if( i == lineNum )
+            {
+                targetPtr = nowPtr;
+                break;
+            }
+            else
+            {
+                nop();
+            }
+        }
+    }
+
+    if( targetPtr != NULL )
+    {
+        if( (removePos > 0) && (removePos >= removeSize) && ((targetPtr->dataSize - targetPtr->newLineCodeSize) >= removeSize) )
+        {
+            newPtr = (S_BUFF_LINE_DATA *)malloc( sizeof(S_BUFF_LINE_DATA) + ((targetPtr->dataSize-removeSize) * sizeof(TCHAR)) );
+            if( newPtr != NULL )
+            {
+                newPtr->dataSize = targetPtr->dataSize - removeSize;
+                newPtr->newLineCodeSize = targetPtr->newLineCodeSize;
+                memcpy( newPtr->data, targetPtr->data, removePos-removeSize );
+                memcpy( newPtr->data+removePos-removeSize, targetPtr->data+removePos, (targetPtr->dataSize-removePos) );
+                newPtr->prevPtr = targetPtr->prevPtr;
+                newPtr->nextPtr = targetPtr->nextPtr;
+                if( newPtr->prevPtr != NULL )
+                {
+                    (newPtr->prevPtr)->nextPtr = newPtr;
+                }
+                else
+                {
+                    ioWndBuffListTopPtr = newPtr;
+                }
+                if( newPtr->nextPtr != NULL )
+                {
+                    (newPtr->nextPtr)->prevPtr = newPtr;
+                }
+                else
+                {
+                    nop();
+                }
+
+                free( targetPtr );
+            }
+            else
+            {
+                nop();
+            }
+        }
+        else
+        {
+
+        }
+    }
+    else
+    {
+        nop();
+    }
+
+    return newPtr;
+}
+
+/********************************************************************************
  * 内容  : 指定行への改行追加
  * 引数  : DWORD lineNum
  * 引数  : DWORD addPos
@@ -467,7 +552,7 @@ IoWndBuffAddData( DWORD lineNum, DWORD addPos, TCHAR data )
 S_BUFF_LINE_DATA *
 IoWndBuffAddNewLine( DWORD lineNum, DWORD addPos )
 {
-    S_BUFF_LINE_DATA *nowPtr,*nextPtr,*targetPtr = NULL,*newPtr,*newNextPtr;
+    S_BUFF_LINE_DATA *nowPtr,*nextPtr,*targetPtr = NULL,*newPtr = NULL,*newNextPtr = NULL;
     DWORD i;
 
     if( ioWndBuffListTopPtr == NULL )

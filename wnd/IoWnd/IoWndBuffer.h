@@ -76,6 +76,15 @@ BOOL IoWndBuffSetNewLineCode( UINT newLineType );
 S_BUFF_LINE_DATA *IoWndBuffAddData( DWORD lineNum, DWORD addPos, TCHAR data );
 
 /********************************************************************************
+ * 内容  : 指定位置のデータ削除
+ * 引数  : DWORD lineNum
+ * 引数  : DWORD removePos
+ * 引数  : DWORD removeSize
+ * 戻り値: S_BUFF_LINE_DATA *
+ ***************************************/
+S_BUFF_LINE_DATA *IoWndBuffRemoveData( DWORD lineNum, DWORD removePos, DWORD removeSize );
+
+/********************************************************************************
  * 内容  : 指定行への改行追加
  * 引数  : DWORD lineNum
  * 引数  : DWORD addPos

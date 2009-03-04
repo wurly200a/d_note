@@ -868,6 +868,17 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         switch( wParam )
         {
         case '\b':  /* backspace */
+            IoWndBuffRemoveData( ioWndData.yCaret, ioWndData.xCaret, 1 );
+            if( ioWndData.xCaret > 0 )
+            {
+                (ioWndData.xCaret)--;
+            }
+            else
+            {
+                
+            }
+            IoWndInvalidateRect();
+            break;
         case '\t':  /* tab */
         case '\x1B':/* escape */
             break;
