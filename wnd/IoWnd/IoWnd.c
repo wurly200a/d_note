@@ -574,8 +574,6 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     S_BUFF_LINE_DATA *lineBuffPtr;
     SCROLLINFO si;
     int moveAmount = 0;
-    BOOL bVscroll = FALSE;
-    BOOL bHscroll = FALSE;
 
     getAllScrollInfo();
 
@@ -600,48 +598,20 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                 moveAmount = 1;
             }
 
-            if( (ioWndData.xCaret - ioWndData.iHorzPos) < moveAmount )
-            { /* キャレットはすでに一番左端 */
-                if( ioWndData.iHorzPos >= moveAmount )
-                { /* 左にスクロールして表示する文字があれば */
-                    ioWndData.xCaret -= moveAmount;
-                    setScrollPos( SB_HORZ, ioWndData.iHorzPos - moveAmount );
-                    bHscroll = TRUE;
+            if( ioWndData.xCaret == 0 )
+            { /* キャレットはすでに行の最左端 */
+                if( (lineBuffPtr->prevPtr != NULL) )
+                { /* 前行有り */
+                    ioWndData.xCaret = (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize); /* 前行の最終位置 */
+                    ioWndData.yCaret = max( ioWndData.yCaret - 1, 0 );
                 }
                 else
-                { /* 左にスクロールして表示する文字無し */
-                    if( (lineBuffPtr->prevPtr != NULL) )
-                    { /* 前行有り */
-                        if( (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize) > (ioWndData.cxBuffer - 1) )
-                        { /* 前行の文字数は、表示可能領域より大きい */
-                            ioWndData.xCaret = (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize);
-                            setScrollPos( SB_HORZ, (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize) - (ioWndData.cxBuffer - 1) );
-                            bHscroll = TRUE;
-                        }
-                        else
-                        { /* 前行の文字数は、表示可能領域内 */
-                            ioWndData.xCaret = (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize);
-                        }
-
-                        if( (ioWndData.yCaret - ioWndData.iVertPos) == 0 )
-                        { /* キャレットはすでに一番上 */
-                            SendMessage(hwnd, WM_VSCROLL, SB_LINEUP, 0);
-                            bVscroll = TRUE;
-                        }
-                        else
-                        { /* キャレットは一番上ではない */
-                            nop();
-                        }
-                        ioWndData.yCaret = max( ioWndData.yCaret - 1, 0 );
-                    }
-                    else
-                    { /* 前行無し */
-                        nop();
-                    }
+                { /* 前行無し */
+                    nop();
                 }
             }
             else
-            { /* キャレットは一番左端ではない */
+            { /* まだ左へ移動可能 */
                 ioWndData.xCaret = max( ioWndData.xCaret - moveAmount, 0 );
             }
         }
@@ -663,41 +633,20 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             }
 
             if( (ioWndData.xCaret + moveAmount) > (lineBuffPtr->dataSize - lineBuffPtr->newLineCodeSize) )
-            { /* 右へ1個移動すると、1行内の文字数数をオーバーする */
+            { /* キャレットはすでに行の最右端 */
                 if( (lineBuffPtr->nextPtr != NULL) )
-                { /* 次行があれば */
+                { /* 次行有り */
                     ioWndData.xCaret = 0;
-                    setScrollPos( SB_HORZ, 0 );
-                    bHscroll = TRUE;
-
-                    if( (ioWndData.yCaret - ioWndData.iVertPos) >= (ioWndData.cyBuffer - 1) )
-                    { /* キャレットはすでに一番下 */
-                        SendMessage(hwnd, WM_VSCROLL, SB_LINEDOWN, 0);
-                        bVscroll = TRUE;
-                    }
-                    else
-                    { /* キャレットは一番下ではない */
-                        nop();
-                    }
                     (ioWndData.yCaret)++;
                 }
                 else
-                {
+                { /* 次行無し */
                     nop();
                 }
             }
             else
-            { /* 右へ1個移動しても、1行内の文字数数はオーバーしない */
+            { /* まだ右へ移動可能 */
                 ioWndData.xCaret += moveAmount;
-                if( ioWndData.xCaret > ioWndData.iHorzPos + ioWndData.cxBuffer - 1 )
-                { /* キャレットはすでに一番右端 */
-                    setScrollPos( SB_HORZ, ioWndData.iHorzPos + moveAmount );
-                    bHscroll = TRUE;
-                }
-                else
-                {
-                    nop();
-                }
             }
         }
         break;
@@ -705,41 +654,20 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         if( (lineBuffPtr != NULL) &&
             (lineBuffPtr->prevPtr != NULL) )
         { /* 前行有り */
-            if( ioWndData.iHorzPos > (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize) )
-            { /* 前行の最終文字が表示範囲に入っていない */
-                ioWndData.xCaret = (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize);
-                setScrollPos( SB_HORZ, (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize) - (ioWndData.cxBuffer - 1) );
-                bHscroll = TRUE;
+            if( ioWndData.xCaret > (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize) )
+            { /* 上は文字が無い */
+                ioWndData.xCaret = (lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize); /* 前行の最終位置へ */
             }
             else
-            { /* 前行の最終文字が表示範囲に入っている */
-                ioWndData.xCaret = min( min( ioWndData.xCaret ,(lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize)), ioWndData.iHorzPos+ioWndData.cxBuffer-1 );
+            { /* 上は文字が有る */
                 if( (detectCharSet(lineBuffPtr->prevPtr->data,(lineBuffPtr->prevPtr->dataSize - lineBuffPtr->prevPtr->newLineCodeSize),ioWndData.xCaret) == DOUBLE_CHAR_LOW) )
-                {
-                    if( ioWndData.xCaret == (ioWndData.iHorzPos+ioWndData.cxBuffer-1) )
-                    {
-                        SendMessage(hwnd, WM_HSCROLL, SB_LINERIGHT, 0);
-                        bHscroll = TRUE;
-                    }
-                    else
-                    {
-                        ioWndData.xCaret += 1;
-                    }
+                { /* 上は2byte文字の真ん中だったら */
+                    ioWndData.xCaret += 1; /* 後ろへずらす */
                 }
                 else
                 {
                     nop();
                 }
-            }
-
-            if( (ioWndData.yCaret - ioWndData.iVertPos) == 0 )
-            { /* キャレットはすでに一番上 */
-                SendMessage(hwnd, WM_VSCROLL, SB_LINEUP, 0);
-                bVscroll = TRUE;
-            }
-            else
-            { /* キャレットは一番上ではない */
-                nop();
             }
             ioWndData.yCaret = max( ioWndData.yCaret - 1, 0 );
         }
@@ -752,41 +680,20 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         if( (lineBuffPtr != NULL) &&
             (lineBuffPtr->nextPtr != NULL) )
         { /* 次行有り */
-            if( ioWndData.iHorzPos > (lineBuffPtr->nextPtr->dataSize - lineBuffPtr->nextPtr->newLineCodeSize) )
-            { /* 次行の最終文字が表示範囲に入っていない */
+            if( ioWndData.xCaret > (lineBuffPtr->nextPtr->dataSize - lineBuffPtr->nextPtr->newLineCodeSize) )
+            { /* 下は文字が無い */
                 ioWndData.xCaret = (lineBuffPtr->nextPtr->dataSize - lineBuffPtr->nextPtr->newLineCodeSize);
-                setScrollPos( SB_HORZ, (lineBuffPtr->nextPtr->dataSize - lineBuffPtr->nextPtr->newLineCodeSize) - (ioWndData.cxBuffer - 1) );
-                bHscroll = TRUE;
             }
             else
-            { /* 次行の最終文字が表示範囲に入っている */
-                ioWndData.xCaret = min( min( ioWndData.xCaret ,(lineBuffPtr->nextPtr->dataSize - lineBuffPtr->nextPtr->newLineCodeSize)), ioWndData.iHorzPos+ioWndData.cxBuffer-1 );
+            { /* 下は文字が有る */
                 if( (detectCharSet(lineBuffPtr->nextPtr->data,(lineBuffPtr->nextPtr->dataSize - lineBuffPtr->nextPtr->newLineCodeSize),ioWndData.xCaret) == DOUBLE_CHAR_LOW) )
-                {
-                    if( ioWndData.xCaret == (ioWndData.iHorzPos+ioWndData.cxBuffer-1) )
-                    {
-                        SendMessage(hwnd, WM_HSCROLL, SB_LINERIGHT, 0);
-                        bHscroll = TRUE;
-                    }
-                    else
-                    {
-                        ioWndData.xCaret += 1;
-                    }
+                { /* 下は2byte文字の真ん中だったら */
+                    ioWndData.xCaret += 1; /* 後ろへずらす */
                 }
                 else
                 {
                     nop();
                 }
-            }
-
-            if( (ioWndData.yCaret - ioWndData.iVertPos) >= (ioWndData.cyBuffer - 1) )
-            { /* キャレットはすでに一番下 */
-                SendMessage(hwnd, WM_VSCROLL, SB_LINEDOWN, 0);
-                bVscroll = TRUE;
-            }
-            else
-            { /* キャレットは一番下ではない */
-                nop();
             }
             (ioWndData.yCaret)++;
         }
@@ -800,47 +707,31 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     }
 
     /* キャレットが表示範囲外に有った場合の処理(横方向) */
-    if( bHscroll == TRUE )
+    if( ioWndData.xCaret < ioWndData.iHorzPos )
     {
-        nop();
+        setScrollPos( SB_HORZ, ioWndData.xCaret );
+    }
+    else if( (ioWndData.iHorzPos+ioWndData.cxBuffer-1) < ioWndData.xCaret )
+    {
+        setScrollPos( SB_HORZ, (ioWndData.iHorzPos+ioWndData.cxBuffer-1) );
     }
     else
     {
-        if( ioWndData.xCaret < ioWndData.iHorzPos )
-        {
-            setScrollPos( SB_HORZ, ioWndData.xCaret );
-        }
-        else if( (ioWndData.iHorzPos+ioWndData.cxBuffer-1) < ioWndData.xCaret )
-        {
-            setScrollPos( SB_HORZ, (ioWndData.iHorzPos+ioWndData.cxBuffer-1) );
-        }
-        else
-        {
-            nop();
-        }
+        nop();
     }
 
     /* キャレットが表示範囲外に有った場合の処理(縦方向) */
-    if( bVscroll == TRUE )
+    if( ioWndData.yCaret < ioWndData.iVertPos )
     {
-        nop();
+        setScrollPos( SB_VERT, ioWndData.yCaret );
+    }
+    else if( (ioWndData.iVertPos+ioWndData.cyBuffer-1) < ioWndData.yCaret )
+    {
+        setScrollPos( SB_VERT, ioWndData.yCaret - (ioWndData.cyBuffer-1) );
     }
     else
     {
-        if( ioWndData.yCaret < ioWndData.iVertPos )
-        {
-            ioWndData.yCaret = ioWndData.iVertPos;
-            setScrollPos( SB_VERT, ioWndData.iVertPos );
-        }
-        else if( (ioWndData.iVertPos+ioWndData.cyBuffer-1) < ioWndData.yCaret )
-        {
-            ioWndData.yCaret = (ioWndData.iVertPos+ioWndData.cyBuffer-1);
-            setScrollPos( SB_VERT, ioWndData.iVertPos );
-        }
-        else
-        {
-            nop();
-        }
+        nop();
     }
 
     SetCaretPos( (ioWndData.xCaret-ioWndData.iHorzPos)*ioWndData.cxChar, (ioWndData.yCaret-ioWndData.iVertPos)*ioWndData.cyChar);
