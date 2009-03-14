@@ -35,8 +35,6 @@ typedef struct
     int    cyChar;    /* 文字サイズ(Y)             */
     int    cxClient;  /* クライアント領域サイズ(X) */
     int    cyClient;  /* クライアント領域サイズ(Y) */
-    int    xCaret;    /* カーソル位置(X)           */
-    int    yCaret;    /* カーソル位置(Y)           */
     int    cxBuffer;  /* 表示可能な文字数(X)       */
     int    cyBuffer;  /* 表示可能な文字数(Y)       */
     DWORD  dwCharSet;

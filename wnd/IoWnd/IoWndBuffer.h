@@ -4,6 +4,8 @@ typedef struct tag_buffer_line_data
 {
     struct tag_buffer_line_data *prevPtr;
     struct tag_buffer_line_data *nextPtr;
+    DWORD                       lineNum;
+    DWORD                       caretPos;
     DWORD                       dataSize;
     INT                         newLineCodeSize;
     TCHAR                       data[];
@@ -46,6 +48,48 @@ DWORD IoWndGetLineMaxSize( void );
 DWORD IoWndGetColumnMaxSize( void );
 
 /********************************************************************************
+ * 内容  : IOウィンドウバッファのキャレットX位置取得
+ * 引数  : なし
+ * 戻り値: DWORD
+ ***************************************/
+DWORD IoWndGetCaretXpos( void );
+
+/********************************************************************************
+ * 内容  : IOウィンドウバッファのキャレットY位置取得
+ * 引数  : なし
+ * 戻り値: DWORD
+ ***************************************/
+DWORD IoWndGetCaretYpos( void );
+
+/********************************************************************************
+ * 内容  : IOウィンドウバッファのキャレットX位置加算
+ * 引数  : なし
+ * 戻り値: なし
+ ***************************************/
+void IoWndIncCaretXpos( void );
+
+/********************************************************************************
+ * 内容  : IOウィンドウバッファのキャレットX位置減算
+ * 引数  : なし
+ * 戻り値: なし
+ ***************************************/
+void IoWndDecCaretXpos( void );
+
+/********************************************************************************
+ * 内容  : IOウィンドウバッファのキャレットY位置加算
+ * 引数  : なし
+ * 戻り値: なし
+ ***************************************/
+void IoWndIncCaretYpos( void );
+
+/********************************************************************************
+ * 内容  : IOウィンドウバッファのキャレットY位置減算
+ * 引数  : なし
+ * 戻り値: なし
+ ***************************************/
+void IoWndDecCaretYpos( void );
+
+/********************************************************************************
  * 内容  : 指定行のデータアドレス取得
  * 引数  : DWORD lineNum
  * 戻り値: S_BUFF_LINE_DATA *
@@ -67,31 +111,25 @@ enum
 BOOL IoWndBuffSetNewLineCode( UINT newLineType );
 
 /********************************************************************************
- * 内容  : 指定行へのデータ追加
- * 引数  : DWORD lineNum
- * 引数  : DWORD addPos
+ * 内容  : データ追加
  * 引数  : TCHAR data
- * 戻り値: S_BUFF_LINE_DATA *
+ * 戻り値: なし
  ***************************************/
-S_BUFF_LINE_DATA *IoWndBuffAddData( DWORD lineNum, DWORD addPos, TCHAR data );
+void IoWndBuffAddData( TCHAR data );
 
 /********************************************************************************
- * 内容  : 指定位置のデータ削除
- * 引数  : DWORD lineNum
- * 引数  : DWORD removePos
- * 引数  : DWORD removeSize
- * 戻り値: S_BUFF_LINE_DATA *
+ * 内容  : データ削除
+ * 引数  : なし
+ * 戻り値: なし
  ***************************************/
-S_BUFF_LINE_DATA *IoWndBuffRemoveData( DWORD lineNum, DWORD removePos, DWORD removeSize );
+void IoWndBuffRemoveData( void );
 
 /********************************************************************************
- * 内容  : 指定行への改行追加
- * 引数  : DWORD lineNum
- * 引数  : DWORD addPos
- * 引数  : TCHAR data
- * 戻り値: S_BUFF_LINE_DATA *
+ * 内容  : 改行追加
+ * 引数  : なし
+ * 戻り値: なし
  ***************************************/
-S_BUFF_LINE_DATA *IoWndBuffAddNewLine( DWORD lineNum, DWORD addPos );
+void IoWndBuffAddNewLine( void );
 
 #define IOWND_BUFFER_H
 #endif /* IOWND_BUFFER_H */
