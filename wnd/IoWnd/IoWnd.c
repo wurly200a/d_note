@@ -270,6 +270,18 @@ ioWndConvertMSGtoINDEX( UINT message )
     case WM_MBUTTONUP           :rtn = IOWND_ON_MBUTTONUP           ;break;
     case WM_RBUTTONUP           :rtn = IOWND_ON_RBUTTONUP           ;break;
     case WM_IME_STARTCOMPOSITION:rtn = IOWND_ON_IME_STARTCOMPOSITION;break;
+
+    case WM_NCMOUSEMOVE         :rtn = IOWND_ON_DEFAULT             ;break;
+    case WM_SETCURSOR           :rtn = IOWND_ON_DEFAULT             ;break;
+    case WM_NCPAINT             :rtn = IOWND_ON_DEFAULT             ;break;
+    case WM_NCHITTEST           :rtn = IOWND_ON_DEFAULT             ;break;
+    case WM_ERASEBKGND          :rtn = IOWND_ON_DEFAULT             ;break;
+
+    case WM_IME_COMPOSITION     :rtn = IOWND_ON_DEFAULT             ;break;
+    case WM_IME_NOTIFY          :rtn = IOWND_ON_DEFAULT             ;break;
+    case WM_IME_SETCONTEXT      :rtn = IOWND_ON_DEFAULT             ;break;
+    case WM_IME_COMPOSITIONFULL :rtn = IOWND_ON_DEFAULT             ;break;
+
     default                     :rtn = IOWND_ON_DEFAULT             ;break;
     }
     /* *INDENT-ON* */
@@ -662,6 +674,7 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         }
     }
     SetCaretPos( (IoWndGetCaretXpos()-ioWndData.iHorzPos)*ioWndData.cxChar, (IoWndGetCaretYpos()-ioWndData.iVertPos)*ioWndData.cyChar);
+    printCaretPos();
     setAllScrollInfo();
 
     return rtn;
@@ -913,6 +926,17 @@ static LRESULT
 ioOnLbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
+    int x,y;
+
+    getAllScrollInfo();
+
+    x = LOWORD(lParam);
+    y = HIWORD(lParam);
+
+    IoWndSetCaretPos( ((x + (ioWndData.iHorzPos*ioWndData.cxChar))/ioWndData.cxChar), ((y + (ioWndData.iVertPos*ioWndData.cyChar))/ioWndData.cyChar) );
+
+    SetCaretPos( (IoWndGetCaretXpos()-ioWndData.iHorzPos)*ioWndData.cxChar, (IoWndGetCaretYpos()-ioWndData.iVertPos)*ioWndData.cyChar);
+    printCaretPos();
 
     return rtn;
 }

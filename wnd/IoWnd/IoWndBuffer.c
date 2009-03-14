@@ -350,6 +350,64 @@ IoWndGetCaretYpos( void )
 }
 
 /********************************************************************************
+ * 内容  : IOウィンドウバッファのキャレット位置セット
+ * 引数  : DWORD xPos
+ * 引数  : DWORD lineNum
+ * 戻り値: なし
+ ***************************************/
+void
+IoWndSetCaretPos( DWORD xPos, DWORD lineNum )
+{
+    S_BUFF_LINE_DATA *nowPtr = NULL;
+
+    if( ioWndBuffListTopPtr == NULL )
+    {
+        nop();
+    }
+    else
+    {
+        for( nowPtr = ioWndBuffListTopPtr; (nowPtr->nextPtr != NULL); nowPtr=nowPtr->nextPtr )
+        { /* 一致しなかった場合は nowPtr=最終行 となるように */
+            if( nowPtr->lineNum == lineNum )
+            {
+                break;
+            }
+            else
+            {
+                nop();
+            }
+        }
+    }
+
+    if( nowPtr != NULL )
+    {
+        ioWndBuffLineNowPtr = nowPtr;
+
+        if( xPos < (ioWndBuffLineNowPtr->dataSize - ioWndBuffLineNowPtr->newLineCodeSize) )
+        {
+            ioWndBuffLineNowPtr->caretPos = xPos;
+
+            if( (detectCharSet(ioWndBuffLineNowPtr,ioWndBuffLineNowPtr->caretPos) == DOUBLE_CHAR_LOW) )
+            { /* 2byte文字の真ん中だったら */
+                ioWndBuffLineNowPtr->caretPos += 1; /* 後ろへずらす */
+            }
+            else
+            {
+                nop();
+            }
+        }
+        else
+        {
+            ioWndBuffLineNowPtr->caretPos = (ioWndBuffLineNowPtr->dataSize - ioWndBuffLineNowPtr->newLineCodeSize);
+        }
+    }
+    else
+    {
+        nop();
+    }
+}
+
+/********************************************************************************
  * 内容  : IOウィンドウバッファのキャレットX位置加算
  * 引数  : なし
  * 戻り値: なし
