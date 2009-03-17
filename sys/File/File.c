@@ -301,7 +301,7 @@ FileReadByte( FILE_ID id, LPDWORD pSize )
     }
     else
     {
-        /* error */
+        nop(); /* error */
     }
 
     return rtn;
@@ -330,4 +330,56 @@ FileGetLength( PTSTR pstrFileName )
     }
 
     return dwFileLength;
+}
+
+/********************************************************************************
+ * 内容  : ファイルに書き込む
+ * 引数  : FILE_ID id
+ * 引数  : TCHAR *dataPtr
+ * 引数  : DWORD dataSize
+ * 戻り値: BOOL 読み込んだデータの先頭ポインタ
+ ***************************************/
+BOOL
+FileWrite( FILE_ID id, TCHAR *dataPtr, DWORD dataSize )
+{
+    DWORD  dwBytesWritten;
+    HANDLE hFile;
+    WORD   wByteOrderMark = 0xFEFF;
+    BOOL   result = TRUE;
+
+    if( (id < FILE_ID_MAX) && (fileList[id].init == TRUE) )
+    {
+        hFile = CreateFile( fileList[id].pFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL );
+        if( hFile == INVALID_HANDLE_VALUE )
+        {
+            result = FALSE;
+        }
+        else
+        {
+            if( dataPtr != NULL )
+            {
+                WriteFile( hFile, dataPtr, dataSize * sizeof (TCHAR), &dwBytesWritten, NULL );
+
+                if( (dataSize * sizeof (TCHAR)) != dwBytesWritten )
+                {
+                    result = FALSE;
+                }
+                else
+                {
+                    nop();
+                }
+            }
+            else
+            {
+                result =  FALSE;
+            }
+            CloseHandle( hFile );
+        }
+    }
+    else
+    {
+        nop(); /* error */
+    }
+
+    return result;
 }

@@ -74,5 +74,14 @@ PBYTE FileReadByte( FILE_ID id, LPDWORD pSize );
  ***************************************/
 DWORD FileGetLength( PTSTR pstrFileName );
 
+/********************************************************************************
+ * 内容  : ファイルに書き込む
+ * 引数  : FILE_ID id
+ * 引数  : TCHAR *dataPtr
+ * 引数  : DWORD dataSize
+ * 戻り値: BOOL 読み込んだデータの先頭ポインタ
+ ***************************************/
+BOOL FileWrite( FILE_ID id, TCHAR *dataPtr, DWORD dataSize );
+
 #define FILE_H
 #endif /* FILE_H */

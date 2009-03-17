@@ -343,6 +343,20 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         break;
 #endif
 
+    case IDM_FILE_SAVE:
+        dwSize = IoWndGetDataSize();
+        dataPtr = malloc( dwSize * sizeof(TCHAR) );
+        if( dataPtr != NULL )
+        {
+            IoWndDataGet( dataPtr,dwSize );
+            FileWrite( FILE_ID_BIN, dataPtr, dwSize );
+            free( dataPtr );
+        }
+        else
+        {
+            nop();
+        }
+        break;
     case IDM_FORMAT_FONT:
         if( FontChooseFont( hwnd, FONT_ID_IO ) )
         {

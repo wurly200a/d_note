@@ -132,6 +132,42 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length )
 }
 
 /********************************************************************************
+ * 内容  : IOウィンドウバッファのデータ取得
+ * 引数  : TCHAR *dataPtr
+ * 引数  : DWORD dataSize
+ * 戻り値: BOOL
+ ***************************************/
+BOOL
+IoWndBuffDataGet( TCHAR *dataPtr, DWORD dataSize )
+{
+    BOOL rtn = FALSE;
+    S_BUFF_LINE_DATA *nowPtr;
+
+    if( ioWndBuffListTopPtr == NULL )
+    {
+        nop();
+    }
+    else
+    {
+        if( dataPtr != NULL )
+        {
+            for( nowPtr=ioWndBuffListTopPtr; nowPtr != NULL; nowPtr = nowPtr->nextPtr )
+            {
+                memcpy( dataPtr, nowPtr->data, nowPtr->dataSize );
+                dataPtr += nowPtr->dataSize;
+            }
+        }
+        else
+        {
+            nop();
+        }
+        rtn = TRUE;
+    }
+
+    return rtn;
+}
+
+/********************************************************************************
  * 内容  : 連結リストのデータをクリア
  * 引数  : なし
  * 戻り値: なし

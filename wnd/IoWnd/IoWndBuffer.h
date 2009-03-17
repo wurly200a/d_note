@@ -27,6 +27,14 @@ void IoWndBuffInit( void );
 void IoWndBuffDataSet( TCHAR* dataPtr, DWORD length );
 
 /********************************************************************************
+ * 内容  : IOウィンドウバッファのデータ取得
+ * 引数  : TCHAR *dataPtr
+ * 引数  : DWORD dataSize
+ * 戻り値: BOOL
+ ***************************************/
+BOOL IoWndBuffDataGet( TCHAR *dataPtr, DWORD dataSize );
+
+/********************************************************************************
  * 内容  : IOウィンドウバッファのデータサイズ取得
  * 引数  : なし
  * 戻り値: DWORD
