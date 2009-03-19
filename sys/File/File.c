@@ -29,7 +29,7 @@ static OPENFILENAME ofns[FILE_ID_MAX];
 
 static S_FILE_LIST fileList[FILE_ID_MAX] =
 {  /* exist, size, file, title, dir ,  ofn  ,filter                            , ext        ,pByte */
-    { FALSE,    0, NULL, NULL , NULL,  NULL ,TEXT("txt files (*.txt)\0*.txt\0"), TEXT("txt"),NULL  },
+    { FALSE,    0, NULL, NULL , NULL,  NULL ,TEXT("テキスト文書 (*.txt)\0*.txt\0"), TEXT("txt"),NULL  },
 };
 
 /********************************************************************************
@@ -337,49 +337,94 @@ FileGetLength( PTSTR pstrFileName )
  * 引数  : FILE_ID id
  * 引数  : TCHAR *dataPtr
  * 引数  : DWORD dataSize
- * 戻り値: BOOL 読み込んだデータの先頭ポインタ
+ * 戻り値: FILE_RESULT
  ***************************************/
-BOOL
+FILE_RESULT
 FileWrite( FILE_ID id, TCHAR *dataPtr, DWORD dataSize )
 {
     DWORD  dwBytesWritten;
     HANDLE hFile;
     WORD   wByteOrderMark = 0xFEFF;
-    BOOL   result = TRUE;
+    FILE_RESULT result = FILE_OK;
 
     if( (id < FILE_ID_MAX) && (fileList[id].init == TRUE) )
     {
-        hFile = CreateFile( fileList[id].pFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL );
-        if( hFile == INVALID_HANDLE_VALUE )
+        if( *(fileList[id].pFileName) != NULL  )
         {
-            result = FALSE;
-        }
-        else
-        {
-            if( dataPtr != NULL )
+            hFile = CreateFile( fileList[id].pFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL );
+            if( hFile == INVALID_HANDLE_VALUE )
             {
-                WriteFile( hFile, dataPtr, dataSize * sizeof (TCHAR), &dwBytesWritten, NULL );
-
-                if( (dataSize * sizeof (TCHAR)) != dwBytesWritten )
-                {
-                    result = FALSE;
-                }
-                else
-                {
-                    nop();
-                }
+                result = FILE_HANDLE_ERR;
             }
             else
             {
-                result =  FALSE;
+                if( dataPtr != NULL )
+                {
+                    WriteFile( hFile, dataPtr, dataSize * sizeof (TCHAR), &dwBytesWritten, NULL );
+
+                    if( (dataSize * sizeof (TCHAR)) != dwBytesWritten )
+                    {
+                        result = FILE_SIZE_ERR;
+                    }
+                    else
+                    {
+                        nop();
+                    }
+                }
+                else
+                {
+                    result = FILE_DATA_ERR;
+                }
+                CloseHandle( hFile );
             }
-            CloseHandle( hFile );
+        }
+        else
+        {
+            result = FILE_NAME_NOT_SET;
         }
     }
     else
     {
-        nop(); /* error */
+        result = FILE_NOT_INITIALIZE;
     }
 
     return result;
+}
+
+/********************************************************************************
+ * 内容  : コモンダイアログにより、ファイルを保存するフルパス、名前を取得する
+ * 引数  : HWND    hwnd
+ * 引数  : FILE_ID id
+ * 戻り値: BOOL
+ **********************************************/
+BOOL
+FileSaveDlg( HWND hwnd, FILE_ID id )
+{
+    BOOL rtn = FALSE;
+
+    if( (id < FILE_ID_MAX) && (fileList[id].init == TRUE) )
+    {
+        fileList[id].pOfn->hwndOwner      = hwnd;
+        fileList[id].pOfn->lpstrFile      = fileList[id].pFileName;
+        fileList[id].pOfn->lpstrFileTitle = fileList[id].pTitleName;
+        fileList[id].pOfn->Flags          = OFN_OVERWRITEPROMPT | OFN_EXPLORER;
+
+        rtn = GetSaveFileName( fileList[id].pOfn );
+
+        if( rtn == TRUE )
+        {
+            lstrcpy( (PTSTR)fileList[id].pDirPath , (PTSTR) fileList[id].pFileName);
+            *(fileList[id].pDirPath + fileList[id].pOfn->nFileOffset) = '\0';
+        }
+        else
+        {
+            *(fileList[id].pDirPath) = '\0';
+        }
+    }
+    else
+    {
+        /* error */
+    }
+
+    return rtn;
 }

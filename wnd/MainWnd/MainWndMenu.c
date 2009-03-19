@@ -33,7 +33,6 @@ MenuCreate( void )
     AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_EXIT       , TEXT("終了(&X)") );
     AppendMenu( hMenu     , MF_POPUP    , (UINT_PTR)hMenuPopup, TEXT("ファイル(&F)") );
 
-    EnableMenuItem( hMenu, IDM_FILE_SAVE_AS   , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_FILE_PAGE      , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_FILE_PRINT     , MF_GRAYED );
 

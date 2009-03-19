@@ -349,7 +349,44 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         if( dataPtr != NULL )
         {
             IoWndDataGet( dataPtr,dwSize );
-            FileWrite( FILE_ID_BIN, dataPtr, dwSize );
+            if( (FileWrite( FILE_ID_BIN, dataPtr, dwSize )) == FILE_NAME_NOT_SET )
+            {
+                if( FileSaveDlg( hwnd,FILE_ID_BIN ) )
+                {
+                    doCaption( hwnd, FileGetTitleName(FILE_ID_BIN) );
+                    FileWrite( FILE_ID_BIN, dataPtr, dwSize );
+                }
+                else
+                {
+                    nop();
+                }
+            }
+            else
+            {
+                nop();
+            }
+            free( dataPtr );
+        }
+        else
+        {
+            nop();
+        }
+        break;
+    case IDM_FILE_SAVE_AS:
+        dwSize = IoWndGetDataSize();
+        dataPtr = malloc( dwSize * sizeof(TCHAR) );
+        if( dataPtr != NULL )
+        {
+            IoWndDataGet( dataPtr,dwSize );
+            if( FileSaveDlg( hwnd,FILE_ID_BIN ) )
+            {
+                doCaption( hwnd, FileGetTitleName(FILE_ID_BIN) );
+                FileWrite( FILE_ID_BIN, dataPtr, dwSize );
+            }
+            else
+            {
+                nop();
+            }
             free( dataPtr );
         }
         else

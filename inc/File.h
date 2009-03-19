@@ -74,14 +74,32 @@ PBYTE FileReadByte( FILE_ID id, LPDWORD pSize );
  ***************************************/
 DWORD FileGetLength( PTSTR pstrFileName );
 
+typedef enum
+{
+    FILE_OK,
+    FILE_NAME_NOT_SET,
+    FILE_SIZE_ERR,
+    FILE_DATA_ERR,
+    FILE_HANDLE_ERR,
+    FILE_NOT_INITIALIZE,
+} FILE_RESULT;
+
 /********************************************************************************
  * 内容  : ファイルに書き込む
  * 引数  : FILE_ID id
  * 引数  : TCHAR *dataPtr
  * 引数  : DWORD dataSize
- * 戻り値: BOOL 読み込んだデータの先頭ポインタ
+ * 戻り値: FILE_RESULT
  ***************************************/
-BOOL FileWrite( FILE_ID id, TCHAR *dataPtr, DWORD dataSize );
+FILE_RESULT FileWrite( FILE_ID id, TCHAR *dataPtr, DWORD dataSize );
+
+/********************************************************************************
+ * 内容  : コモンダイアログにより、ファイルを保存するフルパス、名前を取得する
+ * 引数  : HWND    hwnd
+ * 引数  : FILE_ID id
+ * 戻り値: BOOL
+ **********************************************/
+BOOL FileSaveDlg( HWND hwnd, FILE_ID id );
 
 #define FILE_H
 #endif /* FILE_H */
