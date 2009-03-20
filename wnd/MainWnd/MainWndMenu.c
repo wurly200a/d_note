@@ -9,6 +9,22 @@
 /* 内部変数定義 */
 HMENU hMenu;
 
+static const ACCEL accelTbl[] =
+{
+    { (FVIRTKEY|FNOINVERT|FCONTROL),'N',IDM_FILE_NEW        },
+    { (FVIRTKEY|FNOINVERT|FCONTROL),'O',IDM_FILE_OPEN       },
+    { (FVIRTKEY|FNOINVERT|FCONTROL),'S',IDM_FILE_SAVE       },
+    { (FVIRTKEY|FNOINVERT|FCONTROL),'P',IDM_FILE_PRINT      },
+    { (FVIRTKEY|FNOINVERT|FCONTROL),'Z',IDM_EDIT_UNDO       },
+    { (FVIRTKEY|FNOINVERT|FCONTROL),'X',IDM_EDIT_CUT        },
+    { (FVIRTKEY|FNOINVERT|FCONTROL),'C',IDM_EDIT_COPY       },
+    { (FVIRTKEY|FNOINVERT|FCONTROL),'V',IDM_EDIT_PASTE      },
+    { (FVIRTKEY|FNOINVERT|FCONTROL),'F',IDM_EDIT_FIND       },
+    { (FVIRTKEY|FNOINVERT|FCONTROL),'H',IDM_EDIT_REPLACE    },
+    { (FVIRTKEY|FNOINVERT|FCONTROL),'G',IDM_EDIT_GOTO_LINE  },
+    { (FVIRTKEY|FNOINVERT|FCONTROL),'A',IDM_EDIT_SELECT_ALL },
+};
+
 /********************************************************************************
  * 内容  : メニューの生成
  * 引数  : なし
@@ -94,6 +110,17 @@ MenuCreate( void )
     EnableMenuItem( hMenu, IDM_HELP_ABOUT , MF_GRAYED );
 
     return hMenu;
+}
+
+/********************************************************************************
+ * 内容  : アクセラレータの生成
+ * 引数  : なし
+ * 戻り値: HACCEL
+ ***************************************/
+HACCEL
+AccelCreate( void )
+{
+    return CreateAcceleratorTable(accelTbl,(sizeof(accelTbl)/sizeof(ACCEL)));
 }
 
 /********************************************************************************
