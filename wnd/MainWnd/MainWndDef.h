@@ -32,6 +32,7 @@ typedef struct
     int  cyChar;
     int  cxCaps;
     HWND hWndIo;
+    HACCEL hAccel;
 } S_MAINWND_DATA;
 
 #define MAINWND_DEF_H

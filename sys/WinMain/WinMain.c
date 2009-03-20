@@ -5,7 +5,7 @@
 
 /* 外部変数定義 */
 /* 内部関数定義 */
-static BOOL initializeApp( HINSTANCE, int);
+static HWND initializeApp( HINSTANCE hInst, int nCmdShow, HACCEL *hAccelPtr );
 
 /* 内部変数定義 */
 static HINSTANCE hInstance;    /* インスタンスのハンドラ     */
@@ -23,8 +23,11 @@ int WINAPI
 WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nCmdShow )
 {
     MSG msg;
+    HACCEL hAccel;
+    HWND hWnd;
 
-    if( !initializeApp( hInstance, nCmdShow ) )
+    hWnd = initializeApp( hInstance, nCmdShow, &hAccel );
+    if( hWnd == NULL )
     {
         MessageBox(NULL, "couldn't start!", NULL, MB_OK);
         return 0;
@@ -34,8 +37,15 @@ WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nCmdS
     {
         if( !IsMainWndMessage( &msg ) )
         {
-            TranslateMessage( &msg ) ;
-            DispatchMessage( &msg ) ;
+            if( !TranslateAccelerator(hWnd,hAccel,&msg) )
+            {
+                TranslateMessage( &msg );
+                DispatchMessage( &msg );
+            }
+            else
+            {
+                nop();
+            }
         }
     }
 
@@ -47,13 +57,14 @@ WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nCmdS
  * 内容   : アプリケーションの初期化
  * 引数   : HINSTANCE hInst
  * 引数   : int nCmdShow
- * 戻り値 : BOOL
+ * 引数   : HACCEL *hAccelPtr
+ * 戻り値 : HWND
  ***************************************/
-static BOOL
-initializeApp( HINSTANCE hInst, int nCmdShow )
+static HWND
+initializeApp( HINSTANCE hInst, int nCmdShow, HACCEL *hAccelPtr )
 {
     hInstance = hInst;
-    return MainWndCreate( nCmdShow ); /* メインウィンドウ生成 */
+    return MainWndCreate( nCmdShow, hAccelPtr ); /* メインウィンドウ生成 */
 }
 
 /********************************************************************************

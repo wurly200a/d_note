@@ -22,13 +22,13 @@ MenuCreate( void )
     hMenu = CreateMenu();
 
     hMenuPopup = CreateMenu();
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_NEW        , TEXT("新規(&N)") );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_OPEN       , TEXT("開く(&O)...") );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_SAVE       , TEXT("上書き保存(&S)") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_NEW        , TEXT("新規(&N)\tCtrl+N") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_OPEN       , TEXT("開く(&O)...\tCtrl+O") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_SAVE       , TEXT("上書き保存(&S)\tCtrl+S") );
     AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_SAVE_AS    , TEXT("名前を付けて保存(&A)...") );
     AppendMenu( hMenuPopup, MF_SEPARATOR, 0                   , NULL );
     AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_PAGE       , TEXT("ページ設定(&U)...") );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_PRINT      , TEXT("印刷(&P)...") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_PRINT      , TEXT("印刷(&P)...\tCtrl+P") );
     AppendMenu( hMenuPopup, MF_SEPARATOR, 0                   , NULL );
     AppendMenu( hMenuPopup, MF_STRING   , IDM_FILE_EXIT       , TEXT("終了(&X)") );
     AppendMenu( hMenu     , MF_POPUP    , (UINT_PTR)hMenuPopup, TEXT("ファイル(&F)") );
@@ -37,19 +37,19 @@ MenuCreate( void )
     EnableMenuItem( hMenu, IDM_FILE_PRINT     , MF_GRAYED );
 
     hMenuPopup = CreateMenu();
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_UNDO       , TEXT("元に戻す(&U)") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_UNDO       , TEXT("元に戻す(&U)\tCtrl+Z") );
     AppendMenu( hMenuPopup, MF_SEPARATOR, 0                   , NULL );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_CUT        , TEXT("切り取り(&T)") );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_COPY       , TEXT("コピー(&C)") );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_PASTE      , TEXT("貼り付け(&P)") );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_DELETE     , TEXT("削除(&L)") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_CUT        , TEXT("切り取り(&T)\tCtrl+X") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_COPY       , TEXT("コピー(&C)\tCtrl+C") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_PASTE      , TEXT("貼り付け(&P)\tCtrl+V") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_DELETE     , TEXT("削除(&L)\tDel") );
     AppendMenu( hMenuPopup, MF_SEPARATOR, 0                   , NULL );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_FIND       , TEXT("検索(&F)...") );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_FIND_NEXT  , TEXT("次を検索(&N)") );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_REPLACE    , TEXT("置換(&R)...") );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_GOTO_LINE  , TEXT("行へ移動(&G)...") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_FIND       , TEXT("検索(&F)...\tCtrl+F") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_FIND_NEXT  , TEXT("次を検索(&N)\tF3") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_REPLACE    , TEXT("置換(&R)...\tCtrl+H") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_GOTO_LINE  , TEXT("行へ移動(&G)...\tCtrl+G") );
     AppendMenu( hMenuPopup, MF_SEPARATOR, 0                   , NULL );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_SELECT_ALL , TEXT("全て選択(&A)") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_SELECT_ALL , TEXT("全て選択(&A)\tCtrl+A") );
     AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_DATETIME   , TEXT("日付と時刻(&D)") );
     AppendMenu( hMenu     , MF_POPUP    , (UINT_PTR)hMenuPopup, TEXT("編集(&E)") );
 

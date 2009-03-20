@@ -68,10 +68,11 @@ static LRESULT (*wndProcTbl[MAINWND_MAX])( HWND hwnd, UINT message, WPARAM wPara
 /********************************************************************************
  * 内容  : メインウィンドウクラスの登録、ウィンドウの生成
  * 引数  : int nCmdShow
- * 戻り値: BOOL
+ * 引数  : HACCEL *hAccelPtr
+ * 戻り値: HWND
  ***************************************/
-BOOL
-MainWndCreate( int nCmdShow )
+HWND
+MainWndCreate( int nCmdShow, HACCEL *hAccelPtr )
 {
     WNDCLASS wc = {0};
     HINSTANCE hInst = GetHinst();
@@ -92,7 +93,7 @@ MainWndCreate( int nCmdShow )
     if( !RegisterClass(&wc) )
     {
         MessageBox( NULL, TEXT("This program requires Windows 2000!"), pAppName, MB_ICONERROR );
-        return FALSE;
+        return NULL;
     }
 
     /* メインウィンドウを作成 */
@@ -102,17 +103,17 @@ MainWndCreate( int nCmdShow )
                                WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS /* | WS_VSCROLL | WS_HSCROLL*/,
                                CW_USEDEFAULT, CW_USEDEFAULT,
                                WND_WIDTH    , WND_HEIGHT,
-                               NULL, MenuCreate(), hInst, NULL);
+                               NULL, MenuCreate(), hInst, hAccelPtr );
 
     if( hwndMain == NULL )
     {
-        return FALSE;
+        return NULL;
     }
 
     ShowWindow( hwndMain, nCmdShow ); /* ->WM_SIZE   */ /* ウインドウを表示 */
     UpdateWindow( hwndMain );         /* ->WM_PAINT  */
 
-    return TRUE;
+    return hwndMain;
 }
 
 /********************************************************************************
@@ -192,6 +193,46 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     HDC        hdc;
     TEXTMETRIC tm;
     HFONT hFont,hOldFont;
+    ACCEL accel[12];
+
+    accel[0].fVirt  = FVIRTKEY | FNOINVERT | FCONTROL;
+    accel[1].fVirt  = FVIRTKEY | FNOINVERT | FCONTROL;
+    accel[2].fVirt  = FVIRTKEY | FNOINVERT | FCONTROL;
+    accel[3].fVirt  = FVIRTKEY | FNOINVERT | FCONTROL;
+    accel[4].fVirt  = FVIRTKEY | FNOINVERT | FCONTROL;
+    accel[5].fVirt  = FVIRTKEY | FNOINVERT | FCONTROL;
+    accel[6].fVirt  = FVIRTKEY | FNOINVERT | FCONTROL;
+    accel[7].fVirt  = FVIRTKEY | FNOINVERT | FCONTROL;
+    accel[8].fVirt  = FVIRTKEY | FNOINVERT | FCONTROL;
+    accel[9].fVirt  = FVIRTKEY | FNOINVERT | FCONTROL;
+    accel[10].fVirt = FVIRTKEY | FNOINVERT | FCONTROL;
+    accel[11].fVirt = FVIRTKEY | FNOINVERT | FCONTROL;
+    accel[0].key  = 'N';
+    accel[1].key  = 'O';
+    accel[2].key  = 'S';
+    accel[3].key  = 'P';
+    accel[4].key  = 'Z';
+    accel[5].key  = 'X';
+    accel[6].key  = 'C';
+    accel[7].key  = 'V';
+    accel[8].key  = 'F';
+    accel[9].key  = 'H';
+    accel[10].key = 'G';
+    accel[11].key = 'A';
+    accel[0].cmd  = IDM_FILE_NEW       ;
+    accel[1].cmd  = IDM_FILE_OPEN      ;
+    accel[2].cmd  = IDM_FILE_SAVE      ;
+    accel[3].cmd  = IDM_FILE_PRINT     ;
+    accel[4].cmd  = IDM_EDIT_UNDO      ;
+    accel[5].cmd  = IDM_EDIT_CUT       ;
+    accel[6].cmd  = IDM_EDIT_COPY      ;
+    accel[7].cmd  = IDM_EDIT_PASTE     ;
+    accel[8].cmd  = IDM_EDIT_FIND      ;
+    accel[9].cmd  = IDM_EDIT_REPLACE   ;
+    accel[10].cmd = IDM_EDIT_GOTO_LINE ;
+    accel[11].cmd = IDM_EDIT_SELECT_ALL;
+
+    mainWndData.hAccel = *((HACCEL*)(((LPCREATESTRUCT)(lParam))->lpCreateParams)) = CreateAcceleratorTable(accel, 12);
 
     hdc = GetDC( hwnd );
     hFont = GetStockObject(DEFAULT_GUI_FONT);
@@ -288,6 +329,8 @@ onClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 static LRESULT
 onDestroy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
+    DestroyAcceleratorTable( mainWndData.hAccel );
+
     IoWndDestroy();
     FileEnd();
 
