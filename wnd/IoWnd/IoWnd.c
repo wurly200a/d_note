@@ -181,8 +181,6 @@ IoWndDataSet( TCHAR* dataPtr, DWORD length )
 {
     IoWndBuffDataSet( dataPtr, length );
 
-    StsBarSetText( STS_BAR_0,"%d bytes,%d lines",IoWndGetBuffSize(),IoWndGetLineMaxSize() );
-
     setAllScrollInfo();
     IoWndInvalidateRect();
 }
@@ -422,6 +420,7 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     int         x,charType;
     DWORD       offset,lineLength,dispLength;
     TCHAR       *dataPtr;
+    COLORREF    bkColor,textColor;
 
     hdc = BeginPaint( hwnd, &ps );
     SelectObject( hdc, CreateFontIndirect(ioWndData.logFontPtr) );
@@ -467,6 +466,12 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                     nop();
                 }
 
+                bkColor = GetBkColor(hdc);
+                textColor = GetTextColor(hdc);
+
+                SetBkColor(hdc,RGB(0,13,0x7F));
+                SetTextColor(hdc,RGB(0xFF,0xFF,0xFF));
+
                 TextOut(
                     hdc,
                     x,                               /* x座標 */
@@ -474,6 +479,9 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                     dataPtr,                         /* 文字列へのポインタ */
                     dispLength                       /* 文字数 */
                     );
+
+                SetTextColor(hdc,textColor);
+                SetBkColor(hdc,bkColor);
             }
             else
             {  /* 横スクロール位置が文字数以上(表示範囲に出力する文字無し) */
@@ -1181,5 +1189,6 @@ setScrollPos( int fnBar, DWORD nPos )
 static void
 printCaretPos( void )
 {
-    StsBarSetText( STS_BAR_MAX,"   %d 行、%d 列",IoWndGetCaretYpos(),IoWndGetCaretXpos());
+    StsBarSetText( STS_BAR_0  ,"%d バイト、全 %d 行",IoWndGetBuffSize(),IoWndGetLineMaxSize() );
+    StsBarSetText( STS_BAR_MAX,"   %d 行、%d 列",IoWndGetCaretYpos()+1,IoWndGetCaretXpos()+1);
 }
