@@ -13,7 +13,7 @@ static void addLinkedList( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA *dataPtr 
 static void removeLinkedListTop( S_BUFF_LINE_DATA **topPtr );
 static void removeLinkedListLast( S_BUFF_LINE_DATA **topPtr );
 
-static void clearLinkedList( void );
+static void clearLinkedList( S_BUFF_LINE_DATA **topPtr );
 static S_BUFF_LINE_DATA *getBuffLine( TCHAR *dataPtr, DWORD maxLength );
 static S_BUFF_LINE_DATA *joinData( S_BUFF_LINE_DATA *data1Ptr, S_BUFF_LINE_DATA *data2Ptr );
 
@@ -52,7 +52,7 @@ IoWndBuffInit( void )
 {
     S_BUFF_LINE_DATA *lineDataPtr;
 
-    clearLinkedList();
+    clearLinkedList(&ioWndBuffListTopPtr);
 
     /* データ0、改行コード0のデータを追加 */
     lineDataPtr = (S_BUFF_LINE_DATA *)malloc( sizeof(S_BUFF_LINE_DATA) );
@@ -89,7 +89,7 @@ IoWndBuffInit( void )
 void
 IoWndBuffEnd( void )
 {
-    clearLinkedList();
+    clearLinkedList(&ioWndBuffListTopPtr);
 }
 
 /********************************************************************************
@@ -105,7 +105,7 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length )
     DWORD lineLengthSum = 0;
     DWORD lineNum = 0;
 
-    clearLinkedList();
+    clearLinkedList(&ioWndBuffListTopPtr);
 
     if( (dataPtr != NULL) && (length > 0) )
     { /* データ有りの場合 */
@@ -212,22 +212,22 @@ IoWndBuffDataGet( TCHAR *dataPtr, DWORD dataSize )
 
 /********************************************************************************
  * 内容  : 連結リストのデータをクリア
- * 引数  : なし
+ * 引数  : S_BUFF_LINE_DATA **topPtr 先頭データがつないであるポインタ
  * 戻り値: なし
  ***************************************/
 static void
-clearLinkedList( void )
+clearLinkedList( S_BUFF_LINE_DATA **topPtr )
 {
     S_BUFF_LINE_DATA *nowPtr,*nextPtr;
 
-    for( nowPtr = nextPtr = ioWndBuffListTopPtr; nowPtr != NULL; nowPtr = nextPtr )
+    for( nowPtr = nextPtr = *topPtr; nowPtr != NULL; nowPtr = nextPtr )
     {
         nextPtr = nowPtr->nextPtr;
         free( nowPtr );
 
         if( nextPtr == NULL )
         { /* 次につながれているデータ無し */
-            ioWndBuffListTopPtr = NULL;
+            *topPtr = NULL;
         }
         else
         { /* 次につながれているデータ有り */
@@ -818,7 +818,7 @@ IoWndBuffSetNewLineCode( UINT newLineType )
                 memcpy( dataPtr, nowPtr->data, nowPtr->dataSize );
                 dataPtr += nowPtr->dataSize;
             }
-            clearLinkedList();
+            clearLinkedList(&ioWndBuffListTopPtr);
             IoWndBuffDataSet( dataTopPtr, allDataSize );
             free( dataTopPtr );
         }
