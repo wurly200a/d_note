@@ -171,6 +171,20 @@ IoWndDestroy( void )
 }
 
 /********************************************************************************
+ * 内容  : IOウィンドウの初期化
+ * 引数  : なし
+ * 戻り値: なし
+ ***************************************/
+void
+IoWndDataInit( void )
+{
+    IoWndBuffInit();
+
+    setAllScrollInfo();
+    IoWndInvalidateRect();
+}
+
+/********************************************************************************
  * 内容  : IOウィンドウのデータセット
  * 引数  : TCHAR* dataPtr
  * 引数  : DWORD  length
@@ -328,7 +342,6 @@ ioOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     updateTextMetrics( hwnd );
 
     IoWndBuffInit();
-    IoWndBuffDataSet( (TCHAR*)NULL, 0 );
 
     /* for MouseWheel */
     SystemParametersInfo(SPI_GETWHEELSCROLLLINES,0, &ulScrollLines, 0);
@@ -561,7 +574,7 @@ ioOnClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 static LRESULT
 ioOnDestroy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
-    IoWndBuffInit();
+    IoWndBuffEnd();
 
     PostQuitMessage(0); /* WM_QUITメッセージをポストする */
     return 0;

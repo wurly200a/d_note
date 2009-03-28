@@ -335,7 +335,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     switch( LOWORD(wParam) )
     {
     case IDM_FILE_NEW:
-        IoWndDataSet( NULL, 0 );
+        IoWndDataInit();
         doCaption( hwnd, "" );
         break;
     case IDM_FILE_OPEN:
