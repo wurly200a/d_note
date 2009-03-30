@@ -11,6 +11,7 @@
 #include "IoWndBuffer.h"
 static void addLinkedList( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA *dataPtr );
 static S_BUFF_LINE_DATA *replaceLinkedList( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA *dataPtr );
+static void insertLinkedList( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA *dataPtr );
 static S_BUFF_LINE_DATA *removeLinkedList( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA *dataPtr );
 static void removeLinkedListTop( S_BUFF_LINE_DATA **topPtr );
 static void removeLinkedListLast( S_BUFF_LINE_DATA **topPtr );
@@ -103,6 +104,90 @@ IoWndBuffEnd( void )
 void
 IoWndBuffDataSet( TCHAR* dataPtr, DWORD length )
 {
+#if 0
+    S_BUFF_LINE_DATA *lineDataPtr;
+    S_BUFF_LINE_DATA *tempTopPtr; /* 一時的につないでおく */
+    S_BUFF_LINE_DATA *tempEndPtr;
+    S_BUFF_LINE_DATA *tempNowPtr;
+    S_BUFF_LINE_DATA *newPtr;
+    DWORD lineLengthSum = 0;
+    DWORD lineNum = 0;
+
+    if( (dataPtr != NULL) && (length > 0) )
+    { /* データ有りの場合 */
+        while( lineLengthSum < length )
+        {
+            lineDataPtr = (S_BUFF_LINE_DATA *)getBuffLine( dataPtr+lineLengthSum, length - lineLengthSum );
+
+            if( lineDataPtr != NULL )
+            {
+                lineDataPtr->lineNum = lineNum;
+                addLinkedList( &tempTopPtr,lineDataPtr );
+                lineLengthSum += lineDataPtr->dataSize;
+                tempEndPtr = lineDataPtr;
+            }
+            else
+            {
+                break;
+            }
+            lineNum++;
+        }
+
+        if( (lineDataPtr != NULL) &&
+            (lineDataPtr->newLineCodeSize) )
+        { /* 最後の行に改行コードがあった場合、データ0、改行コード0のデータを追加 */
+            lineDataPtr = (S_BUFF_LINE_DATA *)malloc( sizeof(S_BUFF_LINE_DATA) );
+            if( lineDataPtr != NULL )
+            {
+                lineDataPtr->dataSize = 0;
+                lineDataPtr->newLineCodeSize = 0;
+                lineDataPtr->lineNum = lineNum;
+                addLinkedList( &tempTopPtr,lineDataPtr );
+                tempEndPtr = lineDataPtr;
+            }
+            else
+            {
+                nop();
+            }
+        }
+        else
+        {
+            nop();
+        }
+
+        if( ioWndBuffLineNowPtr != NULL )
+        { /* 現在の行データがあって */
+            if( ioWndBuffLineNowPtr->caretPos == 0 )
+            { /* カーソル位置が先頭 */
+                tempNowPtr = ioWndBuffLineNowPtr;
+                ioWndBuffLineNowPtr = tempTopPtr; /* 追加データを先頭につなぐ */
+
+                newPtr = joinData( tempEndPtr, tempNowPtr );
+                if( newPtr != NULL )
+                {
+                    removeLinkedListLast( &tempTopPtr );
+
+                }
+                else
+                {
+                    nop();
+                }
+            }
+            else
+            {
+            }
+        }
+        else
+        { /* 異常 */
+            nop();
+        }
+    }
+    else
+    { /* データ無しの場合 */
+        nop();
+    }
+
+#else
     S_BUFF_LINE_DATA *lineDataPtr;
     DWORD lineLengthSum = 0;
     DWORD lineNum = 0;
@@ -174,6 +259,7 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length )
     {
         nop();
     }
+#endif
 }
 
 /********************************************************************************
@@ -316,6 +402,50 @@ replaceLinkedList( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_L
 }
 
 /********************************************************************************
+ * 内容  : 連結リストにデータを挿入する
+ * 引数  : S_BUFF_LINE_DATA **topPtr 先頭データをつなぐポインタ
+ * 引数  : S_BUFF_LINE_DATA *nowPtr  挿入位置
+ * 引数  : S_BUFF_LINE_DATA *dataPtr 挿入データの先頭
+ * 戻り値: なし
+ ***************************************/
+static void
+insertLinkedList( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA *dataPtr )
+{
+    S_BUFF_LINE_DATA *lastPtr,*lastPrevPtr;
+
+    if( (topPtr != NULL) && (nowPtr != NULL) && (dataPtr != NULL) )
+    {
+        dataPtr->prevPtr = nowPtr->prevPtr;
+
+        if( dataPtr->prevPtr != NULL )
+        {
+            (dataPtr->prevPtr)->nextPtr = dataPtr;
+        }
+        else
+        {
+            (*topPtr) = dataPtr;
+        }
+
+        /* 挿入データの最後を探す */
+        for( lastPtr = dataPtr; lastPtr->nextPtr != NULL; lastPtr = lastPtr->nextPtr );
+
+        lastPtr->nextPtr = nowPtr;
+        if( lastPtr->nextPtr != NULL )
+        {
+            (lastPtr->nextPtr)->prevPtr = lastPtr;
+        }
+        else
+        {
+            nop();
+        }
+    }
+    else
+    {
+        nop();
+    }
+}
+
+/********************************************************************************
  * 内容  : 連結リストからデータを削除する
  * 引数  : S_BUFF_LINE_DATA **topPtr 先頭データがつないであるポインタ
  * 引数  : S_BUFF_LINE_DATA *dataPtr 削除するデータ
@@ -345,7 +475,14 @@ removeLinkedList( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA *dataPtr )
         else
         { /* 前データ無し */
             *topPtr = dataPtr->nextPtr;
-            (*topPtr)->prevPtr = NULL;
+            if( *topPtr != NULL )
+            {
+                (*topPtr)->prevPtr = NULL;
+            }
+            else
+            {
+                nop();
+            }
         }
     }
     else
@@ -402,7 +539,7 @@ removeLinkedListLast( S_BUFF_LINE_DATA **topPtr )
         }
 
         free( nowPtr );
-        if( nowPtr != prevPtr )
+        if( nowPtr == prevPtr )
         { /* つながれていたのは1個だけだった */
             (*topPtr) = NULL;
         }
@@ -1049,7 +1186,7 @@ IoWndBuffRemoveData( void )
 void
 IoWndBuffAddNewLine( void )
 {
-    S_BUFF_LINE_DATA *newPtr = NULL,*newNextPtr = NULL;
+    S_BUFF_LINE_DATA *newPtr = NULL,*newNextPtr = NULL,*addPtr;
 
     if( ioWndBuffLineNowPtr != NULL )
     {
@@ -1059,7 +1196,7 @@ IoWndBuffAddNewLine( void )
             newNextPtr = (S_BUFF_LINE_DATA *)malloc( sizeof(S_BUFF_LINE_DATA) + ((ioWndBuffLineNowPtr->dataSize-ioWndBuffLineNowPtr->caretPos) * sizeof(TCHAR)) );
             if( newNextPtr != NULL )
             {
-                /* 改行より前 */
+                /* 改行より前のデータ生成 */
                 newPtr->dataSize = ioWndBuffLineNowPtr->caretPos+getNewLineSize();
                 newPtr->newLineCodeSize = getNewLineSize();
                 newPtr->lineNum = ioWndBuffLineNowPtr->lineNum;
@@ -1082,36 +1219,32 @@ IoWndBuffAddNewLine( void )
                     break;
                 }
 
-                newPtr->prevPtr = ioWndBuffLineNowPtr->prevPtr;
-                if( newPtr->prevPtr != NULL )
-                {
-                    (newPtr->prevPtr)->nextPtr = newPtr;
-                }
-                else
-                {
-                    ioWndBuffListTopPtr = newPtr;
-                }
-
-                /* 改行以降 */
+                /* 改行以降のデータ生成 */
                 newNextPtr->dataSize = ioWndBuffLineNowPtr->dataSize - ioWndBuffLineNowPtr->caretPos;
                 newNextPtr->newLineCodeSize = ioWndBuffLineNowPtr->newLineCodeSize;
                 newNextPtr->lineNum = newPtr->lineNum+1;
                 memcpy( newNextPtr->data, ioWndBuffLineNowPtr->data+ioWndBuffLineNowPtr->caretPos, newNextPtr->dataSize );
 
-                newNextPtr->prevPtr = newPtr;
-                newPtr->nextPtr = newNextPtr;
+                /* 古いデータを置き換える */
+                addPtr = removeLinkedList( &ioWndBuffListTopPtr, ioWndBuffLineNowPtr ); /* 元の行は削除 */
+                free( ioWndBuffLineNowPtr );
 
-                newNextPtr->nextPtr = ioWndBuffLineNowPtr->nextPtr;
-                if( newNextPtr->nextPtr != NULL )
+                if( addPtr != NULL )
                 {
-                    (newNextPtr->nextPtr)->prevPtr = newNextPtr;
+                    /* 改行より前と、改行以降のデータをつないでおく */
+                    newPtr->prevPtr     = NULL;
+                    newPtr->nextPtr     = newNextPtr;
+                    newNextPtr->prevPtr = newPtr;
+                    newNextPtr->nextPtr = NULL;
+
+                    insertLinkedList( &ioWndBuffListTopPtr, addPtr, newPtr );
                 }
                 else
-                {
-                    nop();
+                { /* 元々1行しか無かった場合 */
+                    addLinkedList( &ioWndBuffListTopPtr, newPtr );
+                    addLinkedList( &ioWndBuffListTopPtr, newNextPtr );
                 }
 
-                free( ioWndBuffLineNowPtr );
                 ioWndBuffLineNowPtr = newNextPtr;
                 ioWndBuffLineNowPtr->caretPos = 0;
 
