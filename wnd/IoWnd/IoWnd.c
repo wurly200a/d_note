@@ -479,12 +479,13 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                     nop();
                 }
 
+#if 0
                 bkColor = GetBkColor(hdc);
                 textColor = GetTextColor(hdc);
 
                 SetBkColor(hdc,RGB(0,13,0x7F));
                 SetTextColor(hdc,RGB(0xFF,0xFF,0xFF));
-
+#endif
                 TextOut(
                     hdc,
                     x,                               /* x座標 */
@@ -492,9 +493,10 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                     dataPtr,                         /* 文字列へのポインタ */
                     dispLength                       /* 文字数 */
                     );
-
+#if 0
                 SetTextColor(hdc,textColor);
                 SetBkColor(hdc,bkColor);
+#endif
             }
             else
             {  /* 横スクロール位置が文字数以上(表示範囲に出力する文字無し) */
