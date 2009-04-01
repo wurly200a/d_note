@@ -316,22 +316,17 @@ addLinkedList( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE
     }
     else
     {
-        for( nowPtr = nextPtr = *topPtr; nowPtr != NULL; nowPtr = nextPtr )
-        { /* 最後のデータを探す */
-            nextPtr = nowPtr->nextPtr;
-
-            if( nextPtr == NULL )
-            { /* 次につながれているデータ無し(最後のデータがみつかった) */
-                dataPtr->prevPtr = nowPtr;
-                dataPtr->nextPtr = NULL;
-                dataPtr->lineNum = nowPtr->lineNum+1;
-                nowPtr->nextPtr = dataPtr;
-                *endPtr = dataPtr;
-            }
-            else
-            { /* 次につながれているデータ有り */
-                nop();
-            }
+        if( *endPtr != NULL )
+        {
+            dataPtr->prevPtr   = *endPtr;
+            dataPtr->nextPtr   = NULL;
+            dataPtr->lineNum   = (*endPtr)->lineNum+1;
+            (*endPtr)->nextPtr = dataPtr;
+            *endPtr            = dataPtr;
+        }
+        else
+        {
+            nop(); /* 異常 */
         }
     }
 }
@@ -634,15 +629,7 @@ IoWndGetBuffSize( void )
 DWORD
 IoWndGetLineMaxSize( void )
 {
-    DWORD lineMaxSize = 0;
-    S_BUFF_LINE_DATA *nowPtr;
-
-    for( nowPtr = ioWndBuffListTopPtr; nowPtr != NULL; nowPtr = nowPtr->nextPtr )
-    {
-        lineMaxSize++;
-    }
-
-    return lineMaxSize;
+    return ioWndBuffListEndPtr->lineNum;
 }
 
 /********************************************************************************
