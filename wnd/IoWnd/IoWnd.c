@@ -720,6 +720,9 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         }
     }
     SetCaretPos( (IoWndGetCaretXpos()-ioWndData.iHorzPos)*ioWndData.cxChar, (IoWndGetCaretYpos()-ioWndData.iVertPos)*ioWndData.cyChar);
+
+    ioOnImeStartComposition( hwnd, message, wParam, lParam );
+
     printCaretPos();
     setAllScrollInfo();
 
