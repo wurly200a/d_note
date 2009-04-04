@@ -13,9 +13,8 @@ static void clearLinkedList ( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endP
 static void addLinkedList   ( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *dataPtr );
 static void insertLinkedList( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA *dataPtr );
 static S_BUFF_LINE_DATA *replaceLinkedList( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA *dataPtr );
-static S_BUFF_LINE_DATA *mergeLinkedList  ( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA *dataPtr );
 static S_BUFF_LINE_DATA *removeLinkedList ( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *dataPtr );
-
+static void mergeLinkedList( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA **mergeTopPtr, S_BUFF_LINE_DATA **mergeEndPtr );
 static S_BUFF_LINE_DATA *getBuffLine( TCHAR *dataPtr, DWORD maxLength );
 static S_BUFF_LINE_DATA *joinData( S_BUFF_LINE_DATA *data1Ptr, S_BUFF_LINE_DATA *data2Ptr );
 
@@ -108,7 +107,7 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length )
     S_BUFF_LINE_DATA *lineDataPtr;
     S_BUFF_LINE_DATA *tempTopPtr = NULL; /* 一時的につないでおく */
     S_BUFF_LINE_DATA *tempEndPtr = NULL;
-    S_BUFF_LINE_DATA *newPtr;
+    S_BUFF_LINE_DATA *newPtr,*targetPtr;
     DWORD lineLengthSum = 0;
 
     if( (dataPtr != NULL) && (length > 0) )
@@ -128,28 +127,23 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length )
             }
         }
 
-        if( (lineDataPtr != NULL) &&
-            (lineDataPtr->newLineCodeSize) )
-        { /* 最後の行に改行コードがあった場合、データ0、改行コード0のデータを追加 */
-            lineDataPtr = (S_BUFF_LINE_DATA *)malloc( sizeof(S_BUFF_LINE_DATA) );
-            if( lineDataPtr != NULL )
-            {
-                lineDataPtr->dataSize = 0;
-                lineDataPtr->newLineCodeSize = 0;
-                addLinkedList( &tempTopPtr,&tempEndPtr,lineDataPtr );
-            }
-            else
-            {
-                nop();
-            }
+        mergeLinkedList(&ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineNowPtr,&tempTopPtr,&tempEndPtr);
+
+        if( tempEndPtr->newLineCodeSize == 0 )
+        {
+            newPtr = joinData(tempEndPtr,ioWndBuffLineNowPtr);
+            targetPtr = ioWndBuffLineNowPtr;
+            ioWndBuffLineNowPtr = replaceLinkedList( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineNowPtr,newPtr );
+            ioWndBuffLineNowPtr->caretPos = 0;
+            free( targetPtr );
+            targetPtr = tempEndPtr;
+            removeLinkedList( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,tempEndPtr);
+            free( tempEndPtr );
         }
         else
         {
             nop();
         }
-        /* ここまでで、 追加データが行データに分割されて tempTopPtr につながれる */
-
-        mergeLinkedList( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineNowPtr, tempTopPtr );
     }
     else
     { /* データ無しの場合 */
@@ -413,71 +407,6 @@ replaceLinkedList( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_
 }
 
 /********************************************************************************
- * 内容  : 連結リストの結合
- * 引数  : S_BUFF_LINE_DATA **topPtr 先頭データをつなぐポインタ
- * 引数  : S_BUFF_LINE_DATA **topPtr 最終データをつなぐポインタ
- * 引数  : S_BUFF_LINE_DATA *nowPtr  挿入位置
- * 引数  : S_BUFF_LINE_DATA *dataPtr 挿入データの先頭
- * 戻り値: S_BUFF_LINE_DATA *        挿入データの先頭
- ***************************************/
-static S_BUFF_LINE_DATA *
-mergeLinkedList( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA *dataPtr )
-{
-    S_BUFF_LINE_DATA *lastPtr,*lastPrevPtr,*rtnPtr = NULL;
-    DWORD lineNum;
-
-    if( (topPtr != NULL) && (endPtr != NULL) && (nowPtr != NULL) && (dataPtr != NULL) )
-    {
-        rtnPtr = dataPtr;
-
-        dataPtr->prevPtr = nowPtr->prevPtr;
-
-        if( dataPtr->prevPtr != NULL )
-        {
-            dataPtr->lineNum = (dataPtr->prevPtr)->lineNum+1;
-            (dataPtr->prevPtr)->nextPtr = dataPtr;
-        }
-        else
-        {
-            dataPtr->lineNum = 0;
-            (*topPtr) = dataPtr;
-        }
-
-        /* 挿入データの最後を探す */
-        for( lastPtr = dataPtr,lineNum = dataPtr->lineNum; lastPtr->nextPtr != NULL; lastPtr = lastPtr->nextPtr,lineNum++ )
-        {
-            lastPtr->lineNum = lineNum;
-        }
-
-        if( lastPtr == dataPtr )
-        {
-            nowPtr->lineNum = lineNum+1;
-        }
-        else
-        {
-            nowPtr->lineNum = lineNum;
-        }
-
-        lastPtr->nextPtr = nowPtr;
-        if( lastPtr->nextPtr != NULL )
-        {
-            (lastPtr->nextPtr)->prevPtr = lastPtr;
-            updateLineNum( nowPtr );
-        }
-        else
-        {
-            nop();
-        }
-    }
-    else
-    {
-        nop();
-    }
-
-    return rtnPtr;
-}
-
-/********************************************************************************
  * 内容  : 連結リストからデータを削除する
  * 引数  : S_BUFF_LINE_DATA **topPtr 先頭データがつないであるポインタ
  * 引数  : S_BUFF_LINE_DATA **topPtr 最終データをつないであるポインタ
@@ -526,6 +455,54 @@ removeLinkedList( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_L
     }
 
     return nextPtr;
+}
+
+/********************************************************************************
+ * 内容  : 連結リストの結合
+ * 引数  : S_BUFF_LINE_DATA **topPtr 先頭データをつなぐポインタ
+ * 引数  : S_BUFF_LINE_DATA **topPtr 最終データをつなぐポインタ
+ * 引数  : S_BUFF_LINE_DATA *nowPtr  挿入位置
+ * 引数  : S_BUFF_LINE_DATA **mergeTopPtr
+ * 引数  : S_BUFF_LINE_DATA **mergeEndPtr
+ * 戻り値: void
+ ***************************************/
+static void
+mergeLinkedList( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA **mergeTopPtr, S_BUFF_LINE_DATA **mergeEndPtr )
+{
+    S_BUFF_LINE_DATA *lastPtr,*lastPrevPtr;
+    DWORD lineNum;
+
+    if( (topPtr != NULL) && (endPtr != NULL) && (nowPtr != NULL) && (mergeTopPtr != NULL) && (mergeEndPtr != NULL) )
+    {
+        (*mergeTopPtr)->prevPtr = nowPtr->prevPtr;
+
+        if( (*mergeTopPtr)->prevPtr != NULL )
+        {
+            (*mergeTopPtr)->lineNum = ((*mergeTopPtr)->prevPtr)->lineNum+1;
+            ((*mergeTopPtr)->prevPtr)->nextPtr = (*mergeTopPtr);
+        }
+        else
+        {
+            (*mergeTopPtr)->lineNum = 0;
+            (*topPtr) = (*mergeTopPtr);
+        }
+
+        (*mergeEndPtr)->nextPtr = nowPtr;
+        if( (*mergeEndPtr)->nextPtr != NULL )
+        {
+            ((*mergeEndPtr)->nextPtr)->prevPtr = (*mergeEndPtr);
+        }
+        else
+        {
+            nop();
+        }
+
+        updateLineNum( (*mergeTopPtr) );
+    }
+    else
+    {
+        nop();
+    }
 }
 
 /********************************************************************************
@@ -626,6 +603,9 @@ joinData( S_BUFF_LINE_DATA *data1Ptr, S_BUFF_LINE_DATA *data2Ptr )
 
             memcpy( newPtr->data, data1Ptr->data, data1Ptr->dataSize - data1Ptr->newLineCodeSize );
             memcpy( newPtr->data + data1Ptr->dataSize - data1Ptr->newLineCodeSize, data2Ptr->data, data2Ptr->dataSize );
+
+            newPtr->prevPtr = NULL;
+            newPtr->nextPtr = NULL;
         }
         else
         {
