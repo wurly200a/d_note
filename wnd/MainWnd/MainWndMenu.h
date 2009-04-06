@@ -67,5 +67,19 @@ void MenuCheckItem( UINT itemID );
  ***************************************/
 void MenuUnCheckItem( UINT itemID );
 
+/********************************************************************************
+ * 内容  : 指定の項目を有効にする
+ * 引数  : UINT itemID
+ * 戻り値: なし
+ ***************************************/
+void MenuEnableItem( UINT itemID );
+
+/********************************************************************************
+ * 内容  : 指定の項目を無効にする
+ * 引数  : UINT itemID
+ * 戻り値: なし
+ ***************************************/
+void MenuUnEnableItem( UINT itemID );
+
 #define MAINWND_MENU_H
 #endif /* MAINWND_MENU_H */

@@ -99,10 +99,11 @@ IoWndBuffEnd( void )
  * 内容  : IOウィンドウバッファのデータセット
  * 引数  : TCHAR* dataPtr
  * 引数  : DWORD  length
+ * 引数  : BOOL   bInit
  * 戻り値: なし
  ***************************************/
 void
-IoWndBuffDataSet( TCHAR* dataPtr, DWORD length )
+IoWndBuffDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit )
 {
     S_BUFF_LINE_DATA *lineDataPtr;
     S_BUFF_LINE_DATA *tempTopPtr = NULL;
@@ -113,7 +114,14 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length )
     DWORD addLineNum = 0;
     DWORD caretPos = 0;
 
-    IoWndBuffInit();
+    if( bInit )
+    {
+        IoWndBuffInit();
+    }
+    else
+    {
+        nop();
+    }
 
     if( (dataPtr != NULL) && (length > 0) )
     { /* データ有りの場合 */
@@ -172,10 +180,10 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length )
             {
                 if( dividePostPtr != NULL )
                 {
-                    targetPtr = replaceLinkedList( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineNowPtr,dividePostPtr ); /* まず 古いデータを改行以降のデータに置き換え */
-                    insertLinkedList( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,targetPtr,dividePrePtr ); /* その前に改行前のデータを挿入 */
+                    replaceLinkedList( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineNowPtr,dividePostPtr ); /* まず 古いデータを改行以降のデータに置き換え */
+                    insertLinkedList( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,dividePostPtr,dividePrePtr ); /* その前に改行前のデータを挿入 */
                     free( ioWndBuffLineNowPtr );
-                    ioWndBuffLineNowPtr = targetPtr;
+                    ioWndBuffLineNowPtr = dividePostPtr;
                     ioWndBuffLineNowPtr->caretPos = 0;
                     /* 現在の行をキャレット位置で分割(ここまで) */
 
@@ -184,13 +192,13 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length )
 
                     if( tempEndPtr->newLineCodeSize == 0 )
                     { /* 挿入データの最後に改行がなければ */
-                        newPtr = joinData(tempEndPtr,ioWndBuffLineNowPtr);
+                        newPtr = joinData(tempEndPtr,dividePostPtr);
                         if( newPtr != NULL )
                         {
-                            targetPtr = ioWndBuffLineNowPtr;
-                            ioWndBuffLineNowPtr = replaceLinkedList( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineNowPtr,newPtr );
-                            free( targetPtr );
-                            targetPtr = tempEndPtr;
+                            newPtr->caretPos = tempEndPtr->dataSize - tempEndPtr->newLineCodeSize;
+                            replaceLinkedList( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,dividePostPtr,newPtr );
+                            free( dividePostPtr );
+                            ioWndBuffLineNowPtr = newPtr;
                             removeLinkedList( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,tempEndPtr);
                             free( tempEndPtr );
 
@@ -211,15 +219,16 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length )
                     }
                     else
                     {
-                        nop();
+                        tempEndPtr->caretPos = tempEndPtr->dataSize - tempEndPtr->newLineCodeSize;
                     }
 
                     /* 分割した前方データと、挿入データの先頭を結合(ここから) */
                     newPtr = joinData( dividePrePtr, tempTopPtr );
                     if( newPtr != NULL )
                     {
+                        newPtr->caretPos = tempEndPtr->caretPos + (dividePrePtr->dataSize - dividePrePtr->newLineCodeSize);
                         targetPtr = tempTopPtr;
-                        replaceLinkedList( &tempTopPtr,&tempEndPtr,tempTopPtr,newPtr );
+                        replaceLinkedList( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,tempTopPtr,newPtr );
                         free( targetPtr );
                         removeLinkedList( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,dividePrePtr);
                         free( dividePrePtr );
@@ -234,6 +243,7 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length )
                             nop();
                         }
                         /* 分割した前方データと、挿入データの先頭を結合(ここまで) */
+                        ioWndBuffLineNowPtr = tempEndPtr;
                     }
                     else
                     {
@@ -256,10 +266,17 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length )
         nop();
     }
 
-    if( ioWndBuffListTopPtr != NULL )
+    if( bInit )
     {
-        ioWndBuffLineNowPtr = ioWndBuffListTopPtr;
-        ioWndBuffLineNowPtr->caretPos = 0;
+        if( ioWndBuffListTopPtr != NULL )
+        {
+            ioWndBuffLineNowPtr = ioWndBuffListTopPtr;
+            ioWndBuffLineNowPtr->caretPos = 0;
+        }
+        else
+        {
+            nop();
+        }
     }
     else
     {
@@ -1094,8 +1111,7 @@ IoWndBuffSetNewLineCode( UINT newLineType )
                 memcpy( dataPtr, nowPtr->data, nowPtr->dataSize );
                 dataPtr += nowPtr->dataSize;
             }
-            clearLinkedList(&ioWndBuffListTopPtr,&ioWndBuffListEndPtr);
-            IoWndBuffDataSet( dataTopPtr, allDataSize );
+            IoWndBuffDataSet( dataTopPtr, allDataSize, TRUE );
             free( dataTopPtr );
         }
         else

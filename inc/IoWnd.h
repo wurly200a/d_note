@@ -43,9 +43,10 @@ void IoWndDataInit( void );
  * 内容  : IOウィンドウのデータセット
  * 引数  : TCHAR* dataPtr
  * 引数  : DWORD  length
+ * 引数  : BOOL   bInit
  * 戻り値: なし
  ***************************************/
-void IoWndDataSet( TCHAR* dataPtr, DWORD length );
+void IoWndDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit );
 
 /********************************************************************************
  * 内容  : IOウィンドウのデータ取得

@@ -72,7 +72,6 @@ MenuCreate( void )
     EnableMenuItem( hMenu, IDM_EDIT_UNDO       , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_EDIT_CUT        , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_EDIT_COPY       , MF_GRAYED );
-    EnableMenuItem( hMenu, IDM_EDIT_PASTE      , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_EDIT_DELETE     , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_EDIT_FIND       , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_EDIT_FIND_NEXT  , MF_GRAYED );
@@ -198,6 +197,42 @@ MenuUnCheckItem( UINT itemID )
     if( hMenu != NULL )
     {
         CheckMenuItem( hMenu, itemID, MF_UNCHECKED );
+    }
+    else
+    {
+        nop();
+    }
+}
+
+/********************************************************************************
+ * 内容  : 指定の項目を有効にする
+ * 引数  : UINT itemID
+ * 戻り値: なし
+ ***************************************/
+void
+MenuEnableItem( UINT itemID )
+{
+    if( hMenu != NULL )
+    {
+        EnableMenuItem( hMenu, itemID, MF_ENABLED );
+    }
+    else
+    {
+        nop();
+    }
+}
+
+/********************************************************************************
+ * 内容  : 指定の項目を無効にする
+ * 引数  : UINT itemID
+ * 戻り値: なし
+ ***************************************/
+void
+MenuUnEnableItem( UINT itemID )
+{
+    if( hMenu != NULL )
+    {
+        EnableMenuItem( hMenu, itemID, MF_GRAYED );
     }
     else
     {

@@ -188,12 +188,13 @@ IoWndDataInit( void )
  * 内容  : IOウィンドウのデータセット
  * 引数  : TCHAR* dataPtr
  * 引数  : DWORD  length
+ * 引数  : BOOL   bInit
  * 戻り値: なし
  ***************************************/
 void
-IoWndDataSet( TCHAR* dataPtr, DWORD length )
+IoWndDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit )
 {
-    IoWndBuffDataSet( dataPtr, length );
+    IoWndBuffDataSet( dataPtr, length, bInit );
 
     setAllScrollInfo();
     IoWndInvalidateRect();

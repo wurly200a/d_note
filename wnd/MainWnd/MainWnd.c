@@ -33,6 +33,7 @@ static LRESULT onMouseWheel   ( HWND hwnd, UINT message, WPARAM wParam, LPARAM l
 static LRESULT onSetFocus     ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onKillFocus    ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onDropFiles    ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onInitMenuPopup( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onApp          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onDefault      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
@@ -60,6 +61,7 @@ static LRESULT (*wndProcTbl[MAINWND_MAX])( HWND hwnd, UINT message, WPARAM wPara
     onSetFocus     , /* WM_SETFOCUS         */
     onKillFocus    , /* WM_KILLFOCUS        */
     onDropFiles    , /* WM_DROPFILES        */
+    onInitMenuPopup, /* WM_INITMENUPOPUP    */
     onApp          , /* WM_APP              */
     onDefault        /* default             */
 };
@@ -190,6 +192,7 @@ convertMSGtoINDEX( UINT message )
     case WM_SETFOCUS     :rtn = MAINWND_ON_SETFOCUS     ;break;
     case WM_KILLFOCUS    :rtn = MAINWND_ON_KILLFOCUS    ;break;
     case WM_DROPFILES    :rtn = MAINWND_ON_DROPFILES    ;break;
+    case WM_INITMENUPOPUP:rtn = MAINWND_ON_INITMENUPOPUP;break;
     default              :rtn = MAINWND_ON_DEFAULT      ;break;
     }
     /* *INDENT-ON* */
@@ -331,6 +334,8 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     LRESULT rtn = 0;
     DWORD dwSize;
     PBYTE dataPtr;
+    HGLOBAL hGlobal;
+    PTSTR   pGlobal;
 
     switch( LOWORD(wParam) )
     {
@@ -342,7 +347,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         if( FileOpenDlg( hwnd,FILE_ID_BIN ) )
         {
             dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
-            IoWndDataSet( dataPtr,dwSize );
+            IoWndDataSet( dataPtr,dwSize,TRUE );
             doCaption( hwnd, FileGetTitleName(FILE_ID_BIN) );
         }
         else
@@ -356,7 +361,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         {
             SetWindowText( SomeCtrlGetHWND(SOME_CTRL_FILENAME), FileGetName(FILE_ID_BIN) );
             dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
-            IoWndDataSet( dataPtr,dwSize );
+            IoWndDataSet( dataPtr,dwSize,TRUE );
         }
         else
         {
@@ -416,6 +421,28 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             nop();
         }
         break;
+
+    case IDM_EDIT_PASTE:
+        if( IsClipboardFormatAvailable(CF_TEXT) )
+        {
+            OpenClipboard(hwnd);
+
+            hGlobal = GetClipboardData(CF_TEXT);
+            dwSize = GlobalSize(hGlobal) - 1;
+            dataPtr = (PBYTE)malloc(dwSize);
+            pGlobal = GlobalLock( hGlobal );
+            strncpy( dataPtr, pGlobal, dwSize );
+            GlobalUnlock(hGlobal);
+            CloseClipboard();
+            IoWndDataSet( dataPtr,dwSize,FALSE );
+            free( dataPtr );
+        }
+        else
+        {
+            nop();
+        }
+        break;
+
     case IDM_FORMAT_FONT:
         if( FontChooseFont( hwnd, FONT_ID_IO ) )
         {
@@ -647,8 +674,40 @@ onDropFiles( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     FileSetName( FILE_ID_BIN, szFileName, FALSE );
     dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
-    IoWndDataSet( dataPtr,dwSize );
+    IoWndDataSet( dataPtr,dwSize,TRUE );
     doCaption( hwnd, FileGetTitleName(FILE_ID_BIN) );
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : WM_INITMENUPOPUP を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+onInitMenuPopup( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+
+    if( lParam == 1 )
+    {
+        if( IsClipboardFormatAvailable(CF_TEXT) )
+        {
+            MenuEnableItem( IDM_EDIT_PASTE );
+        }
+        else
+        {
+            MenuUnEnableItem( IDM_EDIT_PASTE );
+        }
+    }
+    else
+    {
+        nop();
+    }
 
     return rtn;
 }

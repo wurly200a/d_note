@@ -29,9 +29,10 @@ void IoWndBuffEnd( void );
  * 内容  : IOウィンドウバッファのデータセット
  * 引数  : TCHAR* dataPtr
  * 引数  : DWORD  length
+ * 引数  : BOOL   bInit
  * 戻り値: なし
  ***************************************/
-void IoWndBuffDataSet( TCHAR* dataPtr, DWORD length );
+void IoWndBuffDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit );
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのデータ取得
