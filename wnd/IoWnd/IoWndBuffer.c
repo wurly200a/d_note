@@ -1082,6 +1082,84 @@ IoWndBuffGetLinePtr( DWORD lineNum )
 }
 
 /********************************************************************************
+ * 内容  : 指定行、指定列のデータを取得
+ * 引数  : DWORD lineNum   行
+ * 引数  : DWORD columnPos 列
+ * 引数  : INT   *pSize    データサイズ格納領域
+ * 引数  : TCHAR *dataPtr  データ格納領域
+ * 戻り値: INT             表示オフセット(通常:0,2byte文字の真ん中だった場合:-1)
+ ***************************************/
+INT
+IoWndBuffGetDispData( DWORD lineNum, DWORD columnPos, INT *pSize, TCHAR *dataPtr )
+{
+    S_BUFF_LINE_DATA *nowPtr,*nextPtr;
+    DWORD i;
+    INT iOffset = 0;
+
+    if( ioWndBuffListTopPtr == NULL )
+    {
+        nop();
+    }
+    else
+    {
+        for( i=0,nowPtr = nextPtr = ioWndBuffListTopPtr; (nowPtr != NULL) && (i<=lineNum); nowPtr=nextPtr,i++ )
+        {
+            nextPtr = nowPtr->nextPtr;
+
+            if( i == lineNum )
+            {
+                if( columnPos < (nowPtr->dataSize - nowPtr->newLineCodeSize) )
+                {
+                    switch( detectCharSet(nowPtr,columnPos) )
+                    {
+                    case DOUBLE_CHAR_HIGH:
+                        *dataPtr     = *(nowPtr->data + columnPos);
+                        *(dataPtr+1) = *(nowPtr->data + columnPos+1);
+                        *pSize = 2;
+                        break;
+                    case DOUBLE_CHAR_LOW:
+                        *dataPtr     = *(nowPtr->data + columnPos-1);
+                        *(dataPtr+1) = *(nowPtr->data + columnPos);
+                        *pSize = 2;
+                        iOffset = -1;
+                        break;
+                    case SINGLE_CHAR:
+                    default:
+#if 1
+                        *dataPtr = *(nowPtr->data + columnPos);
+                        *pSize   = 1;
+#else
+                        if( *(nowPtr->data + columnPos) == '\t' )
+                        {
+                            *pSize = 4;
+                            memset( dataPtr, ' ', 4 );
+                        }
+                        else
+                        {
+                            *dataPtr = *(nowPtr->data + columnPos);
+                            *pSize   = 1;
+                        }
+#endif
+                        break;
+                    }
+                }
+                else
+                {
+                    *pSize = 0;
+                }
+                break;
+            }
+            else
+            {
+                nop();
+            }
+        }
+    }
+
+    return iOffset;
+}
+
+/********************************************************************************
  * 内容  : IOウィンドウバッファの改行コードセット
  * 引数  : UINT newLineType
  * 戻り値: BOOL (TRUE:データが変更された)
