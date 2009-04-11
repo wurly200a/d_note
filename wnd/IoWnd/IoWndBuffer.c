@@ -24,10 +24,11 @@ enum
     SINGLE_CHAR,
     DOUBLE_CHAR_HIGH,
     DOUBLE_CHAR_LOW,
+    TAB_CHAR,
 };
 typedef int CHARSET_TYPE;
-CHARSET_TYPE detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset );
-
+static CHARSET_TYPE detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset );
+static int getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, TCHAR *dataPtr, int *offsetPtr );
 static INT getNewLineSize( void );
 static void updateLineNum( S_BUFF_LINE_DATA *dataPtr );
 
@@ -1083,18 +1084,18 @@ IoWndBuffGetLinePtr( DWORD lineNum )
 
 /********************************************************************************
  * 内容  : 指定行、指定列のデータを取得
- * 引数  : DWORD lineNum   行
- * 引数  : DWORD columnPos 列
- * 引数  : INT   *pSize    データサイズ格納領域
- * 引数  : TCHAR *dataPtr  データ格納領域
- * 戻り値: INT             表示オフセット(通常:0,2byte文字の真ん中だった場合:-1)
+ * 引数  : DWORD  lineNum   行
+ * 引数  : DWORD  dispPos   表示位置
+ * 引数  : TCHAR *dataPtr   データ格納領域
+ * 引数  : INT   *offsetPtr データ位置格納領域
+ * 戻り値: INT              格納したデータのサイズ
  ***************************************/
 INT
-IoWndBuffGetDispData( DWORD lineNum, DWORD columnPos, INT *pSize, TCHAR *dataPtr )
+IoWndBuffGetDispData( DWORD lineNum, DWORD dispPos, TCHAR *dataPtr, INT *offsetPtr )
 {
     S_BUFF_LINE_DATA *nowPtr,*nextPtr;
     DWORD i;
-    INT iOffset = 0;
+    INT iSize = 0;
 
     if( ioWndBuffListTopPtr == NULL )
     {
@@ -1108,45 +1109,7 @@ IoWndBuffGetDispData( DWORD lineNum, DWORD columnPos, INT *pSize, TCHAR *dataPtr
 
             if( i == lineNum )
             {
-                if( columnPos < (nowPtr->dataSize - nowPtr->newLineCodeSize) )
-                {
-                    switch( detectCharSet(nowPtr,columnPos) )
-                    {
-                    case DOUBLE_CHAR_HIGH:
-                        *dataPtr     = *(nowPtr->data + columnPos);
-                        *(dataPtr+1) = *(nowPtr->data + columnPos+1);
-                        *pSize = 2;
-                        break;
-                    case DOUBLE_CHAR_LOW:
-                        *dataPtr     = *(nowPtr->data + columnPos-1);
-                        *(dataPtr+1) = *(nowPtr->data + columnPos);
-                        *pSize = 2;
-                        iOffset = -1;
-                        break;
-                    case SINGLE_CHAR:
-                    default:
-#if 1
-                        *dataPtr = *(nowPtr->data + columnPos);
-                        *pSize   = 1;
-#else
-                        if( *(nowPtr->data + columnPos) == '\t' )
-                        {
-                            *pSize = 4;
-                            memset( dataPtr, ' ', 4 );
-                        }
-                        else
-                        {
-                            *dataPtr = *(nowPtr->data + columnPos);
-                            *pSize   = 1;
-                        }
-#endif
-                        break;
-                    }
-                }
-                else
-                {
-                    *pSize = 0;
-                }
+                iSize = getDispCharData( nowPtr, dispPos, dataPtr, offsetPtr );
                 break;
             }
             else
@@ -1156,7 +1119,7 @@ IoWndBuffGetDispData( DWORD lineNum, DWORD columnPos, INT *pSize, TCHAR *dataPtr
         }
     }
 
-    return iOffset;
+    return iSize;
 }
 
 /********************************************************************************
@@ -1373,7 +1336,7 @@ IoWndBuffAddNewLine( void )
  * 引数  : DWORD            offset   判断したい文字の先頭からのオフセット(0 origin)
  * 戻り値: CHARSET_TYPE
  ***************************************/
-CHARSET_TYPE
+static CHARSET_TYPE
 detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset )
 {
     DWORD i;
@@ -1425,6 +1388,115 @@ detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset )
 
     return charType;
 }
+
+#define TAB_SIZE 4 /* 暫定 */
+/********************************************************************************
+ * 内容  : 指定位置の表示データを取得する
+ * 引数  : S_BUFF_LINE_DATA *linePtr   行データ
+ * 引数  : DWORD             dispPos   列位置(表示上の)
+ * 引数  : TCHAR            *dataPtr   データ格納領域
+ * 引数  : int              *offsetPtr データ位置格納領域
+ * 戻り値: int                         格納したデータのサイズ
+ ***************************************/
+static int
+getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, TCHAR *dataPtr, int *offsetPtr )
+{
+    DWORD i,j,k;
+    int charType = SINGLE_CHAR;
+    int size = 0;
+    DWORD literalMaxSize;
+
+    if( linePtr != NULL )
+    {
+        literalMaxSize = (linePtr->dataSize-linePtr->newLineCodeSize);
+
+        for( i=0,j=0; i<literalMaxSize; i++ )
+        { /* 1行中のデータを1文字ずつ処理 */
+            if( charType == DOUBLE_CHAR_HIGH )
+            { /* 前文字が2byte文字の上位byteだったら */
+                charType = DOUBLE_CHAR_LOW;
+                *(dataPtr+1) = *(linePtr->data+i);
+            }
+            else
+            { /* 前文字が2byte文字の上位byte以外 */
+                if( (*(linePtr->data+i)) == '\t' )
+                { /* 処理中の文字はTAB */
+                    charType = TAB_CHAR;
+
+                    if( dispPos < (j+TAB_SIZE) )
+                    {
+                        for(k=0;k<TAB_SIZE;k++)
+                        {
+                            *(dataPtr+k) = ' ';
+                        }
+                        size = TAB_SIZE;
+                        *offsetPtr = dispPos - j;
+                        break;
+                    }
+                    else
+                    {
+                        j+=TAB_SIZE;
+                        continue;
+                    }
+                }
+                else if( ( (BYTE)(*(linePtr->data+i)) <= (BYTE)0x80) || (((BYTE)0xA0 <= (BYTE)(*(linePtr->data+i))) && ((BYTE)(*(linePtr->data+i)) <= (BYTE)0xDF)) )
+                { /* 処理中の文字は1byte文字 */
+                    charType = SINGLE_CHAR;
+                    *dataPtr = *(linePtr->data+i);
+                }
+                else
+                { /* 処理中の文字は2byte文字の上位byte */
+                    charType = DOUBLE_CHAR_HIGH;
+                    *dataPtr     = *(linePtr->data+i);
+                    *(dataPtr+1) = *(linePtr->data+i+1);
+                }
+            }
+
+            if( j == dispPos )
+            { /* 処理中の文字が指定された表示位置 */
+                break;
+            }
+            else
+            {
+                nop();
+            }
+
+            j++;
+        }
+
+        if( i >= literalMaxSize )
+        {
+            nop();
+        }
+        else
+        {
+            switch( charType )
+            {
+            case SINGLE_CHAR:
+                size = 1;
+                *offsetPtr = 0;
+                break;
+            case DOUBLE_CHAR_HIGH:
+                size = 2;
+                *offsetPtr = 0;
+                break;
+            case DOUBLE_CHAR_LOW:
+                size = 2;
+                *offsetPtr = 1;
+                break;
+            defalut:
+                break;
+            }
+        }
+    }
+    else
+    {
+        nop();
+    }
+
+    return size;
+}
+
 
 /********************************************************************************
  * 内容  : 改行コードサイズを取得

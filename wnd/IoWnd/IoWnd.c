@@ -394,7 +394,7 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     { /* 再描画領域のみ1行ずつ処理 */
         for( x=0; x<ioWndData.cxBuffer+1; )
         {
-            iOffset = IoWndBuffGetDispData(y,x+iHorzPos,&dataSize,data);
+            dataSize = IoWndBuffGetDispData(y,x+iHorzPos,data,&iOffset );
 
             if( dataSize )
             {
@@ -412,7 +412,7 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                 }
 
                 TextOut(hdc,
-                        (x*ioWndData.cxChar) + (iOffset*ioWndData.cxChar), /* x座標 */
+                        (x*ioWndData.cxChar) - (iOffset*ioWndData.cxChar), /* x座標 */
                         (y-iVertPos) * ioWndData.cyChar, /* y座標 */
                         data,                            /* 文字列へのポインタ */
                         dataSize                         /* 文字数 */
@@ -425,7 +425,7 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             {
                 break;
             }
-            x += dataSize + iOffset;
+            x += dataSize;
         }
     }
 
@@ -633,7 +633,6 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             IoWndBuffRemoveData();
             IoWndInvalidateRect();
             break;
-        case '\t':  /* tab */
         case '\x1B':/* escape */
             break;
         case '\n':  /* line feed */
@@ -642,6 +641,7 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             IoWndBuffAddNewLine();
             IoWndInvalidateRect();
             break;
+        case '\t':  /* tab */
         default:
             /* 文字入力 */
             IoWndBuffAddData( wParam );

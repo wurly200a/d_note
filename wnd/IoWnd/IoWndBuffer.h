@@ -122,13 +122,13 @@ S_BUFF_LINE_DATA *IoWndBuffGetLinePtr( DWORD lineNum );
 
 /********************************************************************************
  * 内容  : 指定行、指定列のデータを取得
- * 引数  : DWORD lineNum   行
- * 引数  : DWORD columnPos 列
- * 引数  : INT   *pSize    データサイズ格納領域
- * 引数  : TCHAR *dataPtr  データ格納領域
- * 戻り値: INT             表示オフセット(通常:0,2byte文字の真ん中だった場合:-1)
+ * 引数  : DWORD  lineNum   行
+ * 引数  : DWORD  dispPos   表示位置
+ * 引数  : TCHAR *dataPtr   データ格納領域
+ * 引数  : INT   *offsetPtr データ位置格納領域
+ * 戻り値: INT              格納したデータのサイズ
  ***************************************/
-INT IoWndBuffGetDispData( DWORD lineNum, DWORD columnPos, INT *pSize, TCHAR *dataPtr );
+INT IoWndBuffGetDispData( DWORD lineNum, DWORD dispPos, TCHAR *dataPtr, INT *offsetPtr );
 
 enum
 {
