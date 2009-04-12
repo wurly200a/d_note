@@ -1389,7 +1389,7 @@ detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset )
     return charType;
 }
 
-#define TAB_SIZE 4 /* 暫定 */
+#define TAB_SIZE 8 /* 暫定 */
 /********************************************************************************
  * 内容  : 指定位置の表示データを取得する
  * 引数  : S_BUFF_LINE_DATA *linePtr   行データ
@@ -1419,7 +1419,12 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, TCHAR *dataPtr, int *
             }
             else
             { /* 前文字が2byte文字の上位byte以外 */
-                if( (*(linePtr->data+i)) == '\t' )
+                if( (*(linePtr->data+i)) == '\0' )
+                {
+                    charType = SINGLE_CHAR;
+                    *dataPtr = ' ';
+                }
+                else if( (*(linePtr->data+i)) == '\t' )
                 { /* 処理中の文字はTAB */
                     charType = TAB_CHAR;
 
@@ -1439,7 +1444,9 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, TCHAR *dataPtr, int *
                         continue;
                     }
                 }
-                else if( ( (BYTE)(*(linePtr->data+i)) <= (BYTE)0x80) || (((BYTE)0xA0 <= (BYTE)(*(linePtr->data+i))) && ((BYTE)(*(linePtr->data+i)) <= (BYTE)0xDF)) )
+                else if( ( (BYTE)(*(linePtr->data+i)) <= (BYTE)0x80) ||
+                         (((BYTE)0xA0 <= (BYTE)(*(linePtr->data+i))) && ((BYTE)(*(linePtr->data+i)) <= (BYTE)0xDF)) ||
+                         (((BYTE)0xF0 <= (BYTE)(*(linePtr->data+i))) && ((BYTE)(*(linePtr->data+i)) <= (BYTE)0xFF)) )
                 { /* 処理中の文字は1byte文字 */
                     charType = SINGLE_CHAR;
                     *dataPtr = *(linePtr->data+i);
