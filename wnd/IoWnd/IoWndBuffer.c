@@ -1405,6 +1405,7 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, TCHAR *dataPtr, int *
     int charType = SINGLE_CHAR;
     int size = 0;
     DWORD literalMaxSize;
+    int tab_offset;
 
     if( linePtr != NULL )
     {
@@ -1428,19 +1429,21 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, TCHAR *dataPtr, int *
                 { /* èàóùíÜÇÃï∂éöÇÕTAB */
                     charType = TAB_CHAR;
 
-                    if( dispPos < (j+TAB_SIZE) )
+                    tab_offset = TAB_SIZE - (j % TAB_SIZE);
+
+                    if( dispPos < (j+tab_offset) )
                     {
-                        for(k=0;k<TAB_SIZE;k++)
+                        for(k=0;k<tab_offset;k++)
                         {
                             *(dataPtr+k) = ' ';
                         }
-                        size = TAB_SIZE;
+                        size = tab_offset;
                         *offsetPtr = dispPos - j;
                         break;
                     }
                     else
                     {
-                        j+=TAB_SIZE;
+                        j+=tab_offset;
                         continue;
                     }
                 }
