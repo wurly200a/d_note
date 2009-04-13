@@ -19,16 +19,8 @@ static S_BUFF_LINE_DATA *getBuffLine( TCHAR *dataPtr, DWORD maxLength );
 static S_BUFF_LINE_DATA *joinData( S_BUFF_LINE_DATA *data1Ptr, S_BUFF_LINE_DATA *data2Ptr );
 static void divideData( S_BUFF_LINE_DATA *dataPtr, S_BUFF_LINE_DATA **new1Ptr, S_BUFF_LINE_DATA **new2Ptr );
 
-enum
-{
-    SINGLE_CHAR,
-    DOUBLE_CHAR_HIGH,
-    DOUBLE_CHAR_LOW,
-    TAB_CHAR,
-};
-typedef int CHARSET_TYPE;
 static CHARSET_TYPE detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset );
-static int getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, TCHAR *dataPtr, int *offsetPtr );
+static BOOL getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
 static INT getNewLineSize( void );
 static void updateLineNum( S_BUFF_LINE_DATA *dataPtr );
 
@@ -1086,16 +1078,14 @@ IoWndBuffGetLinePtr( DWORD lineNum )
  * 内容  : 指定行、指定列のデータを取得
  * 引数  : DWORD  lineNum   行
  * 引数  : DWORD  dispPos   表示位置
- * 引数  : TCHAR *dataPtr   データ格納領域
- * 引数  : INT   *offsetPtr データ位置格納領域
- * 戻り値: INT              格納したデータのサイズ
+ * 引数  : S_BUFF_DISP_DATA *dataPtr
+ * 戻り値: BOOL
  ***************************************/
-INT
-IoWndBuffGetDispData( DWORD lineNum, DWORD dispPos, TCHAR *dataPtr, INT *offsetPtr )
+BOOL
+IoWndBuffGetDispData( DWORD lineNum, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr )
 {
     S_BUFF_LINE_DATA *nowPtr,*nextPtr;
     DWORD i;
-    INT iSize = 0;
 
     if( ioWndBuffListTopPtr == NULL )
     {
@@ -1109,7 +1099,7 @@ IoWndBuffGetDispData( DWORD lineNum, DWORD dispPos, TCHAR *dataPtr, INT *offsetP
 
             if( i == lineNum )
             {
-                iSize = getDispCharData( nowPtr, dispPos, dataPtr, offsetPtr );
+                getDispCharData( nowPtr, dispPos, dataPtr );
                 break;
             }
             else
@@ -1119,7 +1109,7 @@ IoWndBuffGetDispData( DWORD lineNum, DWORD dispPos, TCHAR *dataPtr, INT *offsetP
         }
     }
 
-    return iSize;
+    return TRUE;
 }
 
 /********************************************************************************
@@ -1394,40 +1384,39 @@ detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset )
  * 内容  : 指定位置の表示データを取得する
  * 引数  : S_BUFF_LINE_DATA *linePtr   行データ
  * 引数  : DWORD             dispPos   列位置(表示上の)
- * 引数  : TCHAR            *dataPtr   データ格納領域
- * 引数  : int              *offsetPtr データ位置格納領域
- * 戻り値: int                         格納したデータのサイズ
+ * 引数  : S_BUFF_DISP_DATA *dataPtr
+ * 戻り値: BOOL
  ***************************************/
-static int
-getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, TCHAR *dataPtr, int *offsetPtr )
+static BOOL
+getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr )
 {
     DWORD i,j,k;
-    int charType = SINGLE_CHAR;
-    int size = 0;
     DWORD literalMaxSize;
     int tab_offset;
 
-    if( linePtr != NULL )
+    if( (linePtr != NULL) && (dataPtr != NULL) )
     {
+        dataPtr->size = 0;
+        dataPtr->type = SINGLE_CHAR;
         literalMaxSize = (linePtr->dataSize-linePtr->newLineCodeSize);
 
         for( i=0,j=0; i<literalMaxSize; i++ )
         { /* 1行中のデータを1文字ずつ処理 */
-            if( charType == DOUBLE_CHAR_HIGH )
+            if( dataPtr->type == DOUBLE_CHAR_HIGH )
             { /* 前文字が2byte文字の上位byteだったら */
-                charType = DOUBLE_CHAR_LOW;
-                *(dataPtr+1) = *(linePtr->data+i);
+                dataPtr->type = DOUBLE_CHAR_LOW;
+                *(dataPtr->data+1) = *(linePtr->data+i);
             }
             else
             { /* 前文字が2byte文字の上位byte以外 */
                 if( (*(linePtr->data+i)) == '\0' )
                 {
-                    charType = SINGLE_CHAR;
-                    *dataPtr = ' ';
+                    dataPtr->type = SINGLE_CHAR;
+                    *(dataPtr->data) = ' ';
                 }
                 else if( (*(linePtr->data+i)) == '\t' )
                 { /* 処理中の文字はTAB */
-                    charType = TAB_CHAR;
+                    dataPtr->type = TAB_CHAR;
 
                     tab_offset = TAB_SIZE - (j % TAB_SIZE);
 
@@ -1435,10 +1424,10 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, TCHAR *dataPtr, int *
                     {
                         for(k=0;k<tab_offset;k++)
                         {
-                            *(dataPtr+k) = ' ';
+                            *(dataPtr->data+k) = ' ';
                         }
-                        size = tab_offset;
-                        *offsetPtr = dispPos - j;
+                        dataPtr->size = tab_offset;
+                        dataPtr->offset = dispPos - j;
                         break;
                     }
                     else
@@ -1451,14 +1440,14 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, TCHAR *dataPtr, int *
                          (((BYTE)0xA0 <= (BYTE)(*(linePtr->data+i))) && ((BYTE)(*(linePtr->data+i)) <= (BYTE)0xDF)) ||
                          (((BYTE)0xF0 <= (BYTE)(*(linePtr->data+i))) && ((BYTE)(*(linePtr->data+i)) <= (BYTE)0xFF)) )
                 { /* 処理中の文字は1byte文字 */
-                    charType = SINGLE_CHAR;
-                    *dataPtr = *(linePtr->data+i);
+                    dataPtr->type = SINGLE_CHAR;
+                    *(dataPtr->data) = *(linePtr->data+i);
                 }
                 else
                 { /* 処理中の文字は2byte文字の上位byte */
-                    charType = DOUBLE_CHAR_HIGH;
-                    *dataPtr     = *(linePtr->data+i);
-                    *(dataPtr+1) = *(linePtr->data+i+1);
+                    dataPtr->type = DOUBLE_CHAR_HIGH;
+                    *(dataPtr->data)   = *(linePtr->data+i);
+                    *(dataPtr->data+1) = *(linePtr->data+i+1);
                 }
             }
 
@@ -1480,19 +1469,19 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, TCHAR *dataPtr, int *
         }
         else
         {
-            switch( charType )
+            switch( dataPtr->type )
             {
             case SINGLE_CHAR:
-                size = 1;
-                *offsetPtr = 0;
+                dataPtr->size = 1;
+                dataPtr->offset = 0;
                 break;
             case DOUBLE_CHAR_HIGH:
-                size = 2;
-                *offsetPtr = 0;
+                dataPtr->size = 2;
+                dataPtr->offset = 0;
                 break;
             case DOUBLE_CHAR_LOW:
-                size = 2;
-                *offsetPtr = 1;
+                dataPtr->size = 2;
+                dataPtr->offset = 1;
                 break;
             defalut:
                 break;
@@ -1504,7 +1493,7 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, TCHAR *dataPtr, int *
         nop();
     }
 
-    return size;
+    return TRUE;
 }
 
 

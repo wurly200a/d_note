@@ -120,15 +120,32 @@ void IoWndDecCaretYpos( void );
  ***************************************/
 S_BUFF_LINE_DATA *IoWndBuffGetLinePtr( DWORD lineNum );
 
+enum
+{
+    SINGLE_CHAR,
+    DOUBLE_CHAR_HIGH,
+    DOUBLE_CHAR_LOW,
+    TAB_CHAR,
+};
+typedef int CHARSET_TYPE;
+
+typedef struct
+{
+    TCHAR        data[8];
+    INT          offset ;
+    INT          size   ;
+    CHARSET_TYPE type   ;
+    BOOL         bSelect;
+} S_BUFF_DISP_DATA;
+
 /********************************************************************************
  * 内容  : 指定行、指定列のデータを取得
  * 引数  : DWORD  lineNum   行
  * 引数  : DWORD  dispPos   表示位置
- * 引数  : TCHAR *dataPtr   データ格納領域
- * 引数  : INT   *offsetPtr データ位置格納領域
- * 戻り値: INT              格納したデータのサイズ
+ * 引数  : S_BUFF_DISP_DATA *dataPtr
+ * 戻り値: BOOL
  ***************************************/
-INT IoWndBuffGetDispData( DWORD lineNum, DWORD dispPos, TCHAR *dataPtr, INT *offsetPtr );
+BOOL IoWndBuffGetDispData( DWORD lineNum, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
 
 enum
 {

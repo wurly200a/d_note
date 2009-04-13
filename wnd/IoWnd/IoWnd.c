@@ -376,9 +376,7 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     int         iPaintBeg,iPaintEnd,y;
     int         x;
     COLORREF    bkColor,textColor;
-    TCHAR       data[8];
-    INT         dataSize;
-    INT         iOffset;
+    S_BUFF_DISP_DATA buffDispData;
 
     hdc = BeginPaint( hwnd, &ps );
     SelectObject( hdc, CreateFontIndirect(ioWndData.logFontPtr) );
@@ -394,17 +392,21 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     { /* 再描画領域のみ1行ずつ処理 */
         for( x=0; x<ioWndData.cxBuffer+1; )
         {
-            dataSize = IoWndBuffGetDispData(y,x+iHorzPos,data,&iOffset );
+            IoWndBuffGetDispData(y,x+iHorzPos,&buffDispData );
 
-            if( dataSize )
+            if( buffDispData.size )
             {
                 bkColor = GetBkColor(hdc);
                 textColor = GetTextColor(hdc);
 
-                if( 0 /* (0 <= x) && (x <= 3) */ )
+                if( buffDispData.type == TAB_CHAR )
                 {
+#if 1
+                    SetBkColor(hdc,RGB(0xE0,0xFF,0xFF));
+#else
                     SetBkColor(hdc,RGB(0,13,0x7F));
                     SetTextColor(hdc,RGB(0xFF,0xFF,0xFF));
+#endif
                 }
                 else
                 {
@@ -412,10 +414,10 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                 }
 
                 TextOut(hdc,
-                        (x*ioWndData.cxChar) - (iOffset*ioWndData.cxChar), /* x座標 */
+                        (x*ioWndData.cxChar) - (buffDispData.offset*ioWndData.cxChar), /* x座標 */
                         (y-iVertPos) * ioWndData.cyChar, /* y座標 */
-                        data,                            /* 文字列へのポインタ */
-                        dataSize                         /* 文字数 */
+                        buffDispData.data,               /* 文字列へのポインタ */
+                        buffDispData.size                /* 文字数 */
                     );
 
                 SetTextColor(hdc,textColor);
@@ -425,7 +427,7 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             {
                 break;
             }
-            x += dataSize;
+            x += buffDispData.size;
         }
     }
 
