@@ -34,9 +34,10 @@ typedef struct
     UINT  NewLineType;
     DWORD xCaret;
     DWORD yCaret;
+    INT   tabSize;
 } S_IOWND_BUFF_DATA;
 
-S_IOWND_BUFF_DATA ioWndBuffData;
+S_IOWND_BUFF_DATA ioWndBuffData = {IOWND_BUFF_NEWLINE_CRLF,0,0,8};
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファの初期化
@@ -793,7 +794,62 @@ IoWndGetColumnMaxSize( void )
 DWORD
 IoWndGetCaretXpos( void )
 {
-    return ioWndBuffLineNowPtr->caretPos;
+    DWORD i,j=0,k;
+    DWORD literalMaxSize;
+    int tab_offset;
+    S_BUFF_LINE_DATA *linePtr;
+    DWORD dispPos;
+    CHARSET_TYPE charType;
+
+    if( ioWndBuffLineNowPtr != NULL )
+    {
+        linePtr = ioWndBuffLineNowPtr;
+        dispPos = linePtr->caretPos;
+        charType = SINGLE_CHAR;
+        literalMaxSize = (linePtr->dataSize-linePtr->newLineCodeSize);
+
+        for( i=0,j=0; (i<dispPos)&&(i<literalMaxSize); i++ )
+        { /* 1行中のデータを1文字ずつ処理 */
+            if( charType == DOUBLE_CHAR_HIGH )
+            { /* 前文字が2byte文字の上位byteだったら */
+                charType = DOUBLE_CHAR_LOW;
+                j++;
+            }
+            else
+            { /* 前文字が2byte文字の上位byte以外 */
+                if( (*(linePtr->data+i)) == '\0' )
+                {
+                    charType = SINGLE_CHAR;
+                    j++;
+                }
+                else if( (*(linePtr->data+i)) == '\t' )
+                { /* 処理中の文字はTAB */
+                    charType = TAB_CHAR;
+
+                    tab_offset = ioWndBuffData.tabSize - (j % ioWndBuffData.tabSize);
+                    j+=tab_offset;
+                }
+                else if( ( (BYTE)(*(linePtr->data+i)) <= (BYTE)0x80) ||
+                         (((BYTE)0xA0 <= (BYTE)(*(linePtr->data+i))) && ((BYTE)(*(linePtr->data+i)) <= (BYTE)0xDF)) ||
+                         (((BYTE)0xF0 <= (BYTE)(*(linePtr->data+i))) && ((BYTE)(*(linePtr->data+i)) <= (BYTE)0xFF)) )
+                { /* 処理中の文字は1byte文字 */
+                    charType = SINGLE_CHAR;
+                    j++;
+                }
+                else
+                { /* 処理中の文字は2byte文字の上位byte */
+                    charType = DOUBLE_CHAR_HIGH;
+                    j++;
+                }
+            }
+        }
+    }
+    else
+    {
+        nop();
+    }
+
+    return j;
 }
 
 /********************************************************************************
@@ -1321,6 +1377,29 @@ IoWndBuffAddNewLine( void )
 }
 
 /********************************************************************************
+ * 内容  : IOウィンドウバッファのタブサイズセット
+ * 引数  : INT tabSize
+ * 戻り値: BOOL (TRUE:変更された)
+ ***************************************/
+BOOL
+IoWndBuffSetTabSize( INT tabSize )
+{
+    BOOL bRtn = FALSE;
+
+    if( tabSize != ioWndBuffData.tabSize )
+    {
+        ioWndBuffData.tabSize = tabSize;
+        bRtn = TRUE;
+    }
+    else
+    {
+        nop();
+    }
+
+    return bRtn;
+}
+
+/********************************************************************************
  * 内容  : キャラクタセットの判断(Shift_JISの場合)
  * 引数  : S_BUFF_LINE_DATA *dataPtr
  * 引数  : DWORD            offset   判断したい文字の先頭からのオフセット(0 origin)
@@ -1379,7 +1458,6 @@ detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset )
     return charType;
 }
 
-#define TAB_SIZE 8 /* 暫定 */
 /********************************************************************************
  * 内容  : 指定位置の表示データを取得する
  * 引数  : S_BUFF_LINE_DATA *linePtr   行データ
@@ -1418,7 +1496,7 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dat
                 { /* 処理中の文字はTAB */
                     dataPtr->type = TAB_CHAR;
 
-                    tab_offset = TAB_SIZE - (j % TAB_SIZE);
+                    tab_offset = ioWndBuffData.tabSize - (j % ioWndBuffData.tabSize);
 
                     if( dispPos < (j+tab_offset) )
                     {
@@ -1549,3 +1627,4 @@ updateLineNum( S_BUFF_LINE_DATA *dataPtr )
         nop();
     }
 }
+

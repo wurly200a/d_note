@@ -182,5 +182,12 @@ void IoWndBuffRemoveData( void );
  ***************************************/
 void IoWndBuffAddNewLine( void );
 
+/********************************************************************************
+ * 内容  : IOウィンドウバッファのタブサイズセット
+ * 引数  : INT tabSize
+ * 戻り値: BOOL (TRUE:変更された)
+ ***************************************/
+BOOL IoWndBuffSetTabSize( INT tabSize );
+
 #define IOWND_BUFFER_H
 #endif /* IOWND_BUFFER_H */
