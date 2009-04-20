@@ -413,6 +413,16 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                     nop();
                 }
 
+                if( buffDispData.bSelect )
+                {
+                    SetBkColor(hdc,RGB(0,13,0x7F));
+                    SetTextColor(hdc,RGB(0xFF,0xFF,0xFF));
+                }
+                else
+                {
+                    nop();
+                }
+
                 TextOut(hdc,
                         (x*ioWndData.cxChar) - (buffDispData.offset*ioWndData.cxChar), /* x座標 */
                         (y-iVertPos) * ioWndData.cyChar, /* y座標 */
@@ -536,6 +546,7 @@ ioOnKeyUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     switch(wParam)
     {
     case VK_SHIFT:
+        ioWndData.bShiftKeyOn = FALSE;
         break;
     default:
         break;
@@ -574,10 +585,23 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         IoWndIncCaretYpos();
         break;
     case VK_SHIFT:
+        ioWndData.bShiftKeyOn = TRUE;
+        IoWndBuffSelectOn();
+        IoWndInvalidateRect();
         break;
     default:
         break;
     }
+
+    if( ioWndData.bShiftKeyOn )
+    {
+        nop();
+    }
+    else
+    {
+        IoWndBuffSelectOff();
+    }
+    IoWndInvalidateRect();
 
     /* キャレットが表示範囲外に有った場合の処理(横方向) */
     if( IoWndGetCaretXpos() < ioWndData.iHorzPos )

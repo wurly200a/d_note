@@ -44,6 +44,7 @@ typedef struct
     int    iHorzPos;     /* スクロールバーの横位置  */
     int    iVertPos;     /* スクロールバーの縦位置  */
     LOGFONT *logFontPtr;
+    BOOL   bShiftKeyOn;
 } S_IOWND_DATA;
 
 #define IOWND_DEF_H

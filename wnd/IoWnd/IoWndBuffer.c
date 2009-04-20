@@ -28,6 +28,8 @@ static void updateLineNum( S_BUFF_LINE_DATA *dataPtr );
 S_BUFF_LINE_DATA *ioWndBuffListTopPtr;
 S_BUFF_LINE_DATA *ioWndBuffListEndPtr;
 S_BUFF_LINE_DATA *ioWndBuffLineNowPtr;
+S_BUFF_LINE_DATA *ioWndBuffLineSelectPtr;
+DWORD selectCaretPos;
 
 typedef struct
 {
@@ -76,6 +78,8 @@ IoWndBuffInit( void )
         nop();
     }
 
+    ioWndBuffLineSelectPtr = NULL;
+    selectCaretPos = 0;
 }
 
 /********************************************************************************
@@ -1400,6 +1404,30 @@ IoWndBuffSetTabSize( INT tabSize )
 }
 
 /********************************************************************************
+ * 内容  : IOウィンドウバッファの範囲選択ON
+ * 引数  : なし
+ * 戻り値: なし
+ ***************************************/
+void
+IoWndBuffSelectOn( void )
+{
+    ioWndBuffLineSelectPtr = ioWndBuffLineNowPtr;
+    selectCaretPos = ioWndBuffLineNowPtr->caretPos;
+}
+
+/********************************************************************************
+ * 内容  : IOウィンドウバッファの範囲選択OFF
+ * 引数  : なし
+ * 戻り値: なし
+ ***************************************/
+void
+IoWndBuffSelectOff( void )
+{
+    ioWndBuffLineSelectPtr = NULL;
+    selectCaretPos = 0;
+}
+
+/********************************************************************************
  * 内容  : キャラクタセットの判断(Shift_JISの場合)
  * 引数  : S_BUFF_LINE_DATA *dataPtr
  * 引数  : DWORD            offset   判断したい文字の先頭からのオフセット(0 origin)
@@ -1474,8 +1502,10 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dat
 
     if( (linePtr != NULL) && (dataPtr != NULL) )
     {
-        dataPtr->size = 0;
-        dataPtr->type = SINGLE_CHAR;
+        dataPtr->size    = 0;
+        dataPtr->type    = SINGLE_CHAR;
+        dataPtr->bSelect = FALSE;
+
         literalMaxSize = (linePtr->dataSize-linePtr->newLineCodeSize);
 
         for( i=0,j=0; i<literalMaxSize; i++ )
@@ -1563,6 +1593,88 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dat
                 break;
             defalut:
                 break;
+            }
+
+            if( ioWndBuffLineSelectPtr != NULL )
+            { /* 選択開始位置有り */
+                if( (ioWndBuffLineSelectPtr->lineNum) < (ioWndBuffLineNowPtr->lineNum) )
+                { /* 正方向に選択 */
+                    if( (ioWndBuffLineSelectPtr->lineNum < linePtr->lineNum) && (linePtr->lineNum < ioWndBuffLineNowPtr->lineNum) )
+                    {
+                        dataPtr->bSelect = TRUE;
+                    }
+                    else if( (ioWndBuffLineSelectPtr->lineNum == linePtr->lineNum) && (selectCaretPos <= i) )
+                    {
+                        dataPtr->bSelect = TRUE;
+                    }
+                    else if( (ioWndBuffLineNowPtr->lineNum == linePtr->lineNum) && (i < linePtr->caretPos) )
+                    {
+                        dataPtr->bSelect = TRUE;
+                    }
+                    else
+                    {
+                        nop();
+                    }
+                }
+                else if( (ioWndBuffLineSelectPtr->lineNum) > (ioWndBuffLineNowPtr->lineNum) )
+                {
+                    if( (ioWndBuffLineNowPtr->lineNum < linePtr->lineNum) && (linePtr->lineNum < ioWndBuffLineSelectPtr->lineNum) )
+                    {
+                        dataPtr->bSelect = TRUE;
+                    }
+                    else if( (ioWndBuffLineNowPtr->lineNum == linePtr->lineNum) && (i >= linePtr->caretPos) )
+                    {
+                        dataPtr->bSelect = TRUE;
+                    }
+                    else if( (ioWndBuffLineSelectPtr->lineNum == linePtr->lineNum) && (selectCaretPos > i) )
+                    {
+                        dataPtr->bSelect = TRUE;
+                    }
+                    else
+                    {
+                        nop();
+                    }
+                }
+                else
+                { /* 同一行内で選択 */
+                    if( ioWndBuffLineNowPtr == linePtr )
+                    {
+                        if( linePtr->caretPos < selectCaretPos )
+                        {
+                            if( (linePtr->caretPos <= i) && (i < selectCaretPos) )
+                            {
+                                dataPtr->bSelect = TRUE;
+                            }
+                            else
+                            {
+                                nop();
+                            }
+                        }
+                        else if( linePtr->caretPos > selectCaretPos )
+                        {
+                            if( (selectCaretPos <= i) && (i < linePtr->caretPos) )
+                            {
+                                dataPtr->bSelect = TRUE;
+                            }
+                            else
+                            {
+                                nop();
+                            }
+                        }
+                        else
+                        {
+                            nop();
+                        }
+                    }
+                    else
+                    {
+                        nop();
+                    }
+                }
+            }
+            else
+            {
+                nop();
             }
         }
     }
