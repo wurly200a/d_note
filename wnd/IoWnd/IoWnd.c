@@ -196,6 +196,7 @@ IoWndDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit )
 {
     IoWndBuffDataSet( dataPtr, length, bInit );
 
+    IoWndBuffSelectOff();
     setAllScrollInfo();
     IoWndInvalidateRect();
 }
@@ -568,71 +569,74 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
-    getAllScrollInfo();
-
-    switch(wParam)
+    if( wParam == VK_SHIFT )
     {
-    case VK_LEFT:
-        IoWndDecCaretXpos();
-        break;
-    case VK_RIGHT:
-        IoWndIncCaretXpos();
-        break;
-    case VK_UP:
-        IoWndDecCaretYpos();
-        break;
-    case VK_DOWN:
-        IoWndIncCaretYpos();
-        break;
-    case VK_SHIFT:
         ioWndData.bShiftKeyOn = TRUE;
         IoWndBuffSelectOn();
+    }
+    else
+    {
+        getAllScrollInfo();
+
+        switch(wParam)
+        {
+        case VK_LEFT:
+            IoWndDecCaretXpos();
+            break;
+        case VK_RIGHT:
+            IoWndIncCaretXpos();
+            break;
+        case VK_UP:
+            IoWndDecCaretYpos();
+            break;
+        case VK_DOWN:
+            IoWndIncCaretYpos();
+            break;
+        default:
+            break;
+        }
+
+        if( ioWndData.bShiftKeyOn )
+        {
+            nop();
+        }
+        else
+        {
+            IoWndBuffSelectOff();
+        }
         IoWndInvalidateRect();
-        break;
-    default:
-        break;
-    }
 
-    if( ioWndData.bShiftKeyOn )
-    {
-        nop();
-    }
-    else
-    {
-        IoWndBuffSelectOff();
-    }
-    IoWndInvalidateRect();
+        /* キャレットが表示範囲外に有った場合の処理(横方向) */
+        if( IoWndGetCaretXpos() < ioWndData.iHorzPos )
+        {
+            setScrollPos( SB_HORZ, IoWndGetCaretXpos() );
+        }
+        else if( (ioWndData.iHorzPos+ioWndData.cxBuffer-1) < IoWndGetCaretXpos() )
+        {
+            setScrollPos( SB_HORZ, (ioWndData.iHorzPos+ioWndData.cxBuffer-1) );
+        }
+        else
+        {
+            nop();
+        }
 
-    /* キャレットが表示範囲外に有った場合の処理(横方向) */
-    if( IoWndGetCaretXpos() < ioWndData.iHorzPos )
-    {
-        setScrollPos( SB_HORZ, IoWndGetCaretXpos() );
-    }
-    else if( (ioWndData.iHorzPos+ioWndData.cxBuffer-1) < IoWndGetCaretXpos() )
-    {
-        setScrollPos( SB_HORZ, (ioWndData.iHorzPos+ioWndData.cxBuffer-1) );
-    }
-    else
-    {
-        nop();
-    }
+        /* キャレットが表示範囲外に有った場合の処理(縦方向) */
+        if( IoWndGetCaretYpos() < ioWndData.iVertPos )
+        {
+            setScrollPos( SB_VERT, IoWndGetCaretYpos() );
+        }
+        else if( (ioWndData.iVertPos+ioWndData.cyBuffer-1) < IoWndGetCaretYpos() )
+        {
+            setScrollPos( SB_VERT, IoWndGetCaretYpos() - (ioWndData.cyBuffer-1) );
+        }
+        else
+        {
+            nop();
+        }
 
-    /* キャレットが表示範囲外に有った場合の処理(縦方向) */
-    if( IoWndGetCaretYpos() < ioWndData.iVertPos )
-    {
-        setScrollPos( SB_VERT, IoWndGetCaretYpos() );
+        SetCaretPos( (IoWndGetCaretXpos()-ioWndData.iHorzPos)*ioWndData.cxChar, (IoWndGetCaretYpos()-ioWndData.iVertPos)*ioWndData.cyChar);
+        printCaretPos();
     }
-    else if( (ioWndData.iVertPos+ioWndData.cyBuffer-1) < IoWndGetCaretYpos() )
-    {
-        setScrollPos( SB_VERT, IoWndGetCaretYpos() - (ioWndData.cyBuffer-1) );
-    }
-    else
-    {
-        nop();
-    }
-
-    SetCaretPos( (IoWndGetCaretXpos()-ioWndData.iHorzPos)*ioWndData.cxChar, (IoWndGetCaretYpos()-ioWndData.iVertPos)*ioWndData.cyChar);
-    printCaretPos();
 
     return rtn;
 }
@@ -915,6 +919,22 @@ static LRESULT
 ioOnMouseMove( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
+    int x,y;
+
+    x = LOWORD(lParam);
+    y = HIWORD(lParam);
+
+    if( (wParam & MK_LBUTTON) )
+    {
+        IoWndSetCaretPos( ((x + (ioWndData.iHorzPos*ioWndData.cxChar))/ioWndData.cxChar), ((y + (ioWndData.iVertPos*ioWndData.cyChar))/ioWndData.cyChar) );
+        SetCaretPos( (IoWndGetCaretXpos()-ioWndData.iHorzPos)*ioWndData.cxChar, (IoWndGetCaretYpos()-ioWndData.iVertPos)*ioWndData.cyChar);
+        printCaretPos();
+        IoWndInvalidateRect();
+    }
+    else
+    {
+        nop();
+    }
 
     return rtn;
 }
@@ -942,6 +962,17 @@ ioOnLbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     SetCaretPos( (IoWndGetCaretXpos()-ioWndData.iHorzPos)*ioWndData.cxChar, (IoWndGetCaretYpos()-ioWndData.iVertPos)*ioWndData.cyChar);
     printCaretPos();
+
+    if( wParam & MK_SHIFT )
+    {
+        nop();
+    }
+    else
+    {
+        IoWndBuffSelectOff();
+        IoWndBuffSelectOn();
+    }
+    IoWndInvalidateRect();
 
     return rtn;
 }

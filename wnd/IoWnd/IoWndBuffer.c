@@ -1411,8 +1411,15 @@ IoWndBuffSetTabSize( INT tabSize )
 void
 IoWndBuffSelectOn( void )
 {
-    ioWndBuffLineSelectPtr = ioWndBuffLineNowPtr;
-    selectCaretPos = ioWndBuffLineNowPtr->caretPos;
+    if( ioWndBuffLineSelectPtr )
+    { /* Šù‚É‘I‘ðÏ‚Ý‚Ìê‡ */
+        nop(); /* •ÏX‚µ‚È‚¢ */
+    }
+    else
+    {
+        ioWndBuffLineSelectPtr = ioWndBuffLineNowPtr;
+        selectCaretPos = ioWndBuffLineNowPtr->caretPos;
+    }
 }
 
 /********************************************************************************
