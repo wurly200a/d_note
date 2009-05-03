@@ -205,23 +205,24 @@ IoWndDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit )
  * 内容  : IOウィンドウのデータ取得
  * 引数  : TCHAR *dataPtr
  * 引数  : DWORD dataSize
+ * 引数  : IOWND_REGION region
  * 戻り値: BOOL
  ***************************************/
 BOOL
-IoWndDataGet( TCHAR *dataPtr, DWORD dataSize )
+IoWndDataGet( TCHAR *dataPtr, DWORD dataSize, IOWND_REGION region )
 {
-    return IoWndBuffDataGet( dataPtr, dataSize );
+    return IoWndBuffDataGet( dataPtr, dataSize, region );
 }
 
 /********************************************************************************
  * 内容  : IOウィンドウのデータサイズ取得
- * 引数  : なし
+ * 引数  : IOWND_REGION region
  * 戻り値: DWORD
  ***************************************/
 DWORD
-IoWndGetDataSize( void )
+IoWndGetDataSize( IOWND_REGION region )
 {
-    return IoWndGetBuffSize();
+    return IoWndGetBuffSize( region );
 }
 
 /********************************************************************************
@@ -1194,6 +1195,6 @@ setScrollPos( int fnBar, DWORD nPos )
 static void
 printCaretPos( void )
 {
-    StsBarSetText( STS_BAR_0  ,"%d バイト、全 %d 行",IoWndGetBuffSize(),IoWndGetLineMaxSize() );
+    StsBarSetText( STS_BAR_0  ,"%d バイト、全 %d 行",IoWndGetBuffSize(BUFF_ALL),IoWndGetLineMaxSize() );
     StsBarSetText( STS_BAR_MAX,"   %d 行、%d 列",IoWndGetCaretYpos()+1,IoWndGetCaretXpos()+1);
 }

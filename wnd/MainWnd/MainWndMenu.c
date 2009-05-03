@@ -71,7 +71,6 @@ MenuCreate( void )
 
     EnableMenuItem( hMenu, IDM_EDIT_UNDO       , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_EDIT_CUT        , MF_GRAYED );
-    EnableMenuItem( hMenu, IDM_EDIT_COPY       , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_EDIT_DELETE     , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_EDIT_FIND       , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_EDIT_FIND_NEXT  , MF_GRAYED );

@@ -48,20 +48,27 @@ void IoWndDataInit( void );
  ***************************************/
 void IoWndDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit );
 
+typedef enum
+{
+    IOWND_ALL,
+    IOWND_SELECTED
+} IOWND_REGION;
+
 /********************************************************************************
  * 内容  : IOウィンドウのデータ取得
  * 引数  : TCHAR *dataPtr
  * 引数  : DWORD dataSize
+ * 引数  : IOWND_REGION region
  * 戻り値: BOOL
  ***************************************/
-BOOL IoWndDataGet( TCHAR *dataPtr, DWORD dataSize );
+BOOL IoWndDataGet( TCHAR *dataPtr, DWORD dataSize, IOWND_REGION region );
 
 /********************************************************************************
  * 内容  : IOウィンドウのデータサイズ取得
- * 引数  : なし
+ * 引数  : IOWND_REGION region
  * 戻り値: DWORD
  ***************************************/
-DWORD IoWndGetDataSize( void );
+DWORD IoWndGetDataSize( IOWND_REGION region );
 
 /********************************************************************************
  * 内容  : IOウィンドウの矩形無効化

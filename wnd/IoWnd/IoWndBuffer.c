@@ -25,11 +25,11 @@ static INT getNewLineSize( void );
 static void updateLineNum( S_BUFF_LINE_DATA *dataPtr );
 
 /* 内部変数定義 */
-S_BUFF_LINE_DATA *ioWndBuffListTopPtr;
-S_BUFF_LINE_DATA *ioWndBuffListEndPtr;
-S_BUFF_LINE_DATA *ioWndBuffLineNowPtr;
-S_BUFF_LINE_DATA *ioWndBuffLineSelectPtr;
-DWORD selectCaretPos;
+S_BUFF_LINE_DATA *ioWndBuffListTopPtr;    /* 先頭のデータ                           */
+S_BUFF_LINE_DATA *ioWndBuffListEndPtr;    /* 最後のデータ                           */
+S_BUFF_LINE_DATA *ioWndBuffLineNowPtr;    /* キャレットがあるデータ                 */
+S_BUFF_LINE_DATA *ioWndBuffLineSelectPtr; /* 選択範囲の先頭のデータ                 */
+DWORD selectCaretPos;                     /* 選択範囲の先頭のデータのキャレット位置 */
 
 typedef struct
 {
@@ -286,33 +286,41 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit )
  * 内容  : IOウィンドウバッファのデータ取得
  * 引数  : TCHAR *dataPtr
  * 引数  : DWORD dataSize
+ * 引数  : IOWND_BUFF_REGION region
  * 戻り値: BOOL
  ***************************************/
 BOOL
-IoWndBuffDataGet( TCHAR *dataPtr, DWORD dataSize )
+IoWndBuffDataGet( TCHAR *dataPtr, DWORD dataSize, IOWND_BUFF_REGION region )
 {
     BOOL rtn = FALSE;
     S_BUFF_LINE_DATA *nowPtr;
 
-    if( ioWndBuffListTopPtr == NULL )
+    if( region == BUFF_ALL )
     {
-        nop();
-    }
-    else
-    {
-        if( dataPtr != NULL )
-        {
-            for( nowPtr=ioWndBuffListTopPtr; nowPtr != NULL; nowPtr = nowPtr->nextPtr )
-            {
-                memcpy( dataPtr, nowPtr->data, nowPtr->dataSize );
-                dataPtr += nowPtr->dataSize;
-            }
-        }
-        else
+        if( ioWndBuffListTopPtr == NULL )
         {
             nop();
         }
-        rtn = TRUE;
+        else
+        {
+            if( dataPtr != NULL )
+            {
+                for( nowPtr=ioWndBuffListTopPtr; nowPtr != NULL; nowPtr = nowPtr->nextPtr )
+                {
+                    memcpy( dataPtr, nowPtr->data, nowPtr->dataSize );
+                    dataPtr += nowPtr->dataSize;
+                }
+            }
+            else
+            {
+                nop();
+            }
+            rtn = TRUE;
+        }
+    }
+    else
+    {
+        nop();
     }
 
     return rtn;
@@ -743,18 +751,25 @@ divideData( S_BUFF_LINE_DATA *dataPtr, S_BUFF_LINE_DATA **new1Ptr, S_BUFF_LINE_D
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのデータサイズ取得
- * 引数  : なし
+ * 引数  : IOWND_BUFF_REGION region
  * 戻り値: DWORD
  ***************************************/
 DWORD
-IoWndGetBuffSize( void )
+IoWndGetBuffSize( IOWND_BUFF_REGION region )
 {
     DWORD dataSize = 0;
     S_BUFF_LINE_DATA *nowPtr;
 
-    for( nowPtr = ioWndBuffListTopPtr; nowPtr != NULL; nowPtr = nowPtr->nextPtr )
+    if( region == BUFF_ALL )
     {
-        dataSize += nowPtr->dataSize;
+        for( nowPtr = ioWndBuffListTopPtr; nowPtr != NULL; nowPtr = nowPtr->nextPtr )
+        {
+            dataSize += nowPtr->dataSize;
+        }
+    }
+    else
+    {
+        nop();
     }
 
     return dataSize;
@@ -1193,7 +1208,7 @@ IoWndBuffSetNewLineCode( UINT newLineType )
     }
     else
     {
-        allDataSize = IoWndGetBuffSize();
+        allDataSize = IoWndGetBuffSize(BUFF_ALL);
         dataTopPtr = malloc( sizeof(TCHAR) * allDataSize );
         if( dataTopPtr != NULL )
         {
@@ -1624,7 +1639,7 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dat
                     }
                 }
                 else if( (ioWndBuffLineSelectPtr->lineNum) > (ioWndBuffLineNowPtr->lineNum) )
-                {
+                { /* 負方向に選択 */
                     if( (ioWndBuffLineNowPtr->lineNum < linePtr->lineNum) && (linePtr->lineNum < ioWndBuffLineSelectPtr->lineNum) )
                     {
                         dataPtr->bSelect = TRUE;

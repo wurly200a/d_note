@@ -371,11 +371,11 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 #endif
 
     case IDM_FILE_SAVE:
-        dwSize = IoWndGetDataSize();
+        dwSize = IoWndGetDataSize(IOWND_ALL);
         dataPtr = malloc( dwSize * sizeof(TCHAR) );
         if( dataPtr != NULL )
         {
-            IoWndDataGet( dataPtr,dwSize );
+            IoWndDataGet( dataPtr,dwSize,IOWND_ALL );
             if( (FileWrite( FILE_ID_BIN, dataPtr, dwSize )) == FILE_NAME_NOT_SET )
             {
                 if( FileSaveDlg( hwnd,FILE_ID_BIN ) )
@@ -400,11 +400,11 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         }
         break;
     case IDM_FILE_SAVE_AS:
-        dwSize = IoWndGetDataSize();
+        dwSize = IoWndGetDataSize(IOWND_ALL);
         dataPtr = malloc( dwSize * sizeof(TCHAR) );
         if( dataPtr != NULL )
         {
-            IoWndDataGet( dataPtr,dwSize );
+            IoWndDataGet( dataPtr,dwSize,IOWND_ALL );
             if( FileSaveDlg( hwnd,FILE_ID_BIN ) )
             {
                 doCaption( hwnd, FileGetTitleName(FILE_ID_BIN) );
@@ -415,6 +415,25 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                 nop();
             }
             free( dataPtr );
+        }
+        else
+        {
+            nop();
+        }
+        break;
+
+    case IDM_EDIT_COPY:
+        dwSize = IoWndGetDataSize(IOWND_SELECTED);
+        if( dwSize )
+        {
+            hGlobal = GlobalAlloc( GHND|GMEM_SHARE, dwSize+1 );
+            pGlobal = GlobalLock( hGlobal );
+            GlobalUnlock(hGlobal);
+            IoWndDataGet( pGlobal,dwSize,IOWND_ALL );
+            OpenClipboard(hwnd);
+            EmptyClipboard();
+            SetClipboardData( CF_TEXT, hGlobal );
+            CloseClipboard();
         }
         else
         {

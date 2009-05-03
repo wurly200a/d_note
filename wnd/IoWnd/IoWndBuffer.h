@@ -34,20 +34,27 @@ void IoWndBuffEnd( void );
  ***************************************/
 void IoWndBuffDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit );
 
+typedef enum
+{
+    BUFF_ALL,
+    BUFF_SELECTED
+} IOWND_BUFF_REGION;
+
 /********************************************************************************
  * 内容  : IOウィンドウバッファのデータ取得
  * 引数  : TCHAR *dataPtr
  * 引数  : DWORD dataSize
+ * 引数  : IOWND_BUFF_REGION region
  * 戻り値: BOOL
  ***************************************/
-BOOL IoWndBuffDataGet( TCHAR *dataPtr, DWORD dataSize );
+BOOL IoWndBuffDataGet( TCHAR *dataPtr, DWORD dataSize, IOWND_BUFF_REGION region );
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのデータサイズ取得
- * 引数  : なし
+ * 引数  : IOWND_BUFF_REGION region
  * 戻り値: DWORD
  ***************************************/
-DWORD IoWndGetBuffSize( void );
+DWORD IoWndGetBuffSize( IOWND_BUFF_REGION region );
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファの最大行サイズ取得
