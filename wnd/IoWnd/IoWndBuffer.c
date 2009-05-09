@@ -293,7 +293,8 @@ BOOL
 IoWndBuffDataGet( TCHAR *dataPtr, DWORD dataSize, IOWND_BUFF_REGION region )
 {
     BOOL rtn = FALSE;
-    S_BUFF_LINE_DATA *nowPtr;
+    S_BUFF_LINE_DATA *nowPtr,*prevPtr;
+    DWORD size;
 
     if( region == BUFF_ALL )
     {
@@ -320,7 +321,96 @@ IoWndBuffDataGet( TCHAR *dataPtr, DWORD dataSize, IOWND_BUFF_REGION region )
     }
     else
     {
-        nop();
+        if( dataPtr != NULL )
+        {
+            if( ioWndBuffLineSelectPtr != NULL )
+            { /* 選択開始位置有り */
+                if( (ioWndBuffLineSelectPtr->lineNum) < (ioWndBuffLineNowPtr->lineNum) )
+                { /* 正方向に選択 */
+                    for( nowPtr = ioWndBuffLineSelectPtr,prevPtr = NULL; prevPtr != ioWndBuffLineNowPtr; nowPtr = nowPtr->nextPtr )
+                    {
+                        if( nowPtr == ioWndBuffLineSelectPtr )
+                        {
+                            size = (nowPtr->dataSize - selectCaretPos);
+                            memcpy( dataPtr, (nowPtr->data + selectCaretPos),size );
+                            dataPtr += size;
+                        }
+                        else if( nowPtr == ioWndBuffLineNowPtr )
+                        {
+                            size = nowPtr->caretPos;
+                            memcpy( dataPtr,nowPtr->data,size );
+                            dataPtr += size;
+                        }
+                        else
+                        {
+                            size = nowPtr->dataSize;
+                            memcpy( dataPtr, nowPtr->data,size );
+                            dataPtr += size;
+                        }
+                        prevPtr = nowPtr;
+                    }
+                }
+                else if( (ioWndBuffLineSelectPtr->lineNum) > (ioWndBuffLineNowPtr->lineNum) )
+                { /* 負方向に選択 */
+                    for( nowPtr = ioWndBuffLineNowPtr,prevPtr = NULL; prevPtr != ioWndBuffLineSelectPtr; nowPtr = nowPtr->nextPtr )
+                    {
+                        if( nowPtr == ioWndBuffLineNowPtr )
+                        {
+                            size = (nowPtr->dataSize - nowPtr->caretPos);
+                            memcpy( dataPtr, (nowPtr->data + nowPtr->caretPos),size );
+                            dataPtr += size;
+                        }
+                        else if( nowPtr == ioWndBuffLineSelectPtr )
+                        {
+                            size = selectCaretPos;
+                            memcpy( dataPtr,nowPtr->data,size );
+                            dataPtr += size;
+                        }
+                        else
+                        {
+                            size = nowPtr->dataSize;
+                            memcpy( dataPtr, nowPtr->data,size );
+                            dataPtr += size;
+                        }
+                        prevPtr = nowPtr;
+                    }
+                }
+                else
+                { /* 同一行内で選択 */
+                    if( ioWndBuffLineNowPtr == ioWndBuffLineSelectPtr )
+                    {
+                        if( ioWndBuffLineNowPtr->caretPos < selectCaretPos )
+                        {
+                            size = (selectCaretPos - ioWndBuffLineNowPtr->caretPos);
+                            memcpy( dataPtr, (ioWndBuffLineNowPtr->data + ioWndBuffLineNowPtr->caretPos),size );
+                            dataPtr += size;
+                        }
+                        else if( ioWndBuffLineNowPtr->caretPos > selectCaretPos )
+                        {
+                            size = (ioWndBuffLineNowPtr->caretPos - selectCaretPos);
+                            memcpy( dataPtr, (ioWndBuffLineNowPtr->data + selectCaretPos),size );
+                            dataPtr += size;
+                        }
+                        else
+                        {
+                            nop();
+                        }
+                    }
+                    else
+                    {
+                        nop();
+                    }
+                }
+            }
+            else
+            {
+                nop();
+            }
+        }
+        else
+        {
+            nop();
+        }
     }
 
     return rtn;
@@ -758,7 +848,7 @@ DWORD
 IoWndGetBuffSize( IOWND_BUFF_REGION region )
 {
     DWORD dataSize = 0;
-    S_BUFF_LINE_DATA *nowPtr;
+    S_BUFF_LINE_DATA *nowPtr,*prevPtr;
 
     if( region == BUFF_ALL )
     {
@@ -769,7 +859,73 @@ IoWndGetBuffSize( IOWND_BUFF_REGION region )
     }
     else
     {
-        nop();
+        if( ioWndBuffLineSelectPtr != NULL )
+        { /* 選択開始位置有り */
+            if( (ioWndBuffLineSelectPtr->lineNum) < (ioWndBuffLineNowPtr->lineNum) )
+            { /* 正方向に選択 */
+                for( nowPtr = ioWndBuffLineSelectPtr,prevPtr = NULL; prevPtr != ioWndBuffLineNowPtr; nowPtr = nowPtr->nextPtr )
+                {
+                    if( nowPtr == ioWndBuffLineSelectPtr )
+                    {
+                        dataSize += (nowPtr->dataSize - selectCaretPos);
+                    }
+                    else if( nowPtr == ioWndBuffLineNowPtr )
+                    {
+                        dataSize += nowPtr->caretPos;
+                    }
+                    else
+                    {
+                        dataSize += nowPtr->dataSize;
+                    }
+                    prevPtr = nowPtr;
+                }
+            }
+            else if( (ioWndBuffLineSelectPtr->lineNum) > (ioWndBuffLineNowPtr->lineNum) )
+            { /* 負方向に選択 */
+                for( nowPtr = ioWndBuffLineNowPtr,prevPtr = NULL; prevPtr != ioWndBuffLineSelectPtr; nowPtr = nowPtr->nextPtr )
+                {
+                    if( nowPtr == ioWndBuffLineNowPtr )
+                    {
+                        dataSize += (nowPtr->dataSize - nowPtr->caretPos);
+                    }
+                    else if( nowPtr == ioWndBuffLineSelectPtr )
+                    {
+                        dataSize += selectCaretPos;
+                    }
+                    else
+                    {
+                        dataSize += nowPtr->dataSize;
+                    }
+                    prevPtr = nowPtr;
+                }
+            }
+            else
+            { /* 同一行内で選択 */
+                if( ioWndBuffLineNowPtr == ioWndBuffLineSelectPtr )
+                {
+                    if( ioWndBuffLineNowPtr->caretPos < selectCaretPos )
+                    {
+                        dataSize += (selectCaretPos - ioWndBuffLineNowPtr->caretPos);
+                    }
+                    else if( ioWndBuffLineNowPtr->caretPos > selectCaretPos )
+                    {
+                        dataSize += (ioWndBuffLineNowPtr->caretPos - selectCaretPos);
+                    }
+                    else
+                    {
+                        nop();
+                    }
+                }
+                else
+                {
+                    nop();
+                }
+            }
+        }
+        else
+        {
+            nop();
+        }
     }
 
     return dataSize;
@@ -1450,6 +1606,42 @@ IoWndBuffSelectOff( void )
 }
 
 /********************************************************************************
+ * 内容  : IOウィンドウバッファの全範囲選択
+ * 引数  : なし
+ * 戻り値: BOOL
+ ***************************************/
+BOOL
+IoWndBuffSelectAll( void )
+{
+    BOOL bRtn = FALSE;
+
+    if( ioWndBuffListTopPtr != NULL )
+    {
+        if( (ioWndBuffLineSelectPtr == ioWndBuffListTopPtr) &&
+            (selectCaretPos == 0) &&
+            (ioWndBuffLineNowPtr == ioWndBuffListEndPtr) &&
+            (ioWndBuffLineNowPtr->caretPos == (ioWndBuffLineNowPtr->dataSize - ioWndBuffLineNowPtr->newLineCodeSize) ) )
+        {
+            nop();
+        }
+        else
+        {
+            ioWndBuffLineSelectPtr = ioWndBuffListTopPtr;
+            selectCaretPos = 0;
+            ioWndBuffLineNowPtr = ioWndBuffListEndPtr;
+            ioWndBuffLineNowPtr->caretPos = ioWndBuffLineNowPtr->dataSize - ioWndBuffLineNowPtr->newLineCodeSize;
+            bRtn = TRUE;
+        }
+    }
+    else
+    {
+        nop();
+    }
+
+    return bRtn;
+}
+
+/********************************************************************************
  * 内容  : キャラクタセットの判断(Shift_JISの場合)
  * 引数  : S_BUFF_LINE_DATA *dataPtr
  * 引数  : DWORD            offset   判断したい文字の先頭からのオフセット(0 origin)
@@ -1644,11 +1836,11 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dat
                     {
                         dataPtr->bSelect = TRUE;
                     }
-                    else if( (ioWndBuffLineNowPtr->lineNum == linePtr->lineNum) && (i >= linePtr->caretPos) )
+                    else if( (ioWndBuffLineNowPtr->lineNum == linePtr->lineNum) && (linePtr->caretPos <= i) )
                     {
                         dataPtr->bSelect = TRUE;
                     }
-                    else if( (ioWndBuffLineSelectPtr->lineNum == linePtr->lineNum) && (selectCaretPos > i) )
+                    else if( (ioWndBuffLineSelectPtr->lineNum == linePtr->lineNum) && (i < selectCaretPos) )
                     {
                         dataPtr->bSelect = TRUE;
                     }

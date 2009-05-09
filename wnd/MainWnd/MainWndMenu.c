@@ -76,7 +76,6 @@ MenuCreate( void )
     EnableMenuItem( hMenu, IDM_EDIT_FIND_NEXT  , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_EDIT_REPLACE    , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_EDIT_GOTO_LINE  , MF_GRAYED );
-    EnableMenuItem( hMenu, IDM_EDIT_SELECT_ALL , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_EDIT_DATETIME   , MF_GRAYED );
 
     hMenuPopup = CreateMenu();

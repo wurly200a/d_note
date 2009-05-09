@@ -71,6 +71,13 @@ BOOL IoWndDataGet( TCHAR *dataPtr, DWORD dataSize, IOWND_REGION region );
 DWORD IoWndGetDataSize( IOWND_REGION region );
 
 /********************************************************************************
+ * 内容  : IOウィンドウの全範囲選択
+ * 引数  : なし
+ * 戻り値: BOOL
+ ***************************************/
+BOOL IoWndSelectAll( void );
+
+/********************************************************************************
  * 内容  : IOウィンドウの矩形無効化
  * 引数  : なし
  * 戻り値: なし

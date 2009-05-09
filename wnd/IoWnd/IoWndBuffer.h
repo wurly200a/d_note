@@ -210,5 +210,12 @@ void IoWndBuffSelectOn( void );
  ***************************************/
 void IoWndBuffSelectOff( void );
 
+/********************************************************************************
+ * 内容  : IOウィンドウバッファの全範囲選択
+ * 引数  : なし
+ * 戻り値: BOOL
+ ***************************************/
+BOOL IoWndBuffSelectAll( void );
+
 #define IOWND_BUFFER_H
 #endif /* IOWND_BUFFER_H */

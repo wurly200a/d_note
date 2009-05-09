@@ -429,7 +429,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             hGlobal = GlobalAlloc( GHND|GMEM_SHARE, dwSize+1 );
             pGlobal = GlobalLock( hGlobal );
             GlobalUnlock(hGlobal);
-            IoWndDataGet( pGlobal,dwSize,IOWND_ALL );
+            IoWndDataGet( pGlobal,dwSize,IOWND_SELECTED );
             OpenClipboard(hwnd);
             EmptyClipboard();
             SetClipboardData( CF_TEXT, hGlobal );
@@ -455,6 +455,17 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             CloseClipboard();
             IoWndDataSet( dataPtr,dwSize,FALSE );
             free( dataPtr );
+        }
+        else
+        {
+            nop();
+        }
+        break;
+
+    case IDM_EDIT_SELECT_ALL:
+        if( IoWndSelectAll() )
+        {
+            IoWndInvalidateRect();
         }
         else
         {

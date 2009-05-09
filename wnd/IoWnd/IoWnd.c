@@ -226,6 +226,17 @@ IoWndGetDataSize( IOWND_REGION region )
 }
 
 /********************************************************************************
+ * 内容  : IOウィンドウの全範囲選択
+ * 引数  : なし
+ * 戻り値: BOOL
+ ***************************************/
+BOOL
+IoWndSelectAll( void )
+{
+    return IoWndBuffSelectAll();
+}
+
+/********************************************************************************
  * 内容  : IOウィンドウの矩形無効化
  * 引数  : なし
  * 戻り値: なし
@@ -574,6 +585,10 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     {
         ioWndData.bShiftKeyOn = TRUE;
         IoWndBuffSelectOn();
+    }
+    else if( wParam == VK_CONTROL )
+    {
+        nop();
     }
     else
     {
