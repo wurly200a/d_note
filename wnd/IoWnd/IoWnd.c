@@ -669,6 +669,7 @@ static LRESULT
 ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
+    TCHAR data;
     int i;
 
     for( i=0; i<(int) LOWORD(lParam); i++ )
@@ -690,7 +691,8 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         case '\t':  /* tab */
         default:
             /* •¶Žš“ü—Í */
-            IoWndBuffAddData( wParam );
+            data = (TCHAR)wParam;
+            IoWndBuffDataSet( &data,1,FALSE );
             IoWndInvalidateRect();
             break ;
         }

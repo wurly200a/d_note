@@ -29,7 +29,7 @@ void IoWndBuffEnd( void );
  * 内容  : IOウィンドウバッファのデータセット
  * 引数  : TCHAR* dataPtr
  * 引数  : DWORD  length
- * 引数  : BOOL   bInit
+ * 引数  : BOOL   bInit  (TRUE:既存データをクリア,FALSE:クリアしない)
  * 戻り値: なし
  ***************************************/
 void IoWndBuffDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit );
@@ -167,13 +167,6 @@ enum
  * 戻り値: BOOL (TRUE:データが変更された)
  ***************************************/
 BOOL IoWndBuffSetNewLineCode( UINT newLineType );
-
-/********************************************************************************
- * 内容  : データ追加
- * 引数  : TCHAR data
- * 戻り値: なし
- ***************************************/
-void IoWndBuffAddData( TCHAR data );
 
 /********************************************************************************
  * 内容  : データ削除
