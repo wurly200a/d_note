@@ -15,9 +15,12 @@ static void insertLinkedList( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endP
 static S_BUFF_LINE_DATA *replaceLinkedList( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA *dataPtr );
 static S_BUFF_LINE_DATA *removeLinkedList ( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *dataPtr );
 static void mergeLinkedList( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA **mergeTopPtr, S_BUFF_LINE_DATA **mergeEndPtr );
+static S_BUFF_LINE_DATA *mallocBuffLineData( DWORD size );
+static void freeBuffLineData( S_BUFF_LINE_DATA *dataPtr );
 static S_BUFF_LINE_DATA *getBuffLine( TCHAR *dataPtr, DWORD maxLength );
 static S_BUFF_LINE_DATA *joinData( S_BUFF_LINE_DATA *data1Ptr, S_BUFF_LINE_DATA *data2Ptr );
 static void divideData( S_BUFF_LINE_DATA *dataPtr, S_BUFF_LINE_DATA **new1Ptr, S_BUFF_LINE_DATA **new2Ptr );
+static S_BUFF_LINE_DATA *shortenData( S_BUFF_LINE_DATA *dataPtr, DWORD size );
 
 static CHARSET_TYPE detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset );
 static BOOL getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
@@ -679,6 +682,41 @@ mergeLinkedList( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LI
 }
 
 /********************************************************************************
+ * 内容  : 行データの生成
+ * 引数  : DWORD size
+ * 戻り値: S_BUFF_LINE_DATA *
+ ***************************************/
+static S_BUFF_LINE_DATA *
+mallocBuffLineData( DWORD size )
+{
+    S_BUFF_LINE_DATA *newPtr = NULL;
+
+    newPtr = (S_BUFF_LINE_DATA *)malloc( sizeof(S_BUFF_LINE_DATA) + (size * sizeof(TCHAR)) );
+    if( newPtr != NULL )
+    {
+        memset( newPtr, sizeof(S_BUFF_LINE_DATA), 0 );
+        newPtr->dataSize = size;
+    }
+    else
+    {
+        nop();
+    }
+
+    return newPtr;
+}
+
+/********************************************************************************
+ * 内容  : 行データの解放
+ * 引数  : S_BUFF_LINE_DATA *
+ * 戻り値: なし
+ ***************************************/
+static void
+freeBuffLineData( S_BUFF_LINE_DATA *dataPtr )
+{
+    free( dataPtr );
+}
+
+/********************************************************************************
  * 内容  : バッファ行データを取得
  * 引数  : TCHAR *dataPtr  データの先頭
  * 引数  : DWORD maxLength 最大長さ
@@ -773,6 +811,7 @@ joinData( S_BUFF_LINE_DATA *data1Ptr, S_BUFF_LINE_DATA *data2Ptr )
         {
             newPtr->dataSize = data1Ptr->dataSize - data1Ptr->newLineCodeSize + data2Ptr->dataSize;
             newPtr->newLineCodeSize = data2Ptr->newLineCodeSize;
+            newPtr->lineNum = 0;
 
             memcpy( newPtr->data, data1Ptr->data, data1Ptr->dataSize - data1Ptr->newLineCodeSize );
             memcpy( newPtr->data + data1Ptr->dataSize - data1Ptr->newLineCodeSize, data2Ptr->data, data2Ptr->dataSize );
@@ -844,6 +883,40 @@ divideData( S_BUFF_LINE_DATA *dataPtr, S_BUFF_LINE_DATA **new1Ptr, S_BUFF_LINE_D
     {
         nop();
     }
+}
+
+/********************************************************************************
+ * 内容  : 行データを短くする
+ * 引数  : S_BUFF_LINE_DATA *dataPtr
+ * 引数  : DWORD size
+ * 戻り値: S_BUFF_LINE_DATA *
+ ***************************************/
+static S_BUFF_LINE_DATA *
+shortenData( S_BUFF_LINE_DATA *dataPtr, DWORD size )
+{
+    S_BUFF_LINE_DATA *newPtr = NULL;
+
+    if( (dataPtr != NULL) &&
+        (dataPtr->dataSize >= size) )
+    {
+        newPtr = mallocBuffLineData( dataPtr->dataSize-size );
+        if( newPtr != NULL )
+        {
+            memcpy( newPtr->data, dataPtr->data, newPtr->dataSize - dataPtr->newLineCodeSize );
+            newPtr->newLineCodeSize = dataPtr->newLineCodeSize;
+            memcpy( newPtr->data + newPtr->dataSize - newPtr->newLineCodeSize, dataPtr->data + dataPtr->dataSize - dataPtr->newLineCodeSize, dataPtr->newLineCodeSize );
+        }
+        else
+        {
+            nop();
+        }
+    }
+    else
+    {
+        nop();
+    }
+
+    return newPtr;
 }
 
 /********************************************************************************
@@ -1395,81 +1468,138 @@ IoWndBuffSetNewLineCode( UINT newLineType )
 
 /********************************************************************************
  * 内容  : データ削除
- * 引数  : なし
+ * 引数  : BOOL bBackSpace
  * 戻り値: なし
  ***************************************/
 void
-IoWndBuffRemoveData( void )
+IoWndBuffRemoveData( BOOL bBackSpace )
 {
     int removeSize = 0;
-    S_BUFF_LINE_DATA *newPtr = NULL,*prevPtr = NULL;
+    S_BUFF_LINE_DATA *newPtr = NULL,*prevPtr = NULL,*nextPtr = NULL;
+    S_BUFF_LINE_DATA *dividePrePtr,*dividePostPtr;
+    BOOL bValid = FALSE;
 
     if( ioWndBuffLineNowPtr != NULL )
     {
-        if( ioWndBuffLineNowPtr->caretPos > 0  )
-        {
-            /* 1文字削除した新しい行データを生成 */
-            if( detectCharSet(ioWndBuffLineNowPtr,ioWndBuffLineNowPtr->caretPos-1) == DOUBLE_CHAR_LOW )
-            { /* 次の文字で削除量を判断 */
-                removeSize = 2;
-            }
-            else
+        if( bBackSpace )
+        { /* BSキー */
+            if( ioWndBuffLineNowPtr->caretPos > 0  )
             {
-                removeSize = 1;
-            }
+                bValid = TRUE;
 
-            newPtr = (S_BUFF_LINE_DATA *)malloc( sizeof(S_BUFF_LINE_DATA) + ((ioWndBuffLineNowPtr->dataSize-removeSize) * sizeof(TCHAR)) );
-            if( newPtr != NULL )
-            {
-                newPtr->dataSize        = ioWndBuffLineNowPtr->dataSize - removeSize;
-                newPtr->newLineCodeSize = ioWndBuffLineNowPtr->newLineCodeSize;
-                newPtr->lineNum         = ioWndBuffLineNowPtr->lineNum;
-                newPtr->caretPos        = ioWndBuffLineNowPtr->caretPos - removeSize;
-
-                memcpy( newPtr->data, ioWndBuffLineNowPtr->data,ioWndBuffLineNowPtr->caretPos-removeSize );
-                memcpy( newPtr->data+ioWndBuffLineNowPtr->caretPos-removeSize, ioWndBuffLineNowPtr->data+ioWndBuffLineNowPtr->caretPos, (ioWndBuffLineNowPtr->dataSize-ioWndBuffLineNowPtr->caretPos) );
-
-                /* 古い行データと置き換える */
-                replaceLinkedList( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineNowPtr,newPtr );
-                free( ioWndBuffLineNowPtr );
-                ioWndBuffLineNowPtr = newPtr;
-            }
-            else
-            {
-                nop();
-            }
-        }
-        else
-        { /* キャレットが行の先頭位置。つまり、前行との結合。*/
-            if( ioWndBuffLineNowPtr->prevPtr != NULL )
-            {
-                prevPtr = ioWndBuffLineNowPtr->prevPtr;
-                newPtr = joinData( prevPtr,ioWndBuffLineNowPtr ); /* 前行と本行を結合した新しい行データを生成 */
-
-                if( newPtr != NULL )
+                if( detectCharSet(ioWndBuffLineNowPtr,ioWndBuffLineNowPtr->caretPos-1) == DOUBLE_CHAR_LOW )
+                { /* 次の文字で削除量を判断 */
+                    removeSize = 2;
+                }
+                else
                 {
-                    /* 行番号、キャレット位置を前行データによって決まる */
-                    newPtr->lineNum  = prevPtr->lineNum;
-                    newPtr->caretPos = prevPtr->dataSize - prevPtr->newLineCodeSize;
+                    removeSize = 1;
+                }
+            }
+            else
+            { /* キャレットが行の先頭位置。つまり、前行との結合。*/
+                if( ioWndBuffLineNowPtr->prevPtr != NULL )
+                {
+                    prevPtr = ioWndBuffLineNowPtr->prevPtr;
+                    newPtr = joinData( prevPtr,ioWndBuffLineNowPtr ); /* 前行と本行を結合した新しい行データを生成 */
 
-                    removeLinkedList( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineNowPtr ); /* 本行は削除 */
-                    replaceLinkedList( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,prevPtr,newPtr );    /* 前行は新しい行データに置き換える */
+                    if( newPtr != NULL )
+                    {
+                        /* 行番号、キャレット位置を前行データによって決まる */
+                        newPtr->lineNum  = prevPtr->lineNum;
+                        newPtr->caretPos = prevPtr->dataSize - prevPtr->newLineCodeSize;
 
-                    free( ioWndBuffLineNowPtr );
-                    free( prevPtr );
-                    ioWndBuffLineNowPtr = newPtr;
+                        removeLinkedList( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineNowPtr ); /* 本行は削除 */
+                        replaceLinkedList( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,prevPtr,newPtr );    /* 前行は新しい行データに置き換える */
 
-                    updateLineNum( ioWndBuffLineNowPtr );
+                        free( ioWndBuffLineNowPtr );
+                        free( prevPtr );
+                        ioWndBuffLineNowPtr = newPtr;
+
+                        updateLineNum( ioWndBuffLineNowPtr );
+                    }
+                    else
+                    {
+                        nop();
+                    }
                 }
                 else
                 {
                     nop();
                 }
             }
-            else
+        }
+        else
+        { /* DELキー */
+            if( ioWndBuffLineNowPtr->caretPos != (ioWndBuffLineNowPtr->dataSize - ioWndBuffLineNowPtr->newLineCodeSize) )
             {
-                nop();
+                bValid = TRUE;
+
+                if( detectCharSet(ioWndBuffLineNowPtr,ioWndBuffLineNowPtr->caretPos) == DOUBLE_CHAR_HIGH )
+                { /* キャレット位置の文字で削除量を判断 */
+                    removeSize = 2;
+                }
+                else
+                {
+                    removeSize = 1;
+                }
+                ioWndBuffLineNowPtr->caretPos += removeSize;
             }
+            else
+            { /* キャレットが行の最終位置。つまり、次行との結合。*/
+                if( ioWndBuffLineNowPtr->nextPtr != NULL )
+                {
+                    nextPtr = ioWndBuffLineNowPtr->nextPtr;
+                    newPtr = joinData( ioWndBuffLineNowPtr,nextPtr ); /* 本行と次行を結合した新しい行データを生成 */
+
+                    if( newPtr != NULL )
+                    {
+                        /* 行番号、キャレット位置は本行データによって決まる */
+                        newPtr->lineNum  = ioWndBuffLineNowPtr->lineNum;
+                        newPtr->caretPos = ioWndBuffLineNowPtr->caretPos;
+
+                        removeLinkedList( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,nextPtr );         /* 次行は削除 */
+                        replaceLinkedList( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineNowPtr,newPtr ); /* 本行は新しい行データに置き換える */
+
+                        free( ioWndBuffLineNowPtr );
+                        free( nextPtr );
+                        ioWndBuffLineNowPtr = newPtr;
+
+                        updateLineNum( ioWndBuffLineNowPtr );
+                    }
+                    else
+                    {
+                        nop();
+                    }
+                }
+                else
+                {
+                    nop();
+                }
+            }
+        }
+
+        if( bValid )
+        { /* 削除有効 */
+            divideData( ioWndBuffLineNowPtr, &dividePrePtr, &dividePostPtr ); /* キャレット位置で分割 */
+            newPtr = shortenData( dividePrePtr, removeSize );                 /* 分割後の前方データの末尾から所定量削除 */
+            freeBuffLineData( dividePrePtr );                                 /* 前方データを */
+            dividePrePtr = newPtr;                                            /* 書き換え     */
+
+            newPtr = joinData( dividePrePtr, dividePostPtr );                 /* 再結合 */
+            newPtr->lineNum = ioWndBuffLineNowPtr->lineNum;                   /* 行番号は同じ */
+            newPtr->caretPos = ioWndBuffLineNowPtr->caretPos - removeSize;    /* キャレット位置は削除量分前方になる */
+            freeBuffLineData( dividePrePtr );                                 /* 作業データを削除 */
+            freeBuffLineData( dividePostPtr );                                /* 作業データを削除 */
+
+            /* 古い行データと置き換える */
+            replaceLinkedList( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineNowPtr,newPtr );
+            freeBuffLineData( ioWndBuffLineNowPtr );
+            ioWndBuffLineNowPtr = newPtr;
+        }
+        else
+        {
+            nop();
         }
     }
     else

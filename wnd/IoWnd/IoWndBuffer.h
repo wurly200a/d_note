@@ -170,10 +170,10 @@ BOOL IoWndBuffSetNewLineCode( UINT newLineType );
 
 /********************************************************************************
  * 内容  : データ削除
- * 引数  : なし
+ * 引数  : BOOL bBackSpace
  * 戻り値: なし
  ***************************************/
-void IoWndBuffRemoveData( void );
+void IoWndBuffRemoveData( BOOL bBackSpace );
 
 /********************************************************************************
  * 内容  : 改行追加

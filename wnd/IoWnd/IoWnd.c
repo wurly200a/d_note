@@ -603,6 +603,7 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             IoWndIncCaretYpos();
             break;
         case VK_DELETE:
+            IoWndBuffRemoveData( FALSE );
             break;
         default:
             break;
@@ -673,7 +674,7 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         switch( wParam )
         {
         case '\b':  /* backspace */
-            IoWndBuffRemoveData();
+            IoWndBuffRemoveData( TRUE );
             IoWndInvalidateRect();
             break;
         case '\x1B':/* escape */
