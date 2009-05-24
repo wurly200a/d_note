@@ -47,5 +47,21 @@ typedef struct
     BOOL   bShiftKeyOn;
 } S_IOWND_DATA;
 
+#if 0
+#define BG_COLOR_RGB          RGB(0xFF,0xFF,0xFF)
+#define TAB_BK_COLOR_RGB      RGB(0xE0,0xFF,0xFF) /* êÖêF */
+#define BK_COLOR_RGB          RGB(0xFF,0xFF,0xFF)
+#define TEXT_COLOR_RGB        RGB(0x00,0x00,0x00)
+#define SELECT_BK_COLOR_RGB   RGB(0x00,0x0D,0x7F) /* îZÇ¢ê¬ */
+#define SELECT_TEXT_COLOR_RGB RGB(0xFF,0xFF,0xFF)
+#else
+#define BG_COLOR_RGB          RGB(0x2F,0x4F,0x4F)
+#define TAB_BK_COLOR_RGB      RGB(0x37,0x57,0x57)
+#define BK_COLOR_RGB          RGB(0x2F,0x4F,0x4F)
+#define TEXT_COLOR_RGB        RGB(0xFF,0xDA,0xB9)
+#define SELECT_BK_COLOR_RGB   RGB(0x00,0x0D,0x7F) /* îZÇ¢ê¬ */
+#define SELECT_TEXT_COLOR_RGB TEXT_COLOR_RGB
+#endif
+
 #define IOWND_DEF_H
 #endif /* IOWND_DEF_H */

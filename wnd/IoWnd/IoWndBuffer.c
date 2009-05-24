@@ -807,7 +807,7 @@ divideData( S_BUFF_LINE_DATA *dataPtr, S_BUFF_LINE_DATA **new1Ptr, S_BUFF_LINE_D
 
     if( (dataPtr != NULL) && (new1Ptr != NULL) && (new2Ptr != NULL) )
     {
-        *new1Ptr = (S_BUFF_LINE_DATA *)malloc( sizeof(S_BUFF_LINE_DATA) + (dataPtr->caretPos+getNewLineSize()) * sizeof(TCHAR));
+        *new1Ptr = (S_BUFF_LINE_DATA *)malloc( sizeof(S_BUFF_LINE_DATA) + (dataPtr->caretPos) * sizeof(TCHAR));
 
         if( *new1Ptr != NULL )
         {
@@ -815,28 +815,12 @@ divideData( S_BUFF_LINE_DATA *dataPtr, S_BUFF_LINE_DATA **new1Ptr, S_BUFF_LINE_D
             if( *new2Ptr != NULL )
             {
                 /* 改行より前のデータ生成 */
-                (*new1Ptr)->dataSize = dataPtr->caretPos+getNewLineSize();
-                (*new1Ptr)->newLineCodeSize = getNewLineSize();
+                (*new1Ptr)->dataSize = dataPtr->caretPos;
+                (*new1Ptr)->newLineCodeSize = 0;
                 (*new1Ptr)->lineNum = dataPtr->lineNum;
                 (*new1Ptr)->caretPos = dataPtr->caretPos;
 
                 memcpy( (*new1Ptr)->data, dataPtr->data, (*new1Ptr)->dataSize );
-                switch( ioWndBuffData.NewLineType )
-                {
-                case IOWND_BUFF_NEWLINE_CRLF:
-                    *((*new1Ptr)->data + (*new1Ptr)->dataSize-2) = '\r';
-                    *((*new1Ptr)->data + (*new1Ptr)->dataSize-1) = '\n';
-                    break;
-                case IOWND_BUFF_NEWLINE_LF  :
-                    *((*new1Ptr)->data + (*new1Ptr)->dataSize-1) = '\n';
-                    break;
-                case IOWND_BUFF_NEWLINE_CR  :
-                    *((*new1Ptr)->data + (*new1Ptr)->dataSize-1) = '\r';
-                    break;
-                case IOWND_BUFF_NEWLINE_NONE:
-                default:
-                    break;
-                }
 
                 /* 改行以降のデータ生成 */
                 (*new2Ptr)->dataSize = dataPtr->dataSize - dataPtr->caretPos;

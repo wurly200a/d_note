@@ -100,7 +100,7 @@ IoWndCreate( HWND hWnd, LOGFONT *logFontPtr )
     wc.hInstance        = hInst;
     wc.hIcon            = LoadIcon( hInst, pAppName );
     wc.hCursor          = LoadCursor(NULL, IDC_IBEAM);
-    wc.hbrBackground    = (HBRUSH) GetStockObject(WHITE_BRUSH);
+    wc.hbrBackground    = (HBRUSH) CreateSolidBrush( BG_COLOR_RGB );
     wc.lpszClassName    = "ioWndClass";
     wc.lpszMenuName     = NULL;
 
@@ -403,7 +403,7 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     for( y=iPaintBeg; y<=iPaintEnd; y++ )
     { /* Ä•`‰æ—Ìˆæ‚Ì‚Ý1s‚¸‚Âˆ— */
-        for( x=0; x<ioWndData.cxBuffer+1; )
+        for( x=0; x<ioWndData.cxBuffer+1;x++ )
         {
             IoWndBuffGetDispData(y,x+iHorzPos,&buffDispData );
 
@@ -414,26 +414,21 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
                 if( buffDispData.type == TAB_CHAR )
                 {
-#if 1
-                    SetBkColor(hdc,RGB(0xE0,0xFF,0xFF));
-#else
-                    SetBkColor(hdc,RGB(0,13,0x7F));
-                    SetTextColor(hdc,RGB(0xFF,0xFF,0xFF));
-#endif
+                    SetBkColor(hdc, TAB_BK_COLOR_RGB );
                 }
                 else
                 {
-                    nop();
+                    SetBkColor(hdc, BK_COLOR_RGB );
                 }
 
                 if( buffDispData.bSelect )
                 {
-                    SetBkColor(hdc,RGB(0,13,0x7F));
-                    SetTextColor(hdc,RGB(0xFF,0xFF,0xFF));
+                    SetBkColor(hdc, SELECT_BK_COLOR_RGB );
+                    SetTextColor(hdc, SELECT_TEXT_COLOR_RGB );
                 }
                 else
                 {
-                    nop();
+                    SetTextColor(hdc, TEXT_COLOR_RGB );
                 }
 
                 TextOut(hdc,
@@ -450,7 +445,6 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             {
                 break;
             }
-            x += buffDispData.size;
         }
     }
 
@@ -607,6 +601,8 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break;
         case VK_DOWN:
             IoWndIncCaretYpos();
+            break;
+        case VK_DELETE:
             break;
         default:
             break;
