@@ -47,7 +47,7 @@ typedef struct
     BOOL   bShiftKeyOn;
 } S_IOWND_DATA;
 
-#if 0
+#if 1
 #define BG_COLOR_RGB          RGB(0xFF,0xFF,0xFF)
 #define TAB_BK_COLOR_RGB      RGB(0xE0,0xFF,0xFF) /* êÖêF */
 #define BK_COLOR_RGB          RGB(0xFF,0xFF,0xFF)

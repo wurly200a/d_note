@@ -226,6 +226,18 @@ IoWndGetDataSize( IOWND_REGION region )
 }
 
 /********************************************************************************
+ * 内容  : IOウィンドウの選択範囲のデータ削除
+ * 引数  : なし
+ * 戻り値: BOOL
+ ***************************************/
+BOOL
+IoWndSelectDataRemove( void )
+{
+    IoWndBuffRemoveData( FALSE );
+    return TRUE;
+}
+
+/********************************************************************************
  * 内容  : IOウィンドウの全範囲選択
  * 引数  : なし
  * 戻り値: BOOL
@@ -605,6 +617,9 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         case VK_DELETE:
             IoWndBuffRemoveData( FALSE );
             break;
+        case VK_BACK:
+            IoWndBuffRemoveData( TRUE );
+            break;
         default:
             break;
         }
@@ -674,8 +689,6 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         switch( wParam )
         {
         case '\b':  /* backspace */
-            IoWndBuffRemoveData( TRUE );
-            IoWndInvalidateRect();
             break;
         case '\x1B':/* escape */
             break;

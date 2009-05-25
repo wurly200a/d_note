@@ -70,7 +70,9 @@ MenuCreate( void )
     AppendMenu( hMenu     , MF_POPUP    , (UINT_PTR)hMenuPopup, TEXT("ï“èW(&E)") );
 
     EnableMenuItem( hMenu, IDM_EDIT_UNDO       , MF_GRAYED );
+#if 0
     EnableMenuItem( hMenu, IDM_EDIT_CUT        , MF_GRAYED );
+#endif
     EnableMenuItem( hMenu, IDM_EDIT_DELETE     , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_EDIT_FIND       , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_EDIT_FIND_NEXT  , MF_GRAYED );

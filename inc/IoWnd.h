@@ -71,6 +71,13 @@ BOOL IoWndDataGet( TCHAR *dataPtr, DWORD dataSize, IOWND_REGION region );
 DWORD IoWndGetDataSize( IOWND_REGION region );
 
 /********************************************************************************
+ * 内容  : IOウィンドウの選択範囲のデータ削除
+ * 引数  : なし
+ * 戻り値: BOOL
+ ***************************************/
+BOOL IoWndSelectDataRemove( void );
+
+/********************************************************************************
  * 内容  : IOウィンドウの全範囲選択
  * 引数  : なし
  * 戻り値: BOOL

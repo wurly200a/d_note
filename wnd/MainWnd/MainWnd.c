@@ -422,6 +422,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         }
         break;
 
+    case IDM_EDIT_CUT:
     case IDM_EDIT_COPY:
         dwSize = IoWndGetDataSize(IOWND_SELECTED);
         if( dwSize )
@@ -434,6 +435,16 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             EmptyClipboard();
             SetClipboardData( CF_TEXT, hGlobal );
             CloseClipboard();
+
+            if( LOWORD(wParam) == IDM_EDIT_CUT )
+            {
+                IoWndSelectDataRemove();
+                IoWndInvalidateRect();
+            }
+            else
+            {
+                nop();
+            }
         }
         else
         {
