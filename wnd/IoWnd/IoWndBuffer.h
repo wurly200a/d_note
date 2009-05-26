@@ -147,12 +147,12 @@ typedef struct
 
 /********************************************************************************
  * 内容  : 指定行、指定列のデータを取得
- * 引数  : DWORD  lineNum   行
- * 引数  : DWORD  dispPos   表示位置
+ * 引数  : S_BUFF_LINE_DATA *lineDataPtr
+ * 引数  : DWORD             dispPos     表示位置
  * 引数  : S_BUFF_DISP_DATA *dataPtr
  * 戻り値: BOOL
  ***************************************/
-BOOL IoWndBuffGetDispData( DWORD lineNum, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
+BOOL IoWndBuffGetDispData( S_BUFF_LINE_DATA *lineDataPtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
 
 enum
 {

@@ -22,14 +22,17 @@ typedef struct
     PBYTE         pByte;      /* ファイルを読み込んだ領域 */
 } S_FILE_LIST;
 
+#define CUSTOM_FILTER_SIZE 256
+
 static TCHAR szFileName [FILE_ID_MAX][1024];
 static TCHAR szTitleName[FILE_ID_MAX][1024];
 static TCHAR szDirPath  [FILE_ID_MAX][1024];
 static OPENFILENAME ofns[FILE_ID_MAX];
+static TCHAR szCustFilter[FILE_ID_MAX][CUSTOM_FILTER_SIZE];
 
 static S_FILE_LIST fileList[FILE_ID_MAX] =
 {  /* exist, size, file, title, dir ,  ofn  ,filter                            , ext        ,pByte */
-    { FALSE,    0, NULL, NULL , NULL,  NULL ,TEXT("テキスト文書 (*.txt)\0*.txt\0"), TEXT("txt"),NULL  },
+    { FALSE,    0, NULL, NULL , NULL,  NULL ,TEXT("テキスト文書 (*.txt)\0*.txt\0")TEXT("すべてのファイル\0*.*\0"), TEXT("txt"),NULL  },
 };
 
 /********************************************************************************
@@ -55,8 +58,8 @@ FileInitialize( HWND hwnd )
         fileList[i].pOfn->hwndOwner         = hwnd;
         fileList[i].pOfn->hInstance         = NULL;
         fileList[i].pOfn->lpstrFilter       = fileList[i].pFilter;
-        fileList[i].pOfn->lpstrCustomFilter = NULL;
-        fileList[i].pOfn->nMaxCustFilter    = 0;
+        fileList[i].pOfn->lpstrCustomFilter = szCustFilter[i];
+        fileList[i].pOfn->nMaxCustFilter    = CUSTOM_FILTER_SIZE;
         fileList[i].pOfn->nFilterIndex      = 0;
         fileList[i].pOfn->lpstrFile         = NULL;
         fileList[i].pOfn->nMaxFile          = MAX_PATH;

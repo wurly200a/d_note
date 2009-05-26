@@ -86,10 +86,10 @@ BOOL IoWndSelectAll( void );
 
 /********************************************************************************
  * 内容  : IOウィンドウの矩形無効化
- * 引数  : なし
+ * 引数  : BOOL bErase
  * 戻り値: なし
  ***************************************/
-void IoWndInvalidateRect( void );
+void IoWndInvalidateRect( BOOL bErase );
 
 enum
 {

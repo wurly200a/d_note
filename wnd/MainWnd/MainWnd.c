@@ -439,7 +439,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             if( LOWORD(wParam) == IDM_EDIT_CUT )
             {
                 IoWndSelectDataRemove();
-                IoWndInvalidateRect();
+                IoWndInvalidateRect(TRUE);
             }
             else
             {
@@ -476,7 +476,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     case IDM_EDIT_SELECT_ALL:
         if( IoWndSelectAll() )
         {
-            IoWndInvalidateRect();
+            IoWndInvalidateRect(TRUE);
         }
         else
         {
@@ -512,7 +512,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     case IDM_EXTEND_NEWLINE_CRLF:
         if( IoWndNewLineCodeSet(NEWLINECODE_CRLF) )
         {
-            IoWndInvalidateRect();
+            IoWndInvalidateRect(TRUE);
         }
         else
         {
@@ -526,7 +526,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     case IDM_EXTEND_NEWLINE_LF  :
         if( IoWndNewLineCodeSet(NEWLINECODE_LF) )
         {
-            IoWndInvalidateRect();
+            IoWndInvalidateRect(TRUE);
         }
         else
         {
@@ -540,7 +540,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     case IDM_EXTEND_NEWLINE_CR  :
         if( IoWndNewLineCodeSet(NEWLINECODE_CR) )
         {
-            IoWndInvalidateRect();
+            IoWndInvalidateRect(TRUE);
         }
         else
         {

@@ -181,7 +181,7 @@ IoWndDataInit( void )
     IoWndBuffInit();
 
     setAllScrollInfo();
-    IoWndInvalidateRect();
+    IoWndInvalidateRect(TRUE);
 }
 
 /********************************************************************************
@@ -198,7 +198,7 @@ IoWndDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit )
 
     IoWndBuffSelectOff();
     setAllScrollInfo();
-    IoWndInvalidateRect();
+    IoWndInvalidateRect(TRUE);
 }
 
 /********************************************************************************
@@ -250,13 +250,13 @@ IoWndSelectAll( void )
 
 /********************************************************************************
  * 内容  : IOウィンドウの矩形無効化
- * 引数  : なし
+ * 引数  : BOOL bErase
  * 戻り値: なし
  ***************************************/
 void
-IoWndInvalidateRect( void )
+IoWndInvalidateRect( BOOL bErase )
 {
-    InvalidateRect( hWndIo, NULL, TRUE );
+    InvalidateRect( hWndIo, NULL, bErase );
 }
 
 /********************************************************************************
@@ -402,6 +402,7 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     int         x;
     COLORREF    bkColor,textColor;
     S_BUFF_DISP_DATA buffDispData;
+    S_BUFF_LINE_DATA *lineDataPtr;
 
     hdc = BeginPaint( hwnd, &ps );
     SelectObject( hdc, CreateFontIndirect(ioWndData.logFontPtr) );
@@ -413,11 +414,11 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     iPaintBeg = max(0, iVertPos + ps.rcPaint.top / ioWndData.cyChar);
     iPaintEnd = min(IoWndGetLineMaxSize(),iVertPos + ps.rcPaint.bottom / ioWndData.cyChar);
 
-    for( y=iPaintBeg; y<=iPaintEnd; y++ )
+    for( y=iPaintBeg,lineDataPtr=IoWndBuffGetLinePtr(y); (y<=iPaintEnd)&&(lineDataPtr != NULL); y++,lineDataPtr = lineDataPtr->nextPtr )
     { /* 再描画領域のみ1行ずつ処理 */
         for( x=0; x<ioWndData.cxBuffer+1;x++ )
         {
-            IoWndBuffGetDispData(y,x+iHorzPos,&buffDispData );
+            IoWndBuffGetDispData(lineDataPtr,x+iHorzPos,&buffDispData );
 
             if( buffDispData.size )
             {
@@ -586,6 +587,7 @@ static LRESULT
 ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
+    BOOL bErase = TRUE;
 
     if( wParam == VK_SHIFT )
     {
@@ -603,15 +605,19 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         switch(wParam)
         {
         case VK_LEFT:
+            bErase = FALSE;
             IoWndDecCaretXpos();
             break;
         case VK_RIGHT:
+            bErase = FALSE;
             IoWndIncCaretXpos();
             break;
         case VK_UP:
+            bErase = FALSE;
             IoWndDecCaretYpos();
             break;
         case VK_DOWN:
+            bErase = FALSE;
             IoWndIncCaretYpos();
             break;
         case VK_DELETE:
@@ -632,7 +638,6 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         {
             IoWndBuffSelectOff();
         }
-        IoWndInvalidateRect();
 
         /* キャレットが表示範囲外に有った場合の処理(横方向) */
         if( IoWndGetCaretXpos() < ioWndData.iHorzPos )
@@ -664,6 +669,8 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
         SetCaretPos( (IoWndGetCaretXpos()-ioWndData.iHorzPos)*ioWndData.cxChar, (IoWndGetCaretYpos()-ioWndData.iVertPos)*ioWndData.cyChar);
         printCaretPos();
+
+        IoWndInvalidateRect(bErase);
     }
 
     return rtn;
@@ -696,14 +703,14 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break;
         case '\r':  /* carriage return */
             IoWndBuffAddNewLine();
-            IoWndInvalidateRect();
+            IoWndInvalidateRect(TRUE);
             break;
         case '\t':  /* tab */
         default:
             /* 文字入力 */
             data = (TCHAR)wParam;
             IoWndBuffDataSet( &data,1,FALSE );
-            IoWndInvalidateRect();
+            IoWndInvalidateRect(TRUE);
             break ;
         }
     }
@@ -957,7 +964,7 @@ ioOnMouseMove( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         IoWndSetCaretPos( ((x + (ioWndData.iHorzPos*ioWndData.cxChar))/ioWndData.cxChar), ((y + (ioWndData.iVertPos*ioWndData.cyChar))/ioWndData.cyChar) );
         SetCaretPos( (IoWndGetCaretXpos()-ioWndData.iHorzPos)*ioWndData.cxChar, (IoWndGetCaretYpos()-ioWndData.iVertPos)*ioWndData.cyChar);
         printCaretPos();
-        IoWndInvalidateRect();
+        IoWndInvalidateRect(FALSE);
     }
     else
     {
@@ -1000,7 +1007,7 @@ ioOnLbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         IoWndBuffSelectOff();
         IoWndBuffSelectOn();
     }
-    IoWndInvalidateRect();
+    IoWndInvalidateRect(TRUE);
 
     return rtn;
 }
@@ -1211,7 +1218,6 @@ setScrollPos( int fnBar, DWORD nPos )
     GetScrollInfo( hWndIo, fnBar, &si );
     si.nPos   = nPos;
     SetScrollInfo( hWndIo, fnBar, &si, TRUE );
-    IoWndInvalidateRect();
 }
 
 /********************************************************************************

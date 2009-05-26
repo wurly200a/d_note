@@ -1387,38 +1387,15 @@ IoWndBuffGetLinePtr( DWORD lineNum )
 
 /********************************************************************************
  * 内容  : 指定行、指定列のデータを取得
- * 引数  : DWORD  lineNum   行
- * 引数  : DWORD  dispPos   表示位置
+ * 引数  : S_BUFF_LINE_DATA *lineDataPtr
+ * 引数  : DWORD             dispPos     表示位置
  * 引数  : S_BUFF_DISP_DATA *dataPtr
  * 戻り値: BOOL
  ***************************************/
 BOOL
-IoWndBuffGetDispData( DWORD lineNum, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr )
+IoWndBuffGetDispData( S_BUFF_LINE_DATA *lineDataPtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr )
 {
-    S_BUFF_LINE_DATA *nowPtr,*nextPtr;
-    DWORD i;
-
-    if( ioWndBuffListTopPtr == NULL )
-    {
-        nop();
-    }
-    else
-    {
-        for( i=0,nowPtr = nextPtr = ioWndBuffListTopPtr; (nowPtr != NULL) && (i<=lineNum); nowPtr=nextPtr,i++ )
-        {
-            nextPtr = nowPtr->nextPtr;
-
-            if( i == lineNum )
-            {
-                getDispCharData( nowPtr, dispPos, dataPtr );
-                break;
-            }
-            else
-            {
-                nop();
-            }
-        }
-    }
+    getDispCharData( lineDataPtr, dispPos, dataPtr );
 
     return TRUE;
 }
