@@ -138,11 +138,13 @@ typedef int CHARSET_TYPE;
 
 typedef struct
 {
-    TCHAR        data[8];
-    INT          offset ;
-    INT          size   ;
-    CHARSET_TYPE type   ;
-    BOOL         bSelect;
+    TCHAR        data[8] ;
+    INT          offset  ;
+    INT          size    ;
+    CHARSET_TYPE type    ;
+    BOOL         bSelect ;
+    DWORD        dataPos ;
+    DWORD        caretPos;
 } S_BUFF_DISP_DATA;
 
 /********************************************************************************

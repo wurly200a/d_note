@@ -1128,47 +1128,16 @@ void
 IoWndSetCaretPos( DWORD xPos, DWORD lineNum )
 {
     S_BUFF_LINE_DATA *nowPtr = NULL;
+    S_BUFF_DISP_DATA dispData;
 
-    if( ioWndBuffListTopPtr == NULL )
-    {
-        nop();
-    }
-    else
-    {
-        for( nowPtr = ioWndBuffListTopPtr; (nowPtr->nextPtr != NULL); nowPtr=nowPtr->nextPtr )
-        { /* 一致しなかった場合は nowPtr=最終行 となるように */
-            if( nowPtr->lineNum == lineNum )
-            {
-                break;
-            }
-            else
-            {
-                nop();
-            }
-        }
-    }
+    nowPtr = IoWndBuffGetLinePtr( lineNum );
 
     if( nowPtr != NULL )
     {
         ioWndBuffLineNowPtr = nowPtr;
 
-        if( xPos < (ioWndBuffLineNowPtr->dataSize - ioWndBuffLineNowPtr->newLineCodeSize) )
-        {
-            ioWndBuffLineNowPtr->caretPos = xPos;
-
-            if( (detectCharSet(ioWndBuffLineNowPtr,ioWndBuffLineNowPtr->caretPos) == DOUBLE_CHAR_LOW) )
-            { /* 2byte文字の真ん中だったら */
-                ioWndBuffLineNowPtr->caretPos += 1; /* 後ろへずらす */
-            }
-            else
-            {
-                nop();
-            }
-        }
-        else
-        {
-            ioWndBuffLineNowPtr->caretPos = (ioWndBuffLineNowPtr->dataSize - ioWndBuffLineNowPtr->newLineCodeSize);
-        }
+        getDispCharData( ioWndBuffLineNowPtr, xPos, &dispData );
+        ioWndBuffLineNowPtr->caretPos = dispData.caretPos;
     }
     else
     {
@@ -1273,28 +1242,18 @@ IoWndDecCaretXpos( void )
 void
 IoWndIncCaretYpos( void )
 {
+    DWORD preDispPos = 0;
+    S_BUFF_DISP_DATA dispData;
+
     if( ioWndBuffLineNowPtr != NULL )
     {
         if( ioWndBuffLineNowPtr->nextPtr != NULL )
         { /* 次行有り */
+            preDispPos = IoWndGetCaretXpos();
             (ioWndBuffLineNowPtr->nextPtr)->caretPos = ioWndBuffLineNowPtr->caretPos;
             ioWndBuffLineNowPtr = ioWndBuffLineNowPtr->nextPtr;
-
-            if( ioWndBuffLineNowPtr->caretPos > (ioWndBuffLineNowPtr->dataSize - ioWndBuffLineNowPtr->newLineCodeSize) )
-            { /* 下は文字が無い */
-                ioWndBuffLineNowPtr->caretPos = (ioWndBuffLineNowPtr->dataSize - ioWndBuffLineNowPtr->newLineCodeSize);
-            }
-            else
-            { /* 下は文字が有る */
-                if( (detectCharSet(ioWndBuffLineNowPtr,ioWndBuffLineNowPtr->caretPos) == DOUBLE_CHAR_LOW) )
-                { /* 下は2byte文字の真ん中だったら */
-                    ioWndBuffLineNowPtr->caretPos += 1; /* 後ろへずらす */
-                }
-                else
-                {
-                    nop();
-                }
-            }
+            getDispCharData( ioWndBuffLineNowPtr, preDispPos, &dispData );
+            ioWndBuffLineNowPtr->caretPos = dispData.caretPos;
         }
         else
         { /* 次行無し */
@@ -1315,28 +1274,18 @@ IoWndIncCaretYpos( void )
 void
 IoWndDecCaretYpos( void )
 {
+    DWORD preDispPos = 0;
+    S_BUFF_DISP_DATA dispData;
+
     if( ioWndBuffLineNowPtr != NULL )
     {
         if( ioWndBuffLineNowPtr->prevPtr != NULL )
         { /* 前行有り */
+            preDispPos = IoWndGetCaretXpos();
             (ioWndBuffLineNowPtr->prevPtr)->caretPos = ioWndBuffLineNowPtr->caretPos;
             ioWndBuffLineNowPtr = ioWndBuffLineNowPtr->prevPtr;
-
-            if( ioWndBuffLineNowPtr->caretPos > (ioWndBuffLineNowPtr->dataSize - ioWndBuffLineNowPtr->newLineCodeSize) )
-            { /* 上は文字が無い */
-                ioWndBuffLineNowPtr->caretPos = (ioWndBuffLineNowPtr->dataSize - ioWndBuffLineNowPtr->newLineCodeSize);
-            }
-            else
-            { /* 上は文字が有る */
-                if( (detectCharSet(ioWndBuffLineNowPtr,ioWndBuffLineNowPtr->caretPos) == DOUBLE_CHAR_LOW) )
-                { /* 下は2byte文字の真ん中だったら */
-                    ioWndBuffLineNowPtr->caretPos += 1; /* 後ろへずらす */
-                }
-                else
-                {
-                    nop();
-                }
-            }
+            getDispCharData( ioWndBuffLineNowPtr, preDispPos, &dispData );
+            ioWndBuffLineNowPtr->caretPos = dispData.caretPos;
         }
         else
         { /* 前行無し */
@@ -1879,7 +1828,7 @@ detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset )
 static BOOL
 getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr )
 {
-    DWORD i,j,k;
+    DWORD dataPos,j,k;
     DWORD literalMaxSize;
     int tab_offset;
 
@@ -1888,24 +1837,26 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dat
         dataPtr->size    = 0;
         dataPtr->type    = SINGLE_CHAR;
         dataPtr->bSelect = FALSE;
+        dataPtr->dataPos = 0;
+        dataPtr->caretPos= 0;
 
         literalMaxSize = (linePtr->dataSize-linePtr->newLineCodeSize);
 
-        for( i=0,j=0; i<literalMaxSize; i++ )
+        for( dataPos=0,j=0; dataPos<literalMaxSize; dataPos++ )
         { /* 1行中のデータを1文字ずつ処理 */
             if( dataPtr->type == DOUBLE_CHAR_HIGH )
             { /* 前文字が2byte文字の上位byteだったら */
                 dataPtr->type = DOUBLE_CHAR_LOW;
-                *(dataPtr->data+1) = *(linePtr->data+i);
+                *(dataPtr->data+1) = *(linePtr->data+dataPos);
             }
             else
             { /* 前文字が2byte文字の上位byte以外 */
-                if( (*(linePtr->data+i)) == '\0' )
+                if( (*(linePtr->data+dataPos)) == '\0' )
                 {
                     dataPtr->type = SINGLE_CHAR;
                     *(dataPtr->data) = ' ';
                 }
-                else if( (*(linePtr->data+i)) == '\t' )
+                else if( (*(linePtr->data+dataPos)) == '\t' )
                 { /* 処理中の文字はTAB */
                     dataPtr->type = TAB_CHAR;
 
@@ -1927,18 +1878,18 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dat
                         continue;
                     }
                 }
-                else if( ( (BYTE)(*(linePtr->data+i)) <= (BYTE)0x80) ||
-                         (((BYTE)0xA0 <= (BYTE)(*(linePtr->data+i))) && ((BYTE)(*(linePtr->data+i)) <= (BYTE)0xDF)) ||
-                         (((BYTE)0xF0 <= (BYTE)(*(linePtr->data+i))) && ((BYTE)(*(linePtr->data+i)) <= (BYTE)0xFF)) )
+                else if( ( (BYTE)(*(linePtr->data+dataPos)) <= (BYTE)0x80) ||
+                         (((BYTE)0xA0 <= (BYTE)(*(linePtr->data+dataPos))) && ((BYTE)(*(linePtr->data+dataPos)) <= (BYTE)0xDF)) ||
+                         (((BYTE)0xF0 <= (BYTE)(*(linePtr->data+dataPos))) && ((BYTE)(*(linePtr->data+dataPos)) <= (BYTE)0xFF)) )
                 { /* 処理中の文字は1byte文字 */
                     dataPtr->type = SINGLE_CHAR;
-                    *(dataPtr->data) = *(linePtr->data+i);
+                    *(dataPtr->data) = *(linePtr->data+dataPos);
                 }
                 else
                 { /* 処理中の文字は2byte文字の上位byte */
                     dataPtr->type = DOUBLE_CHAR_HIGH;
-                    *(dataPtr->data)   = *(linePtr->data+i);
-                    *(dataPtr->data+1) = *(linePtr->data+i+1);
+                    *(dataPtr->data)   = *(linePtr->data+dataPos);
+                    *(dataPtr->data+1) = *(linePtr->data+dataPos+1);
                 }
             }
 
@@ -1954,7 +1905,9 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dat
             j++;
         }
 
-        if( i >= literalMaxSize )
+        dataPtr->dataPos = dataPos;
+
+        if( dataPos >= literalMaxSize )
         {
             nop();
         }
@@ -1974,7 +1927,7 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dat
                 dataPtr->size = 2;
                 dataPtr->offset = 1;
                 break;
-            defalut:
+            default:
                 break;
             }
 
@@ -1986,11 +1939,11 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dat
                     {
                         dataPtr->bSelect = TRUE;
                     }
-                    else if( (ioWndBuffLineSelectPtr->lineNum == linePtr->lineNum) && (selectCaretPos <= i) )
+                    else if( (ioWndBuffLineSelectPtr->lineNum == linePtr->lineNum) && (selectCaretPos <= dataPos) )
                     {
                         dataPtr->bSelect = TRUE;
                     }
-                    else if( (ioWndBuffLineNowPtr->lineNum == linePtr->lineNum) && (i < linePtr->caretPos) )
+                    else if( (ioWndBuffLineNowPtr->lineNum == linePtr->lineNum) && (dataPos < linePtr->caretPos) )
                     {
                         dataPtr->bSelect = TRUE;
                     }
@@ -2005,11 +1958,11 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dat
                     {
                         dataPtr->bSelect = TRUE;
                     }
-                    else if( (ioWndBuffLineNowPtr->lineNum == linePtr->lineNum) && (linePtr->caretPos <= i) )
+                    else if( (ioWndBuffLineNowPtr->lineNum == linePtr->lineNum) && (linePtr->caretPos <= dataPos) )
                     {
                         dataPtr->bSelect = TRUE;
                     }
-                    else if( (ioWndBuffLineSelectPtr->lineNum == linePtr->lineNum) && (i < selectCaretPos) )
+                    else if( (ioWndBuffLineSelectPtr->lineNum == linePtr->lineNum) && (dataPos < selectCaretPos) )
                     {
                         dataPtr->bSelect = TRUE;
                     }
@@ -2024,7 +1977,7 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dat
                     {
                         if( linePtr->caretPos < selectCaretPos )
                         {
-                            if( (linePtr->caretPos <= i) && (i < selectCaretPos) )
+                            if( (linePtr->caretPos <= dataPos) && (dataPos < selectCaretPos) )
                             {
                                 dataPtr->bSelect = TRUE;
                             }
@@ -2035,7 +1988,7 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dat
                         }
                         else if( linePtr->caretPos > selectCaretPos )
                         {
-                            if( (selectCaretPos <= i) && (i < linePtr->caretPos) )
+                            if( (selectCaretPos <= dataPos) && (dataPos < linePtr->caretPos) )
                             {
                                 dataPtr->bSelect = TRUE;
                             }
@@ -2059,6 +2012,19 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dat
             {
                 nop();
             }
+        }
+
+        if( dataPtr->type == DOUBLE_CHAR_LOW )
+        {
+            dataPtr->caretPos = dataPtr->dataPos + 1;
+        }
+        else if( (dataPtr->type == TAB_CHAR) && (dataPtr->offset != 0)  )
+        {
+            dataPtr->caretPos = dataPtr->dataPos + 1;
+        }
+        else
+        {
+            dataPtr->caretPos = dataPtr->dataPos;
         }
     }
     else
