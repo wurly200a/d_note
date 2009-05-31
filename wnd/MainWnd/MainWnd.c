@@ -332,7 +332,7 @@ static LRESULT
 onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
-    DWORD dwSize;
+    DWORD dwSize,dwSize2;
     PBYTE dataPtr;
     HGLOBAL hGlobal;
     PTSTR   pGlobal;
@@ -464,6 +464,15 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             strncpy( dataPtr, pGlobal, dwSize );
             GlobalUnlock(hGlobal);
             CloseClipboard();
+            dwSize2 = strlen( dataPtr );
+            if( dwSize2 < dwSize )
+            { /* クリップボードの最大サイズに達する前にNULLがあれば */
+                dwSize = dwSize2; /* NULLまでのデータを有効とする (アプリケーションによっては 余分なNULLが大量に入っていることがある) */
+            }
+            else
+            {
+                nop();
+            }
             IoWndDataSet( dataPtr,dwSize,FALSE );
             free( dataPtr );
         }
@@ -471,6 +480,11 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         {
             nop();
         }
+        break;
+
+    case IDM_EDIT_DELETE:
+        IoWndSelectDataRemove();
+        IoWndInvalidateRect(TRUE);
         break;
 
     case IDM_EDIT_SELECT_ALL:
@@ -734,8 +748,22 @@ onInitMenuPopup( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
-    if( lParam == 1 )
-    {
+    if( LOWORD(lParam) == 1 )
+    { /* 「編集」 */
+
+        if( IoWndGetDataSize(IOWND_SELECTED) )
+        {
+            MenuEnableItem( IDM_EDIT_CUT    );
+            MenuEnableItem( IDM_EDIT_COPY   );
+            MenuEnableItem( IDM_EDIT_DELETE );
+        }
+        else
+        {
+            MenuUnEnableItem( IDM_EDIT_CUT    );
+            MenuUnEnableItem( IDM_EDIT_COPY   );
+            MenuUnEnableItem( IDM_EDIT_DELETE );
+        }
+
         if( IsClipboardFormatAvailable(CF_TEXT) )
         {
             MenuEnableItem( IDM_EDIT_PASTE );
