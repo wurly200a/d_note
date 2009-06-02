@@ -113,6 +113,9 @@
 	</References>
 	<Files>
 		<File
+			RelativePath="..\sys\Config\Config.c">
+		</File>
+		<File
 			RelativePath="..\sys\File\File.c">
 		</File>
 		<File

@@ -11,6 +11,7 @@
 #include "File.h"
 #include "StsBar.h"
 #include "Font.h"
+#include "Config.h"
 
 /* 外部変数定義 */
 
@@ -21,6 +22,7 @@ static MAINWND_INDEX convertMSGtoINDEX( UINT message );
 static LRESULT onCreate       ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onPaint        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onSize         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onMove         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onClose        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onDestroy      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onCommand      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
@@ -49,6 +51,7 @@ static LRESULT (*wndProcTbl[MAINWND_MAX])( HWND hwnd, UINT message, WPARAM wPara
     onCreate       , /* WM_CREATE           */
     onPaint        , /* WM_PAINT            */
     onSize         , /* WM_SIZE             */
+    onMove         , /* WM_MOVE             */
     onClose        , /* WM_CLOSE            */
     onDestroy      , /* WM_DESTROY          */
     onCommand      , /* WM_COMMAND          */
@@ -101,6 +104,9 @@ MainWndCreate( int nCmdShow, HACCEL *hAccelPtr )
     }
     else
     {
+        /* 設定の初期化 */
+        ConfigInit();
+
         /* メニューの生成 */
         hMenu = MenuCreate();
 
@@ -119,8 +125,8 @@ MainWndCreate( int nCmdShow, HACCEL *hAccelPtr )
         hwndMain = CreateWindowEx( /* WS_EX_OVERLAPPEDWINDOW | */ WS_EX_ACCEPTFILES,
                                    pAppName, pAppName,
                                    WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS /* | WS_VSCROLL | WS_HSCROLL*/,
-                                   CW_USEDEFAULT, CW_USEDEFAULT,
-                                   WND_WIDTH    , WND_HEIGHT,
+                                   ConfigLoadDword(CONFIG_ID_WINDOW_POS_X) , ConfigLoadDword(CONFIG_ID_WINDOW_POS_Y) ,
+                                   ConfigLoadDword(CONFIG_ID_WINDOW_POS_DX), ConfigLoadDword(CONFIG_ID_WINDOW_POS_DY),
                                    NULL, hMenu, hInst, NULL );
 
         if( hwndMain == NULL )
@@ -179,6 +185,7 @@ convertMSGtoINDEX( UINT message )
     case WM_CREATE       :rtn = MAINWND_ON_CREATE       ;break;
     case WM_PAINT        :rtn = MAINWND_ON_PAINT        ;break;
     case WM_SIZE         :rtn = MAINWND_ON_SIZE         ;break;
+    case WM_MOVE         :rtn = MAINWND_ON_MOVE         ;break;
     case WM_CLOSE        :rtn = MAINWND_ON_CLOSE        ;break;
     case WM_DESTROY      :rtn = MAINWND_ON_DESTROY      ;break;
     case WM_COMMAND      :rtn = MAINWND_ON_COMMAND      ;break;
@@ -285,6 +292,23 @@ onSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 }
 
 /********************************************************************************
+ * 内容  : WM_MOVE の処理
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+onMove( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    mainWndData.xPos = LOWORD( lParam );
+    mainWndData.yPos = HIWORD( lParam );
+
+    return 0;
+}
+
+/********************************************************************************
  * 内容  : WM_CLOSE の処理
  * 引数  : HWND hwnd
  * 引数  : UINT message
@@ -295,6 +319,11 @@ onSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 static LRESULT
 onClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
+    ConfigSaveDword( CONFIG_ID_WINDOW_POS_X , mainWndData.xPos     );
+    ConfigSaveDword( CONFIG_ID_WINDOW_POS_Y , mainWndData.yPos     );
+    ConfigSaveDword( CONFIG_ID_WINDOW_POS_DX, mainWndData.cxClient );
+    ConfigSaveDword( CONFIG_ID_WINDOW_POS_DY, mainWndData.cyClient );
+
     DestroyWindow( hwnd );
 
     return 0;

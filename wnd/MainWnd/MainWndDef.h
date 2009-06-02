@@ -5,6 +5,7 @@ typedef enum
     MAINWND_ON_CREATE        , /* WM_CREATE        */
     MAINWND_ON_PAINT         , /* WM_PAINT         */
     MAINWND_ON_SIZE          , /* WM_SIZE          */
+    MAINWND_ON_MOVE          , /* WM_MOVE          */
     MAINWND_ON_CLOSE         , /* WM_CLOSE         */
     MAINWND_ON_DESTROY       , /* WM_DESTROY       */
     MAINWND_ON_COMMAND       , /* WM_COMMAND       */
@@ -27,6 +28,8 @@ typedef struct
 {
     BOOL execute;
     BOOL bAppExit;
+    int  xPos;
+    int  yPos;
     int  cxClient;
     int  cyClient;
     int  cxChar;
