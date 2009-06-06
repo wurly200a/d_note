@@ -16,6 +16,9 @@ Global
 		{E19AD84B-1457-4CE8-A148-8043BEE97209}.Release.ActiveCfg = Release|Win32
 		{E19AD84B-1457-4CE8-A148-8043BEE97209}.Release.Build.0 = Release|Win32
 	EndGlobalSection
+	GlobalSection(SolutionItems) = postSolution
+		hdt.vsd = hdt.vsd
+	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
 	GlobalSection(ExtensibilityAddIns) = postSolution

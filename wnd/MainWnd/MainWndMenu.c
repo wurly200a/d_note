@@ -24,6 +24,7 @@ static const ACCEL accelTbl[] =
     { (FVIRTKEY|FNOINVERT|FCONTROL),'H'       ,IDM_EDIT_REPLACE    },
     { (FVIRTKEY|FNOINVERT|FCONTROL),'G'       ,IDM_EDIT_GOTO_LINE  },
     { (FVIRTKEY|FNOINVERT|FCONTROL),'A'       ,IDM_EDIT_SELECT_ALL },
+    { (FVIRTKEY|FNOINVERT)         ,VK_F5     ,IDM_EDIT_DATETIME   },
 };
 
 /********************************************************************************
@@ -67,7 +68,7 @@ MenuCreate( void )
     AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_GOTO_LINE  , TEXT("行へ移動(&G)...\tCtrl+G") );
     AppendMenu( hMenuPopup, MF_SEPARATOR, 0                   , NULL );
     AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_SELECT_ALL , TEXT("全て選択(&A)\tCtrl+A") );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_DATETIME   , TEXT("日付と時刻(&D)") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_DATETIME   , TEXT("日付と時刻(&D)\tF5") );
     AppendMenu( hMenu     , MF_POPUP    , (UINT_PTR)hMenuPopup, TEXT("編集(&E)") );
 
     EnableMenuItem( hMenu, IDM_EDIT_UNDO       , MF_GRAYED );
@@ -79,7 +80,6 @@ MenuCreate( void )
     EnableMenuItem( hMenu, IDM_EDIT_FIND_NEXT  , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_EDIT_REPLACE    , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_EDIT_GOTO_LINE  , MF_GRAYED );
-    EnableMenuItem( hMenu, IDM_EDIT_DATETIME   , MF_GRAYED );
 
     hMenuPopup = CreateMenu();
     AppendMenu( hMenuPopup, MF_STRING, IDM_FORMAT_WRAP     , TEXT("右端で折り返す(&W)") );

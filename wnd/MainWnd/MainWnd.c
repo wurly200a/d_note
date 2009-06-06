@@ -12,6 +12,7 @@
 #include "StsBar.h"
 #include "Font.h"
 #include "Config.h"
+#include "DateTime.h"
 
 /* äOïîïœêîíËã` */
 
@@ -525,6 +526,11 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         {
             nop();
         }
+        break;
+
+    case IDM_EDIT_DATETIME:
+        pGlobal = DateTimeGetString();
+        IoWndDataSet( pGlobal, strlen(pGlobal), FALSE );
         break;
 
     case IDM_FORMAT_FONT:
