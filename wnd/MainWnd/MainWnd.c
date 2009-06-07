@@ -13,6 +13,7 @@
 #include "Font.h"
 #include "Config.h"
 #include "DateTime.h"
+#include "ModalDlg.h"
 
 /* 外部変数定義 */
 
@@ -235,7 +236,7 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     DeleteObject(hFont);
     ReleaseDC( hwnd,hdc );
 
-
+    ModalDlgInit();
     FileInitialize( hwnd ); /* ファイル初期化     */
     FontInit();
 
@@ -366,6 +367,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     PBYTE dataPtr;
     HGLOBAL hGlobal;
     PTSTR   pGlobal;
+    S_MODAL_DLG_DATA modalDlgData;
 
     switch( LOWORD(wParam) )
     {
@@ -603,6 +605,11 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     case IDM_FILE_EXIT:
         SendMessage( hwnd, WM_CLOSE, 0, 0 );
         break;
+
+    case IDM_HELP_ABOUT:
+        ModalDlg( MODAL_DLG_ID_ABOUT, &modalDlgData, hwnd, mainWndData.xPos, mainWndData.yPos );
+        break;
+
     default:
         break;
     }

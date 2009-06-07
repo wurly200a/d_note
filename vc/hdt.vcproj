@@ -137,6 +137,9 @@
 			RelativePath="..\wnd\MainWnd\MainWndMenu.c">
 		</File>
 		<File
+			RelativePath="..\wnd\ModalDlg\ModalDialog.c">
+		</File>
+		<File
 			RelativePath="..\wnd\SomeCtrl\SomeCtrl.c">
 		</File>
 		<File

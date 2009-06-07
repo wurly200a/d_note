@@ -107,7 +107,6 @@ MenuCreate( void )
     AppendMenu( hMenu, MF_POPUP, (UINT_PTR)hMenuPopup, TEXT("ƒwƒ‹ƒv(&H)") );
 
     EnableMenuItem( hMenu, IDM_HELP_HELP  , MF_GRAYED );
-    EnableMenuItem( hMenu, IDM_HELP_ABOUT , MF_GRAYED );
 
     return hMenu;
 }
