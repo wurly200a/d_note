@@ -4,6 +4,7 @@
 
 /* 外部関数定義 */
 #include "WinMain.h"
+#include "Version.h"
 
 /* 外部変数定義 */
 
@@ -117,18 +118,79 @@ ModalDlg( MODAL_DLG_ID id, S_MODAL_DLG_DATA *dataPtr, HWND hwnd, int x, int y )
     return rtn;
 }
 
+/********************************************************************************
+ * 内容  : バージョン情報のモーダルダイアログボックス
+ * 引数  : HWND   hwnd
+ * 引数  : UINT   message
+ * 引数  : WPARAM wParam
+ * 引数  : LPARAM lParam
+ * 戻り値: LRESULT
+ ***************************************/
 LRESULT CALLBACK
 AboutDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
-    HWND hBtn;
+    HWND hCtrl;
+    MEMORYSTATUS memSts;
+    TCHAR szTemp[256];
+    TCHAR szTemp2[256];
+    TCHAR szTemp3[256];
+#if 0
+    static HBITMAP hBitmap = 0;
+#endif
+
+    NUMBERFMT numberFormat = {0};
+    numberFormat.NumDigits = 0;
+    numberFormat.LeadingZero = 1;
+    numberFormat.Grouping = 3;
+    numberFormat.lpDecimalSep = ".";
+    numberFormat.lpThousandSep = ",";
+    numberFormat.NegativeOrder = 1;
 
     switch( message )
     {
     case WM_CREATE:
-        hBtn = CreateWindow( TEXT("Button"), TEXT("OK"), WS_CHILD|WS_VISIBLE, 382,270,90,19, hwnd, (HMENU)0, GetHinst(), NULL );
-        SendMessage( hBtn, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
-        SetFocus( hBtn );
+#if 0
+        hCtrl = CreateWindow( TEXT("Static"), TEXT(""), WS_VISIBLE|WS_CHILD|SS_BITMAP,0,0,481,90, hwnd, (HMENU)3, GetHinst(), NULL);
+        hBitmap = (HBITMAP)LoadImage(0, TEXT("bar.bmp"), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION|LR_DEFAULTSIZE|LR_LOADFROMFILE);
+        SendMessage(hCtrl, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBitmap);
+#endif
+        /* 白矩形 */
+        CreateWindow(TEXT("static"),TEXT(""),WS_CHILD|WS_VISIBLE|SS_WHITERECT,0,0,481,90,hwnd,(HMENU)-1,GetHinst(),NULL);
+
+        /* アプリケーション名 */
+        hCtrl = CreateWindow( TEXT("static"), GetAppName(), WS_CHILD|WS_VISIBLE, 60, 100, 400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
+        SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
+
+        /* バージョン */
+        wsprintf( szTemp, TEXT("Version %s (%s)"),VersionStringGet(),__DATE__ );
+        hCtrl = CreateWindow( TEXT("static"), szTemp, WS_CHILD|WS_VISIBLE, 60, 115, 400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
+        SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
+
+        /* Copyright */
+        hCtrl = CreateWindow( TEXT("static"), TEXT("Copyright (C) 2009 Wurly"), WS_CHILD|WS_VISIBLE, 60, 130, 400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
+        SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
+
+        /* ライセンス */
+        hCtrl = CreateWindow( TEXT("static"), TEXT("この製品はフリーソフトウェアです。"), WS_CHILD|WS_VISIBLE, 60, 180, 400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
+        SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
+
+        /* 線 */
+        hCtrl = CreateWindow( TEXT("static"), TEXT(""), WS_CHILD|WS_VISIBLE|SS_SUNKEN, 60, 242,410,2, hwnd, (HMENU)-1, GetHinst(), NULL );
+
+        /* 物理メモリサイズ */
+        GlobalMemoryStatus( &memSts );
+        wsprintf( szTemp3, TEXT("%ld"),(memSts.dwTotalPhys/1024) );
+        GetNumberFormat( LOCALE_SYSTEM_DEFAULT, 0, szTemp3, &numberFormat, szTemp2, strlen(szTemp2) );
+        wsprintf( szTemp, TEXT("Windows が使用できる物理メモリ:\t        %s KB"),szTemp2 );
+        hCtrl = CreateWindow( TEXT("static"), szTemp, WS_CHILD|WS_VISIBLE, 60, 252,400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
+        SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
+
+        /* OKボタン */
+        hCtrl = CreateWindow( TEXT("Button"), TEXT("OK"), WS_CHILD|WS_VISIBLE, 382,270,90,19, hwnd, (HMENU)0, GetHinst(), NULL );
+        SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
+
+        SetFocus( hCtrl );
         break;
     case WM_DESTROY:
         PostQuitMessage(0); /* WM_QUITメッセージをポストする */

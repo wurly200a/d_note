@@ -21,25 +21,26 @@
 #include "MainWnd.h"
 LRESULT CALLBACK WndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static MAINWND_INDEX convertMSGtoINDEX( UINT message );
-static LRESULT onCreate       ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onPaint        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onSize         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onMove         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onClose        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onDestroy      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onCommand      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onKeyUp        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onKeyDown      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onChar         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onHscroll      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onVscroll      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onMouseWheel   ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onSetFocus     ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onKillFocus    ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onDropFiles    ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onInitMenuPopup( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onApp          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onDefault      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onCreate          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onPaint           ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onSize            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onMove            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onWindowPosChanged( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onClose           ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onDestroy         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onCommand         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onKeyUp           ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onKeyDown         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onChar            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onHscroll         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onVscroll         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onMouseWheel      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onSetFocus        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onKillFocus       ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onDropFiles       ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onInitMenuPopup   ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onApp             ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onDefault         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
 void doCaption( HWND hwnd, TCHAR* szTitleName );
 
@@ -50,25 +51,26 @@ static S_MAINWND_DATA mainWndData;
 /* *INDENT-OFF* */
 static LRESULT (*wndProcTbl[MAINWND_MAX])( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam ) =
 {
-    onCreate       , /* WM_CREATE           */
-    onPaint        , /* WM_PAINT            */
-    onSize         , /* WM_SIZE             */
-    onMove         , /* WM_MOVE             */
-    onClose        , /* WM_CLOSE            */
-    onDestroy      , /* WM_DESTROY          */
-    onCommand      , /* WM_COMMAND          */
-    onKeyUp        , /* WM_KEYUP            */
-    onKeyDown      , /* WM_KEYDOWN          */
-    onChar         , /* WM_CHAR             */
-    onHscroll      , /* WM_HSCROLL          */
-    onVscroll      , /* WM_VSCROLL          */
-    onMouseWheel   , /* WM_MOUSEWHEEL       */
-    onSetFocus     , /* WM_SETFOCUS         */
-    onKillFocus    , /* WM_KILLFOCUS        */
-    onDropFiles    , /* WM_DROPFILES        */
-    onInitMenuPopup, /* WM_INITMENUPOPUP    */
-    onApp          , /* WM_APP              */
-    onDefault        /* default             */
+    onCreate          , /* WM_CREATE           */
+    onPaint           , /* WM_PAINT            */
+    onSize            , /* WM_SIZE             */
+    onMove            , /* WM_MOVE             */
+    onWindowPosChanged, /* WM_WINDOWPOSCHANGED */
+    onClose           , /* WM_CLOSE            */
+    onDestroy         , /* WM_DESTROY          */
+    onCommand         , /* WM_COMMAND          */
+    onKeyUp           , /* WM_KEYUP            */
+    onKeyDown         , /* WM_KEYDOWN          */
+    onChar            , /* WM_CHAR             */
+    onHscroll         , /* WM_HSCROLL          */
+    onVscroll         , /* WM_VSCROLL          */
+    onMouseWheel      , /* WM_MOUSEWHEEL       */
+    onSetFocus        , /* WM_SETFOCUS         */
+    onKillFocus       , /* WM_KILLFOCUS        */
+    onDropFiles       , /* WM_DROPFILES        */
+    onInitMenuPopup   , /* WM_INITMENUPOPUP    */
+    onApp             , /* WM_APP              */
+    onDefault           /* default             */
 };
 /* *INDENT-ON* */
 
@@ -184,25 +186,26 @@ convertMSGtoINDEX( UINT message )
     /* *INDENT-OFF* */
     switch( message )
     {
-    case WM_CREATE       :rtn = MAINWND_ON_CREATE       ;break;
-    case WM_PAINT        :rtn = MAINWND_ON_PAINT        ;break;
-    case WM_SIZE         :rtn = MAINWND_ON_SIZE         ;break;
-    case WM_MOVE         :rtn = MAINWND_ON_MOVE         ;break;
-    case WM_CLOSE        :rtn = MAINWND_ON_CLOSE        ;break;
-    case WM_DESTROY      :rtn = MAINWND_ON_DESTROY      ;break;
-    case WM_COMMAND      :rtn = MAINWND_ON_COMMAND      ;break;
-    case WM_APP          :rtn = MAINWND_ON_APP          ;break;
-    case WM_KEYUP        :rtn = MAINWND_ON_KEYUP        ;break;
-    case WM_KEYDOWN      :rtn = MAINWND_ON_KEYDOWN      ;break;
-    case WM_CHAR         :rtn = MAINWND_ON_CHAR         ;break;
-    case WM_HSCROLL      :rtn = MAINWND_ON_HSCROLL      ;break;
-    case WM_VSCROLL      :rtn = MAINWND_ON_VSCROLL      ;break;
-    case WM_MOUSEWHEEL   :rtn = MAINWND_ON_MOUSEWHEEL   ;break;
-    case WM_SETFOCUS     :rtn = MAINWND_ON_SETFOCUS     ;break;
-    case WM_KILLFOCUS    :rtn = MAINWND_ON_KILLFOCUS    ;break;
-    case WM_DROPFILES    :rtn = MAINWND_ON_DROPFILES    ;break;
-    case WM_INITMENUPOPUP:rtn = MAINWND_ON_INITMENUPOPUP;break;
-    default              :rtn = MAINWND_ON_DEFAULT      ;break;
+    case WM_CREATE          :rtn = MAINWND_ON_CREATE          ;break;
+    case WM_PAINT           :rtn = MAINWND_ON_PAINT           ;break;
+    case WM_SIZE            :rtn = MAINWND_ON_SIZE            ;break;
+    case WM_MOVE            :rtn = MAINWND_ON_MOVE            ;break;
+    case WM_WINDOWPOSCHANGED:rtn = MAINWND_ON_WINDOWPOSCHANGED;break;
+    case WM_CLOSE           :rtn = MAINWND_ON_CLOSE           ;break;
+    case WM_DESTROY         :rtn = MAINWND_ON_DESTROY         ;break;
+    case WM_COMMAND         :rtn = MAINWND_ON_COMMAND         ;break;
+    case WM_APP             :rtn = MAINWND_ON_APP             ;break;
+    case WM_KEYUP           :rtn = MAINWND_ON_KEYUP           ;break;
+    case WM_KEYDOWN         :rtn = MAINWND_ON_KEYDOWN         ;break;
+    case WM_CHAR            :rtn = MAINWND_ON_CHAR            ;break;
+    case WM_HSCROLL         :rtn = MAINWND_ON_HSCROLL         ;break;
+    case WM_VSCROLL         :rtn = MAINWND_ON_VSCROLL         ;break;
+    case WM_MOUSEWHEEL      :rtn = MAINWND_ON_MOUSEWHEEL      ;break;
+    case WM_SETFOCUS        :rtn = MAINWND_ON_SETFOCUS        ;break;
+    case WM_KILLFOCUS       :rtn = MAINWND_ON_KILLFOCUS       ;break;
+    case WM_DROPFILES       :rtn = MAINWND_ON_DROPFILES       ;break;
+    case WM_INITMENUPOPUP   :rtn = MAINWND_ON_INITMENUPOPUP   ;break;
+    default                 :rtn = MAINWND_ON_DEFAULT         ;break;
     }
     /* *INDENT-ON* */
 
@@ -311,6 +314,25 @@ onMove( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 }
 
 /********************************************************************************
+ * 内容  : WM_WINDOWPOSCHANGED の処理
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+onWindowPosChanged( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    mainWndData.xWindowPos = ((WINDOWPOS *)lParam)->x ;
+    mainWndData.yWindowPos = ((WINDOWPOS *)lParam)->y ;
+    mainWndData.cxWindow   = ((WINDOWPOS *)lParam)->cx;
+    mainWndData.cyWindow   = ((WINDOWPOS *)lParam)->cy;
+
+    return DefWindowProc( hwnd, message, wParam, lParam );
+}
+
+/********************************************************************************
  * 内容  : WM_CLOSE の処理
  * 引数  : HWND hwnd
  * 引数  : UINT message
@@ -321,10 +343,10 @@ onMove( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 static LRESULT
 onClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
-    ConfigSaveDword( CONFIG_ID_WINDOW_POS_X , mainWndData.xPos     );
-    ConfigSaveDword( CONFIG_ID_WINDOW_POS_Y , mainWndData.yPos     );
-    ConfigSaveDword( CONFIG_ID_WINDOW_POS_DX, mainWndData.cxClient );
-    ConfigSaveDword( CONFIG_ID_WINDOW_POS_DY, mainWndData.cyClient );
+    ConfigSaveDword( CONFIG_ID_WINDOW_POS_X , mainWndData.xWindowPos );
+    ConfigSaveDword( CONFIG_ID_WINDOW_POS_Y , mainWndData.yWindowPos );
+    ConfigSaveDword( CONFIG_ID_WINDOW_POS_DX, mainWndData.cxWindow   );
+    ConfigSaveDword( CONFIG_ID_WINDOW_POS_DY, mainWndData.cyWindow   );
 
     DestroyWindow( hwnd );
 

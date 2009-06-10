@@ -146,6 +146,9 @@
 			RelativePath="..\wnd\StsBar\StsBar.c">
 		</File>
 		<File
+			RelativePath="..\sys\Version\Version.c">
+		</File>
+		<File
 			RelativePath="..\sys\WinMain\WinMain.c">
 		</File>
 	</Files>
