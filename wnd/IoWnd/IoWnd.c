@@ -267,7 +267,19 @@ IoWndInvalidateRect( BOOL bErase )
 BOOL
 IoWndNewLineCodeSet( NEWLINECODE_TYPE newLineCodeType )
 {
-    return IoWndBuffSetNewLineCode( newLineCodeType );
+    BOOL bRtn = IoWndBuffSetNewLineCode( newLineCodeType );
+
+    if( bRtn )
+    {
+        setAllScrollInfo();
+        IoWndInvalidateRect(TRUE);
+    }
+    else
+    {
+        nop();
+    }
+
+    return bRtn;
 }
 
 /********************************************************************************
@@ -714,10 +726,10 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break ;
         }
     }
-    SetCaretPos( (IoWndGetCaretXpos()-ioWndData.iHorzPos)*ioWndData.cxChar, (IoWndGetCaretYpos()-ioWndData.iVertPos)*ioWndData.cyChar);
 
     ioOnImeStartComposition( hwnd, message, wParam, lParam );
 
+    SetCaretPos( (IoWndGetCaretXpos()-ioWndData.iHorzPos)*ioWndData.cxChar, (IoWndGetCaretYpos()-ioWndData.iVertPos)*ioWndData.cyChar);
     printCaretPos();
     setAllScrollInfo();
 
@@ -1116,7 +1128,7 @@ ioOnImeStartComposition( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     ImmSetCompositionFont( hImc,ioWndData.logFontPtr );
     ImmReleaseContext( hwnd, hImc );
 
-    return rtn;
+    return DefWindowProc(hwnd,message, wParam, lParam);
 }
 
 /********************************************************************************

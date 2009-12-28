@@ -583,45 +583,27 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         break;
 
     case IDM_EXTEND_NEWLINE_CRLF:
-        if( IoWndNewLineCodeSet(NEWLINECODE_CRLF) )
-        {
-            IoWndInvalidateRect(TRUE);
-        }
-        else
-        {
-            nop();
-        }
+        IoWndNewLineCodeSet(NEWLINECODE_CRLF);
         MenuCheckItem  ( IDM_EXTEND_NEWLINE_CRLF );
         MenuUnCheckItem( IDM_EXTEND_NEWLINE_LF   );
         MenuUnCheckItem( IDM_EXTEND_NEWLINE_CR   );
+        StsBarSetText( STS_BAR_1,"CR+LF");
         break;
 
     case IDM_EXTEND_NEWLINE_LF  :
-        if( IoWndNewLineCodeSet(NEWLINECODE_LF) )
-        {
-            IoWndInvalidateRect(TRUE);
-        }
-        else
-        {
-            nop();
-        }
+        IoWndNewLineCodeSet(NEWLINECODE_LF);
         MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_CRLF );
         MenuCheckItem    ( IDM_EXTEND_NEWLINE_LF   );
         MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_CR   );
+        StsBarSetText( STS_BAR_1,"LF");
         break;
 
     case IDM_EXTEND_NEWLINE_CR  :
-        if( IoWndNewLineCodeSet(NEWLINECODE_CR) )
-        {
-            IoWndInvalidateRect(TRUE);
-        }
-        else
-        {
-            nop();
-        }
+        IoWndNewLineCodeSet(NEWLINECODE_CR);
         MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_CRLF );
         MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_LF   );
         MenuCheckItem    ( IDM_EXTEND_NEWLINE_CR   );
+        StsBarSetText( STS_BAR_1,"CR");
         break;
 
     case IDM_FILE_EXIT:

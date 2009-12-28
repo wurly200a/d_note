@@ -61,7 +61,8 @@ StsBarSize( int cxClient,int cyClient )
     int i;
     LONG vertSize = 0;
 
-    sbarColWidth[STS_BAR_0]   = cxClient - (cxClient/4);
+    sbarColWidth[STS_BAR_0]   = (cxClient/4);
+    sbarColWidth[STS_BAR_1]   = cxClient - (cxClient/4);
     sbarColWidth[STS_BAR_MAX] = -1;
 
     SendMessage(hwndSbar, SB_SETPARTS, sizeof(sbarColWidth)/sizeof(int), (LPARAM)sbarColWidth);

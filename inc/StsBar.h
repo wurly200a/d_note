@@ -3,6 +3,7 @@
 typedef enum
 {
     STS_BAR_0,
+    STS_BAR_1,
     STS_BAR_MAX
 }STS_BAR_ID;
 
