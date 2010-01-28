@@ -131,6 +131,9 @@
 			RelativePath="..\wnd\IoWnd\IoWndBuffer.c">
 		</File>
 		<File
+			RelativePath="..\sys\LinkedList\LinkedList.c">
+		</File>
+		<File
 			RelativePath="..\wnd\MainWnd\MainWnd.c">
 		</File>
 		<File

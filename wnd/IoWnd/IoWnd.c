@@ -7,6 +7,7 @@
 /* 外部関数定義 */
 #include "WinMain.h"
 #include "StsBar.h"
+#include "LinkedList.h"
 #include "IoWndBuffer.h"
 
 /* 外部変数定義 */
@@ -426,7 +427,7 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     iPaintBeg = max(0, iVertPos + ps.rcPaint.top / ioWndData.cyChar);
     iPaintEnd = min(IoWndGetLineMaxSize(),iVertPos + ps.rcPaint.bottom / ioWndData.cyChar);
 
-    for( y=iPaintBeg,lineDataPtr=IoWndBuffGetLinePtr(y); (y<=iPaintEnd)&&(lineDataPtr != NULL); y++,lineDataPtr = lineDataPtr->nextPtr )
+    for( y=iPaintBeg,lineDataPtr=IoWndBuffGetLinePtr(y); (y<=iPaintEnd)&&(lineDataPtr != NULL); y++,lineDataPtr = (S_BUFF_LINE_DATA *)lineDataPtr->header.nextPtr )
     { /* 再描画領域のみ1行ずつ処理 */
         for( x=0; x<ioWndData.cxBuffer+1;x++ )
         {

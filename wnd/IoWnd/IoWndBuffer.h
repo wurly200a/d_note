@@ -2,13 +2,12 @@
 
 typedef struct tag_buffer_line_data
 {
-    struct tag_buffer_line_data *prevPtr;
-    struct tag_buffer_line_data *nextPtr;
-    DWORD                       lineNum;
-    DWORD                       caretPos;
-    DWORD                       dataSize;
-    INT                         newLineCodeSize;
-    TCHAR                       data[];
+    S_LIST_HEADER header;
+    DWORD         lineNum;
+    DWORD         caretPos;
+    DWORD         dataSize;
+    INT           newLineCodeSize;
+    TCHAR         data[];
 } S_BUFF_LINE_DATA;
 
 /********************************************************************************
