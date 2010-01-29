@@ -16,7 +16,6 @@ static S_BUFF_LINE_DATA *getBuffLine( TCHAR *dataPtr, DWORD maxLength );
 static S_BUFF_LINE_DATA *joinData( S_BUFF_LINE_DATA *data1Ptr, S_BUFF_LINE_DATA *data2Ptr );
 static void divideData( S_BUFF_LINE_DATA *dataPtr, S_BUFF_LINE_DATA **new1Ptr, S_BUFF_LINE_DATA **new2Ptr );
 static S_BUFF_LINE_DATA *shortenData( S_BUFF_LINE_DATA *dataPtr, DWORD size );
-
 static CHARSET_TYPE detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset );
 static BOOL getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
 static INT getNewLineSize( void );
@@ -428,211 +427,6 @@ IoWndBuffDataGet( TCHAR *dataPtr, DWORD dataSize, IOWND_BUFF_REGION region )
     }
 
     return rtn;
-}
-
-/********************************************************************************
- * 内容  : 行データの生成
- * 引数  : DWORD size          データサイズ(改行コード含む)
- * 引数  : INT newLineCodeSize 改行コードサイズ
- * 引数  : TCHAR *dataPtr      データ(ポインタ)
- * 引数  : DWORD lineNum       行番号
- * 引数  : DWORD caretPos      キャレット位置
- * 戻り値: S_BUFF_LINE_DATA *
- ***************************************/
-static S_BUFF_LINE_DATA *
-createBuffLineData( DWORD size, INT newLineCodeSize, TCHAR *dataPtr, DWORD lineNum, DWORD caretPos )
-{
-    S_BUFF_LINE_DATA *newPtr = NULL;
-
-    newPtr = (S_BUFF_LINE_DATA *)malloc( sizeof(S_BUFF_LINE_DATA) + (size * sizeof(TCHAR)) );
-    if( newPtr != NULL )
-    {
-        memset( newPtr, sizeof(S_BUFF_LINE_DATA), 0 );
-        newPtr->lineNum         = lineNum;
-        newPtr->caretPos        = caretPos;
-        newPtr->dataSize        = size;
-        newPtr->newLineCodeSize = newLineCodeSize;
-
-        if( dataPtr != NULL )
-        {
-            memcpy( newPtr->data, dataPtr, size );
-        }
-        else
-        {
-            nop();
-        }
-    }
-    else
-    {
-        nop();
-    }
-
-    return newPtr;
-}
-
-/********************************************************************************
- * 内容  : 行データの解放
- * 引数  : S_BUFF_LINE_DATA *
- * 戻り値: なし
- ***************************************/
-static void
-destroyBuffLineData( S_BUFF_LINE_DATA *dataPtr )
-{
-    free( dataPtr );
-}
-
-/********************************************************************************
- * 内容  : バッファ行データを取得
- * 引数  : TCHAR *dataPtr  データの先頭
- * 引数  : DWORD maxLength 最大長さ
- * 戻り値: S_BUFF_LINE_DATA *
- ***************************************/
-static S_BUFF_LINE_DATA *
-getBuffLine( TCHAR *dataPtr, DWORD maxLength )
-{
-    S_BUFF_LINE_DATA *lineDataPtr = NULL;
-    DWORD i;
-    INT   newLineCodeSize = 0;
-
-    for( i=0; i<maxLength; i++ )
-    {
-        if( ioWndBuffData.NewLineType == IOWND_BUFF_NEWLINE_CRLF )
-        {
-            if( (i>0) &&
-                (*(dataPtr+i-1) == '\r') &&
-                (*(dataPtr+i)   == '\n') )
-            {
-                i++;
-                newLineCodeSize = 2;
-                break;
-            }
-            else
-            {
-                nop();
-            }
-        }
-        else if( ioWndBuffData.NewLineType == IOWND_BUFF_NEWLINE_LF )
-        {
-            if( (*(dataPtr+i) == '\n') )
-            {
-                i++;
-                newLineCodeSize = 1;
-                break;
-            }
-            else
-            {
-                nop();
-            }
-        }
-        else if( ioWndBuffData.NewLineType == IOWND_BUFF_NEWLINE_CR )
-        {
-            if( (*(dataPtr+i) == '\r') )
-            {
-                i++;
-                newLineCodeSize = 1;
-                break;
-            }
-            else
-            {
-                nop();
-            }
-        }
-        else
-        { /* IOWND_BUFF_NEWLINE_NONE */
-            nop();
-        }
-    }
-
-    lineDataPtr = createBuffLineData( i, newLineCodeSize, dataPtr, 0, 0 );
-
-    return lineDataPtr;
-}
-
-/********************************************************************************
- * 内容  : 行データの結合
- * 引数  : S_BUFF_LINE_DATA *data1Ptr (改行コードは削除される)
- * 引数  : S_BUFF_LINE_DATA *data2Ptr
- * 戻り値: S_BUFF_LINE_DATA *
- ***************************************/
-static S_BUFF_LINE_DATA *
-joinData( S_BUFF_LINE_DATA *data1Ptr, S_BUFF_LINE_DATA *data2Ptr )
-{
-    S_BUFF_LINE_DATA *newPtr = NULL;
-
-    if( (data1Ptr != NULL) && (data2Ptr != NULL) )
-    {
-        newPtr = createBuffLineData( data1Ptr->dataSize-data1Ptr->newLineCodeSize+data2Ptr->dataSize, data2Ptr->newLineCodeSize, data1Ptr->data, data1Ptr->lineNum, 0 );
-        if( newPtr != NULL )
-        {
-            memcpy( newPtr->data + data1Ptr->dataSize - data1Ptr->newLineCodeSize, data2Ptr->data, data2Ptr->dataSize );
-        }
-        else
-        {
-            nop();
-        }
-    }
-    else
-    {
-        nop();
-    }
-
-    return newPtr;
-}
-
-/********************************************************************************
- * 内容  : 行データの分割
- * 引数  : S_BUFF_LINE_DATA *dataPtr  分割するデータ
- * 引数  : S_BUFF_LINE_DATA **new1Ptr 分割後のデータ1 (メモリ確保する)
- * 引数  : S_BUFF_LINE_DATA **new2Ptr 分割後のデータ2 (メモリ確保する)
- * 戻り値: なし
- ***************************************/
-static void
-divideData( S_BUFF_LINE_DATA *dataPtr, S_BUFF_LINE_DATA **new1Ptr, S_BUFF_LINE_DATA **new2Ptr )
-{
-    S_BUFF_LINE_DATA *newPtr = NULL;
-
-    if( (dataPtr != NULL) && (new1Ptr != NULL) && (new2Ptr != NULL) )
-    {
-        *new1Ptr = createBuffLineData( dataPtr->caretPos                  , 0                       , dataPtr->data                  , dataPtr->lineNum  , dataPtr->caretPos ); /* 改行より前 */
-        *new2Ptr = createBuffLineData( dataPtr->dataSize-dataPtr->caretPos, dataPtr->newLineCodeSize, dataPtr->data+dataPtr->caretPos, dataPtr->lineNum+1, 0                 ); /* 改行より後 */
-    }
-    else
-    {
-        nop();
-    }
-}
-
-/********************************************************************************
- * 内容  : 行データを短くする
- * 引数  : S_BUFF_LINE_DATA *dataPtr
- * 引数  : DWORD size
- * 戻り値: S_BUFF_LINE_DATA *
- ***************************************/
-static S_BUFF_LINE_DATA *
-shortenData( S_BUFF_LINE_DATA *dataPtr, DWORD size )
-{
-    S_BUFF_LINE_DATA *newPtr = NULL;
-
-    if( (dataPtr != NULL) &&
-        (dataPtr->dataSize >= size) )
-    {
-        newPtr = createBuffLineData( dataPtr->dataSize-size, dataPtr->newLineCodeSize, dataPtr->data, dataPtr->lineNum, dataPtr->caretPos );
-        if( newPtr != NULL )
-        {
-            /* 改行コードのコピー */
-            memcpy( newPtr->data + newPtr->dataSize - newPtr->newLineCodeSize, dataPtr->data + dataPtr->dataSize - dataPtr->newLineCodeSize, dataPtr->newLineCodeSize );
-        }
-        else
-        {
-            nop();
-        }
-    }
-    else
-    {
-        nop();
-    }
-
-    return newPtr;
 }
 
 /********************************************************************************
@@ -1476,6 +1270,211 @@ IoWndBuffSelectAll( void )
 }
 
 /********************************************************************************
+ * 内容  : 行データの生成
+ * 引数  : DWORD size          データサイズ(改行コード含む)
+ * 引数  : INT newLineCodeSize 改行コードサイズ
+ * 引数  : TCHAR *dataPtr      データ(ポインタ)
+ * 引数  : DWORD lineNum       行番号
+ * 引数  : DWORD caretPos      キャレット位置
+ * 戻り値: S_BUFF_LINE_DATA *
+ ***************************************/
+static S_BUFF_LINE_DATA *
+createBuffLineData( DWORD size, INT newLineCodeSize, TCHAR *dataPtr, DWORD lineNum, DWORD caretPos )
+{
+    S_BUFF_LINE_DATA *newPtr = NULL;
+
+    newPtr = (S_BUFF_LINE_DATA *)malloc( sizeof(S_BUFF_LINE_DATA) + (size * sizeof(TCHAR)) );
+    if( newPtr != NULL )
+    {
+        memset( newPtr, sizeof(S_BUFF_LINE_DATA), 0 );
+        newPtr->lineNum         = lineNum;
+        newPtr->caretPos        = caretPos;
+        newPtr->dataSize        = size;
+        newPtr->newLineCodeSize = newLineCodeSize;
+
+        if( dataPtr != NULL )
+        {
+            memcpy( newPtr->data, dataPtr, size );
+        }
+        else
+        {
+            nop();
+        }
+    }
+    else
+    {
+        nop();
+    }
+
+    return newPtr;
+}
+
+/********************************************************************************
+ * 内容  : 行データの解放
+ * 引数  : S_BUFF_LINE_DATA *
+ * 戻り値: なし
+ ***************************************/
+static void
+destroyBuffLineData( S_BUFF_LINE_DATA *dataPtr )
+{
+    free( dataPtr );
+}
+
+/********************************************************************************
+ * 内容  : バッファ行データを取得
+ * 引数  : TCHAR *dataPtr  データの先頭
+ * 引数  : DWORD maxLength 最大長さ
+ * 戻り値: S_BUFF_LINE_DATA *
+ ***************************************/
+static S_BUFF_LINE_DATA *
+getBuffLine( TCHAR *dataPtr, DWORD maxLength )
+{
+    S_BUFF_LINE_DATA *lineDataPtr = NULL;
+    DWORD i;
+    INT   newLineCodeSize = 0;
+
+    for( i=0; i<maxLength; i++ )
+    {
+        if( ioWndBuffData.NewLineType == IOWND_BUFF_NEWLINE_CRLF )
+        {
+            if( (i>0) &&
+                (*(dataPtr+i-1) == '\r') &&
+                (*(dataPtr+i)   == '\n') )
+            {
+                i++;
+                newLineCodeSize = 2;
+                break;
+            }
+            else
+            {
+                nop();
+            }
+        }
+        else if( ioWndBuffData.NewLineType == IOWND_BUFF_NEWLINE_LF )
+        {
+            if( (*(dataPtr+i) == '\n') )
+            {
+                i++;
+                newLineCodeSize = 1;
+                break;
+            }
+            else
+            {
+                nop();
+            }
+        }
+        else if( ioWndBuffData.NewLineType == IOWND_BUFF_NEWLINE_CR )
+        {
+            if( (*(dataPtr+i) == '\r') )
+            {
+                i++;
+                newLineCodeSize = 1;
+                break;
+            }
+            else
+            {
+                nop();
+            }
+        }
+        else
+        { /* IOWND_BUFF_NEWLINE_NONE */
+            nop();
+        }
+    }
+
+    lineDataPtr = createBuffLineData( i, newLineCodeSize, dataPtr, 0, 0 );
+
+    return lineDataPtr;
+}
+
+/********************************************************************************
+ * 内容  : 行データの結合
+ * 引数  : S_BUFF_LINE_DATA *data1Ptr (改行コードは削除される)
+ * 引数  : S_BUFF_LINE_DATA *data2Ptr
+ * 戻り値: S_BUFF_LINE_DATA *
+ ***************************************/
+static S_BUFF_LINE_DATA *
+joinData( S_BUFF_LINE_DATA *data1Ptr, S_BUFF_LINE_DATA *data2Ptr )
+{
+    S_BUFF_LINE_DATA *newPtr = NULL;
+
+    if( (data1Ptr != NULL) && (data2Ptr != NULL) )
+    {
+        newPtr = createBuffLineData( data1Ptr->dataSize-data1Ptr->newLineCodeSize+data2Ptr->dataSize, data2Ptr->newLineCodeSize, data1Ptr->data, data1Ptr->lineNum, 0 );
+        if( newPtr != NULL )
+        {
+            memcpy( newPtr->data + data1Ptr->dataSize - data1Ptr->newLineCodeSize, data2Ptr->data, data2Ptr->dataSize );
+        }
+        else
+        {
+            nop();
+        }
+    }
+    else
+    {
+        nop();
+    }
+
+    return newPtr;
+}
+
+/********************************************************************************
+ * 内容  : 行データの分割
+ * 引数  : S_BUFF_LINE_DATA *dataPtr  分割するデータ
+ * 引数  : S_BUFF_LINE_DATA **new1Ptr 分割後のデータ1 (メモリ確保する)
+ * 引数  : S_BUFF_LINE_DATA **new2Ptr 分割後のデータ2 (メモリ確保する)
+ * 戻り値: なし
+ ***************************************/
+static void
+divideData( S_BUFF_LINE_DATA *dataPtr, S_BUFF_LINE_DATA **new1Ptr, S_BUFF_LINE_DATA **new2Ptr )
+{
+    S_BUFF_LINE_DATA *newPtr = NULL;
+
+    if( (dataPtr != NULL) && (new1Ptr != NULL) && (new2Ptr != NULL) )
+    {
+        *new1Ptr = createBuffLineData( dataPtr->caretPos                  , 0                       , dataPtr->data                  , dataPtr->lineNum  , dataPtr->caretPos ); /* 改行より前 */
+        *new2Ptr = createBuffLineData( dataPtr->dataSize-dataPtr->caretPos, dataPtr->newLineCodeSize, dataPtr->data+dataPtr->caretPos, dataPtr->lineNum+1, 0                 ); /* 改行より後 */
+    }
+    else
+    {
+        nop();
+    }
+}
+
+/********************************************************************************
+ * 内容  : 行データを短くする
+ * 引数  : S_BUFF_LINE_DATA *dataPtr
+ * 引数  : DWORD size
+ * 戻り値: S_BUFF_LINE_DATA *
+ ***************************************/
+static S_BUFF_LINE_DATA *
+shortenData( S_BUFF_LINE_DATA *dataPtr, DWORD size )
+{
+    S_BUFF_LINE_DATA *newPtr = NULL;
+
+    if( (dataPtr != NULL) &&
+        (dataPtr->dataSize >= size) )
+    {
+        newPtr = createBuffLineData( dataPtr->dataSize-size, dataPtr->newLineCodeSize, dataPtr->data, dataPtr->lineNum, dataPtr->caretPos );
+        if( newPtr != NULL )
+        {
+            /* 改行コードのコピー */
+            memcpy( newPtr->data + newPtr->dataSize - newPtr->newLineCodeSize, dataPtr->data + dataPtr->dataSize - dataPtr->newLineCodeSize, dataPtr->newLineCodeSize );
+        }
+        else
+        {
+            nop();
+        }
+    }
+    else
+    {
+        nop();
+    }
+
+    return newPtr;
+}
+
+/********************************************************************************
  * 内容  : キャラクタセットの判断(Shift_JISの場合)
  * 引数  : S_BUFF_LINE_DATA *dataPtr
  * 引数  : DWORD            offset   判断したい文字の先頭からのオフセット(0 origin)
@@ -1750,7 +1749,6 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dat
 
     return TRUE;
 }
-
 
 /********************************************************************************
  * 内容  : 改行コードサイズを取得
