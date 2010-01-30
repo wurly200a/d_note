@@ -9,7 +9,7 @@
 /* “à•”ŠÖ”’è‹` */
 #include "Version.h"
 /* “à•”•Ï”’è‹` */
-static WORD versionData = 0x0001;
+static WORD versionData = 0x0002;
 static TCHAR szVersion[64];
 
 /********************************************************************************
@@ -20,7 +20,7 @@ static TCHAR szVersion[64];
 PTSTR
 VersionStringGet( void )
 {
-    wsprintf( szVersion, TEXT("%01x.%02x"),HIBYTE(versionData),LOBYTE(versionData) );
+    wsprintf( szVersion, TEXT("%01x.%02x (%s)"),HIBYTE(versionData),LOBYTE(versionData),__DATE__ );
 
     return szVersion;
 }
