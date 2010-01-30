@@ -2,12 +2,12 @@
 
 typedef struct tag_buffer_line_data
 {
-    S_LIST_HEADER header;
-    DWORD         lineNum;
-    DWORD         caretPos;
-    DWORD         dataSize;
-    INT           newLineCodeSize;
-    TCHAR         data[];
+    S_LIST_HEADER header         ;
+    DWORD         lineNum        ; /* Y位置            */
+    DWORD         caretDataPos   ; /* X位置            */
+    DWORD         dataSize       ; /* データサイズ     */
+    INT           newLineCodeSize; /* 改行コードサイズ */
+    TCHAR         data[]         ;
 } S_BUFF_LINE_DATA;
 
 /********************************************************************************
@@ -128,22 +128,23 @@ S_BUFF_LINE_DATA *IoWndBuffGetLinePtr( DWORD lineNum );
 
 enum
 {
-    SINGLE_CHAR,
+    SINGLE_CHAR     ,
     DOUBLE_CHAR_HIGH,
-    DOUBLE_CHAR_LOW,
-    TAB_CHAR,
+    DOUBLE_CHAR_LOW ,
+    TAB_CHAR        ,
+    END_CHAR        ,
 };
 typedef int CHARSET_TYPE;
 
 typedef struct
 {
-    TCHAR        data[8] ;
-    INT          offset  ;
-    INT          size    ;
+    TCHAR        data[8] ; /* データ(半角,全角,タブ)                   */
+    INT          offset  ; /* 半角以外の場合、先頭からのオフセット位置 */
+    INT          size    ; /* データサイズ                             */
     CHARSET_TYPE type    ;
-    BOOL         bSelect ;
-    DWORD        dataPos ;
-    DWORD        caretPos;
+    BOOL         bSelect ; /* 選択されているか否か                     */
+    DWORD        dataPos ; /* データ位置                               */
+    DWORD        caretPos; /* キャレット位置(区切りのいい位置)         */
 } S_BUFF_DISP_DATA;
 
 /********************************************************************************

@@ -680,10 +680,12 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             nop();
         }
 
-        SetCaretPos( (IoWndGetCaretXpos()-ioWndData.iHorzPos)*ioWndData.cxChar, (IoWndGetCaretYpos()-ioWndData.iVertPos)*ioWndData.cyChar);
         printCaretPos();
 
+        HideCaret(hwnd);
         IoWndInvalidateRect(bErase);
+        SetCaretPos( (IoWndGetCaretXpos()-ioWndData.iHorzPos)*ioWndData.cxChar, (IoWndGetCaretYpos()-ioWndData.iVertPos)*ioWndData.cyChar);
+        ShowCaret(hwnd);
     }
 
     return rtn;
