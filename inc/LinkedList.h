@@ -24,16 +24,6 @@ void ClearLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr );
 void AddLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr, S_LIST_HEADER *dataPtr );
 
 /********************************************************************************
- * 内容  : 連結リストにデータを挿入する
- * 引数  : S_LIST_HEADER **topPtr 先頭データをつなぐポインタ
- * 引数  : S_LIST_HEADER **topPtr 最終データをつなぐポインタ
- * 引数  : S_LIST_HEADER *nowPtr  挿入位置
- * 引数  : S_LIST_HEADER *dataPtr 挿入するデータ
- * 戻り値: なし
- ***************************************/
-void InsertLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr, S_LIST_HEADER *nowPtr, S_LIST_HEADER *dataPtr );
-
-/********************************************************************************
  * 内容  : 連結リストのデータを置き換える
  * 引数  : S_LIST_HEADER **topPtr 先頭データをつなぐポインタ
  * 引数  : S_LIST_HEADER **topPtr 最終データをつなぐポインタ
@@ -53,15 +43,15 @@ S_LIST_HEADER *ReplaceLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr
 S_LIST_HEADER *RemoveLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr, S_LIST_HEADER *dataPtr );
 
 /********************************************************************************
- * 内容  : 連結リストの結合
- * 引数  : S_LIST_HEADER **topPtr 先頭データをつなぐポインタ
- * 引数  : S_LIST_HEADER **topPtr 最終データをつなぐポインタ
- * 引数  : S_LIST_HEADER *nowPtr  挿入位置
- * 引数  : S_LIST_HEADER **mergeTopPtr
- * 引数  : S_LIST_HEADER **mergeEndPtr
+ * 内容  : 連結リストへの挿入
+ * 引数  : S_LIST_HEADER **topPtr       先頭データをつなぐポインタ
+ * 引数  : S_LIST_HEADER **topPtr       最終データをつなぐポインタ
+ * 引数  : S_LIST_HEADER *nowPtr        挿入位置
+ * 引数  : S_LIST_HEADER **insertTopPtr 挿入する連結リストの先頭
+ * 引数  : S_LIST_HEADER **insertEndPtr 挿入する連結リストの最後
  * 戻り値: void
  ***************************************/
-void MergeLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr, S_LIST_HEADER *nowPtr, S_LIST_HEADER **mergeTopPtr, S_LIST_HEADER **mergeEndPtr );
+void InsertLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr, S_LIST_HEADER *nowPtr, S_LIST_HEADER **insertTopPtr, S_LIST_HEADER **insertEndPtr );
 
 #define LINKEDLIST_H
 #endif /* LINKEDLIST_H */

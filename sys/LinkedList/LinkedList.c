@@ -72,39 +72,6 @@ AddLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr, S_LIST_HEADER *da
 }
 
 /********************************************************************************
- * 内容  : 連結リストにデータを挿入する
- * 引数  : S_LIST_HEADER **topPtr 先頭データをつなぐポインタ
- * 引数  : S_LIST_HEADER **topPtr 最終データをつなぐポインタ
- * 引数  : S_LIST_HEADER *nowPtr  挿入位置
- * 引数  : S_LIST_HEADER *dataPtr 挿入するデータ
- * 戻り値: なし
- ***************************************/
-void
-InsertLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr, S_LIST_HEADER *nowPtr, S_LIST_HEADER *dataPtr )
-{
-    if( (topPtr != NULL) && (endPtr != NULL) && (nowPtr != NULL) && (dataPtr != NULL) )
-    {
-        dataPtr->prevPtr = nowPtr->prevPtr;
-        dataPtr->nextPtr = nowPtr;
-
-        if( dataPtr->prevPtr != NULL )
-        { /* 前データ有り */
-            (dataPtr->prevPtr)->nextPtr = dataPtr;
-        }
-        else
-        { /* 前データ無し */
-            (*topPtr) = dataPtr;
-        }
-
-        nowPtr->prevPtr = dataPtr;
-    }
-    else
-    {
-        nop();
-    }
-}
-
-/********************************************************************************
  * 内容  : 連結リストのデータを置き換える
  * 引数  : S_LIST_HEADER **topPtr 先頭データをつなぐポインタ
  * 引数  : S_LIST_HEADER **topPtr 最終データをつなぐポインタ
@@ -195,39 +162,32 @@ RemoveLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr, S_LIST_HEADER 
 }
 
 /********************************************************************************
- * 内容  : 連結リストの結合
- * 引数  : S_LIST_HEADER **topPtr 先頭データをつなぐポインタ
- * 引数  : S_LIST_HEADER **topPtr 最終データをつなぐポインタ
- * 引数  : S_LIST_HEADER *nowPtr  挿入位置
- * 引数  : S_LIST_HEADER **mergeTopPtr
- * 引数  : S_LIST_HEADER **mergeEndPtr
+ * 内容  : 連結リストへの挿入
+ * 引数  : S_LIST_HEADER **topPtr       先頭データをつなぐポインタ
+ * 引数  : S_LIST_HEADER **topPtr       最終データをつなぐポインタ
+ * 引数  : S_LIST_HEADER *nowPtr        挿入位置
+ * 引数  : S_LIST_HEADER **insertTopPtr 挿入する連結リストの先頭
+ * 引数  : S_LIST_HEADER **insertEndPtr 挿入する連結リストの最後
  * 戻り値: void
  ***************************************/
 void
-MergeLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr, S_LIST_HEADER *nowPtr, S_LIST_HEADER **mergeTopPtr, S_LIST_HEADER **mergeEndPtr )
+InsertLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr, S_LIST_HEADER *nowPtr, S_LIST_HEADER **insertTopPtr, S_LIST_HEADER **insertEndPtr )
 {
-    if( (topPtr != NULL) && (endPtr != NULL) && (nowPtr != NULL) && (mergeTopPtr != NULL) && (mergeEndPtr != NULL) )
+    if( (topPtr != NULL) && (endPtr != NULL) && (nowPtr != NULL) && (insertTopPtr != NULL) && (insertEndPtr != NULL) )
     {
-        (*mergeTopPtr)->prevPtr = nowPtr->prevPtr;
+        (*insertTopPtr)->prevPtr = nowPtr->prevPtr;
 
-        if( (*mergeTopPtr)->prevPtr != NULL )
+        if( (*insertTopPtr)->prevPtr != NULL )
         {
-            ((*mergeTopPtr)->prevPtr)->nextPtr = (*mergeTopPtr);
+            ((*insertTopPtr)->prevPtr)->nextPtr = (*insertTopPtr);
         }
         else
         {
-            (*topPtr) = (*mergeTopPtr);
+            (*topPtr) = (*insertTopPtr);
         }
 
-        (*mergeEndPtr)->nextPtr = nowPtr;
-        if( (*mergeEndPtr)->nextPtr != NULL )
-        {
-            ((*mergeEndPtr)->nextPtr)->prevPtr = (*mergeEndPtr);
-        }
-        else
-        {
-            nop(); /* 有り得ない */
-        }
+        (*insertEndPtr)->nextPtr = nowPtr;
+        nowPtr->prevPtr = (*insertEndPtr);
     }
     else
     {
