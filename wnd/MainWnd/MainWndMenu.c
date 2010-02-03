@@ -1,6 +1,7 @@
 /* 共通インクルードファイル */
 #include "common.h"
 /* 個別インクルードファイル */
+#include "MenuId.h"
 #include "MainWndMenu.h"
 
 /* 外部関数定義 */
@@ -67,15 +68,12 @@ MenuCreate( void )
     AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_REPLACE    , TEXT("置換(&R)...\tCtrl+H") );
     AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_GOTO_LINE  , TEXT("行へ移動(&G)...\tCtrl+G") );
     AppendMenu( hMenuPopup, MF_SEPARATOR, 0                   , NULL );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_SELECT_ALL , TEXT("全て選択(&A)\tCtrl+A") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_SELECT_ALL , TEXT("すべて選択(&A)\tCtrl+A") );
     AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_DATETIME   , TEXT("日付と時刻(&D)\tF5") );
     AppendMenu( hMenu     , MF_POPUP    , (UINT_PTR)hMenuPopup, TEXT("編集(&E)") );
 
     EnableMenuItem( hMenu, IDM_EDIT_UNDO       , MF_GRAYED );
-#if 0
-    EnableMenuItem( hMenu, IDM_EDIT_CUT        , MF_GRAYED );
-#endif
-    EnableMenuItem( hMenu, IDM_EDIT_DELETE     , MF_GRAYED );
+
     EnableMenuItem( hMenu, IDM_EDIT_FIND       , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_EDIT_FIND_NEXT  , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_EDIT_REPLACE    , MF_GRAYED );

@@ -53,7 +53,7 @@ ModalDlgInit( void )
         wc.hInstance     = GetHinst();
         wc.hIcon         = NULL;
         wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
-        wc.hbrBackground = (HBRUSH)GetStockObject(LTGRAY_BRUSH);
+        wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE+1);
         wc.lpszMenuName  = NULL;
         wc.lpszClassName = modalDlgInfoTbl[i].className;
 
@@ -168,7 +168,7 @@ AboutDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
 
         /* Copyright */
-        hCtrl = CreateWindow( TEXT("static"), TEXT("Copyright (C) 2009 Wurly"), WS_CHILD|WS_VISIBLE, 60, 130, 400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
+        hCtrl = CreateWindow( TEXT("static"), TEXT("Copyright (C) 2009-2010 Wurly"), WS_CHILD|WS_VISIBLE, 60, 130, 400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
 
         /* ƒ‰ƒCƒZƒ“ƒX */

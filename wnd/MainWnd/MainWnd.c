@@ -2,6 +2,7 @@
 #include "common.h"
 /* 個別インクルードファイル */
 #include "MainWndDef.h"
+#include "MenuId.h"
 #include "MainWndMenu.h"
 
 /* 外部関数定義 */
@@ -385,10 +386,9 @@ static LRESULT
 onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
-    DWORD dwSize,dwSize2;
+    DWORD dwSize;
     PBYTE dataPtr;
-    HGLOBAL hGlobal;
-    PTSTR   pGlobal;
+    PTSTR strPtr;
     S_MODAL_DLG_DATA modalDlgData;
 
     switch( LOWORD(wParam) )
@@ -409,21 +409,6 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             /* キャンセルされた。又はエラー */
         }
         break;
-#if 0
-    case (SOME_CTRL_FILEOPEN_BUTTON+SOME_CTRL_ID_OFFSET):
-        if( FileOpenDlg( hwnd,FILE_ID_BIN ) )
-        {
-            SetWindowText( SomeCtrlGetHWND(SOME_CTRL_FILENAME), FileGetName(FILE_ID_BIN) );
-            dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
-            IoWndDataSet( dataPtr,dwSize,TRUE );
-        }
-        else
-        {
-            /* キャンセルされた。又はエラー */
-        }
-        break;
-#endif
-
     case IDM_FILE_SAVE:
         dwSize = IoWndGetDataSize(IOWND_ALL);
         dataPtr = malloc( dwSize * sizeof(TCHAR) );
@@ -477,84 +462,28 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         break;
 
     case IDM_EDIT_CUT:
-    case IDM_EDIT_COPY:
-        dwSize = IoWndGetDataSize(IOWND_SELECTED);
-        if( dwSize )
-        {
-            hGlobal = GlobalAlloc( GHND|GMEM_SHARE, dwSize+1 );
-            pGlobal = GlobalLock( hGlobal );
-            GlobalUnlock(hGlobal);
-            IoWndDataGet( pGlobal,dwSize,IOWND_SELECTED );
-            OpenClipboard(hwnd);
-            EmptyClipboard();
-            SetClipboardData( CF_TEXT, hGlobal );
-            CloseClipboard();
+        SendMessage( mainWndData.hWndIo, WM_CUT, 0, 0 );
+        break;
 
-            if( LOWORD(wParam) == IDM_EDIT_CUT )
-            {
-                IoWndSelectDataRemove();
-                IoWndInvalidateRect(TRUE);
-            }
-            else
-            {
-                nop();
-            }
-        }
-        else
-        {
-            nop();
-        }
+    case IDM_EDIT_COPY:
+        SendMessage( mainWndData.hWndIo, WM_COPY, 0, 0 );
         break;
 
     case IDM_EDIT_PASTE:
-        if( IsClipboardFormatAvailable(CF_TEXT) )
-        {
-            OpenClipboard(hwnd);
-
-            hGlobal = GetClipboardData(CF_TEXT);
-            dwSize = GlobalSize(hGlobal) - 1;
-            dataPtr = (PBYTE)malloc(dwSize);
-            pGlobal = GlobalLock( hGlobal );
-            strncpy( dataPtr, pGlobal, dwSize );
-            GlobalUnlock(hGlobal);
-            CloseClipboard();
-            dwSize2 = strlen( dataPtr );
-            if( dwSize2 < dwSize )
-            { /* クリップボードの最大サイズに達する前にNULLがあれば */
-                dwSize = dwSize2; /* NULLまでのデータを有効とする (アプリケーションによっては 余分なNULLが大量に入っていることがある) */
-            }
-            else
-            {
-                nop();
-            }
-            IoWndDataSet( dataPtr,dwSize,FALSE );
-            free( dataPtr );
-        }
-        else
-        {
-            nop();
-        }
+        SendMessage( mainWndData.hWndIo, WM_PASTE, 0, 0 );
         break;
 
     case IDM_EDIT_DELETE:
-        IoWndSelectDataRemove();
-        IoWndInvalidateRect(TRUE);
+        SendMessage( mainWndData.hWndIo, WM_CLEAR, 0, 0 );
         break;
 
     case IDM_EDIT_SELECT_ALL:
-        if( IoWndSelectAll() )
-        {
-            IoWndInvalidateRect(TRUE);
-        }
-        else
-        {
-            nop();
-        }
+        SendMessage( mainWndData.hWndIo, EM_SETSEL, 0, -1 );
         break;
 
     case IDM_EDIT_DATETIME:
-        pGlobal = DateTimeGetString();
-        IoWndDataSet( pGlobal, strlen(pGlobal), FALSE );
+        strPtr = DateTimeGetString();
+        IoWndDataSet( strPtr, strlen(strPtr), FALSE );
         break;
 
     case IDM_FORMAT_FONT:

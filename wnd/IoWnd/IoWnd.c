@@ -2,6 +2,7 @@
 #include "common.h"
 /* 個別インクルードファイル */
 #include "mbctype.h"
+#include "MenuId.h"
 #include "IoWndDef.h"
 
 /* 外部関数定義 */
@@ -39,6 +40,12 @@ static LRESULT ioOnLbuttonUp          ( HWND hwnd, UINT message, WPARAM wParam, 
 static LRESULT ioOnMbuttonUp          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT ioOnRbuttonUp          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT ioOnImeStartComposition( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnCut                ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnCopy               ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnPaste              ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnClear              ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnUndo               ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnSetSel             ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT ioOnDefault            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
 static void updateTextMetrics( HWND hwnd );
@@ -77,6 +84,12 @@ static LRESULT (*ioWndProcTbl[IOWND_MAX])( HWND hwnd, UINT message, WPARAM wPara
     ioOnMbuttonUp          , /* WM_MBUTTONUP           */
     ioOnRbuttonUp          , /* WM_RBUTTONUP           */
     ioOnImeStartComposition, /* WM_IME_STARTCOMPOSITION*/
+    ioOnCut                , /* WM_CUT                 */
+    ioOnCopy               , /* WM_COPY                */
+    ioOnPaste              , /* WM_PASTE               */
+    ioOnClear              , /* WM_CLEAR               */
+    ioOnUndo               , /* WM_UNDO                */
+    ioOnSetSel             , /* EM_SETSEL              */
     ioOnDefault              /* default                */
 };
 /* *INDENT-ON* */
@@ -112,11 +125,11 @@ IoWndCreate( HWND hWnd, LOGFONT *logFontPtr )
     }
 
     hWndIo = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW /* | WS_EX_ACCEPTFILES*/,
-                                 "ioWndClass", "IO Window",
-                                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL,
-                                 CW_USEDEFAULT, CW_USEDEFAULT,
-                                 0, 0,
-                                 hWnd, NULL, hInst, NULL );
+                             "ioWndClass", "IO Window",
+                             WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL,
+                             CW_USEDEFAULT, CW_USEDEFAULT,
+                             0, 0,
+                             hWnd, NULL, hInst, NULL );
 
     if( hWndIo != NULL )
     {
@@ -227,29 +240,6 @@ IoWndGetDataSize( IOWND_REGION region )
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウの選択範囲のデータ削除
- * 引数  : なし
- * 戻り値: BOOL
- ***************************************/
-BOOL
-IoWndSelectDataRemove( void )
-{
-    IoWndBuffRemoveData( FALSE );
-    return TRUE;
-}
-
-/********************************************************************************
- * 内容  : IOウィンドウの全範囲選択
- * 引数  : なし
- * 戻り値: BOOL
- ***************************************/
-BOOL
-IoWndSelectAll( void )
-{
-    return IoWndBuffSelectAll();
-}
-
-/********************************************************************************
  * 内容  : IOウィンドウの矩形無効化
  * 引数  : BOOL bErase
  * 戻り値: なし
@@ -344,6 +334,12 @@ ioWndConvertMSGtoINDEX( UINT message )
     case WM_MBUTTONUP           :rtn = IOWND_ON_MBUTTONUP           ;break;
     case WM_RBUTTONUP           :rtn = IOWND_ON_RBUTTONUP           ;break;
     case WM_IME_STARTCOMPOSITION:rtn = IOWND_ON_IME_STARTCOMPOSITION;break;
+    case WM_CUT                 :rtn = IOWND_ON_CUT                 ;break;
+    case WM_COPY                :rtn = IOWND_ON_COPY                ;break;
+    case WM_PASTE               :rtn = IOWND_ON_PASTE               ;break;
+    case WM_CLEAR               :rtn = IOWND_ON_CLEAR               ;break;
+    case WM_UNDO                :rtn = IOWND_ON_UNDO                ;break;
+    case EM_SETSEL              :rtn = IOWND_ON_SETSEL              ;break;
 
     case WM_NCMOUSEMOVE         :rtn = IOWND_ON_DEFAULT             ;break;
     case WM_SETCURSOR           :rtn = IOWND_ON_DEFAULT             ;break;
@@ -559,6 +555,29 @@ static LRESULT
 ioOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
+
+    switch( LOWORD(wParam) )
+    {
+    case IDM_EDIT_CUT:
+        rtn = ioOnCut( hwnd, message, wParam, lParam );
+        break;
+
+    case IDM_EDIT_COPY:
+        rtn = ioOnCopy( hwnd, message, wParam, lParam );
+        break;
+
+    case IDM_EDIT_PASTE:
+        rtn = ioOnPaste( hwnd, message, wParam, lParam );
+        break;
+
+    case IDM_EDIT_DELETE:
+        rtn = ioOnClear( hwnd, message, wParam, lParam );
+        break;
+
+    case IDM_EDIT_SELECT_ALL:
+        rtn = ioOnSetSel( hwnd, message, 0, -1 );
+        break;
+    }
 
     return rtn;
 }
@@ -1103,6 +1122,50 @@ static LRESULT
 ioOnRbuttonUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
+    HMENU hMenu;
+    POINT point;
+
+    point.x = LOWORD(lParam);
+    point.y = HIWORD(lParam);
+
+    ClientToScreen(hwnd,&point);
+
+    hMenu = CreatePopupMenu();
+    AppendMenu( hMenu, MF_STRING   , IDM_EDIT_UNDO       , TEXT("元に戻す(&U)") );
+    AppendMenu( hMenu, MF_SEPARATOR, 0                   , NULL );
+    AppendMenu( hMenu, MF_STRING   , IDM_EDIT_CUT        , TEXT("切り取り(&T)") );
+    AppendMenu( hMenu, MF_STRING   , IDM_EDIT_COPY       , TEXT("コピー(&C)") );
+    AppendMenu( hMenu, MF_STRING   , IDM_EDIT_PASTE      , TEXT("貼り付け(&P)") );
+    AppendMenu( hMenu, MF_STRING   , IDM_EDIT_DELETE     , TEXT("削除(&D)") );
+    AppendMenu( hMenu, MF_SEPARATOR, 0                   , NULL );
+    AppendMenu( hMenu, MF_STRING   , IDM_EDIT_SELECT_ALL , TEXT("すべて選択(&A)") );
+
+    EnableMenuItem( hMenu, IDM_EDIT_UNDO, MF_GRAYED );
+
+    if( IoWndGetDataSize(IOWND_SELECTED) )
+    {
+        EnableMenuItem( hMenu, IDM_EDIT_CUT   , MF_ENABLED );
+        EnableMenuItem( hMenu, IDM_EDIT_COPY  , MF_ENABLED );
+        EnableMenuItem( hMenu, IDM_EDIT_DELETE, MF_ENABLED );
+    }
+    else
+    {
+        EnableMenuItem( hMenu, IDM_EDIT_CUT   , MF_GRAYED );
+        EnableMenuItem( hMenu, IDM_EDIT_COPY  , MF_GRAYED );
+        EnableMenuItem( hMenu, IDM_EDIT_DELETE, MF_GRAYED );
+    }
+
+    if( IsClipboardFormatAvailable(CF_TEXT) )
+    {
+        EnableMenuItem( hMenu, IDM_EDIT_PASTE, MF_ENABLED );
+    }
+    else
+    {
+        EnableMenuItem( hMenu, IDM_EDIT_PASTE, MF_GRAYED );
+    }
+
+    TrackPopupMenu(hMenu,TPM_RIGHTBUTTON,point.x,point.y,0,hwnd,NULL);
+    DestroyMenu(hMenu);
 
     return rtn;
 }
@@ -1132,6 +1195,197 @@ ioOnImeStartComposition( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     ImmReleaseContext( hwnd, hImc );
 
     return DefWindowProc(hwnd,message, wParam, lParam);
+}
+
+/********************************************************************************
+ * 内容  : WM_CUT を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+ioOnCut( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+    DWORD   dwSize;
+    HGLOBAL hGlobal;
+    PTSTR   pGlobal;
+
+    dwSize = IoWndGetDataSize(IOWND_SELECTED);
+    if( dwSize )
+    {
+        hGlobal = GlobalAlloc( GHND|GMEM_SHARE, dwSize+1 );
+        pGlobal = GlobalLock( hGlobal );
+        GlobalUnlock(hGlobal);
+        IoWndBuffDataGet( pGlobal,dwSize,IOWND_SELECTED );
+        OpenClipboard(hwnd);
+        EmptyClipboard();
+        SetClipboardData( CF_TEXT, hGlobal );
+        CloseClipboard();
+
+        /* CUTのみ */
+        IoWndBuffRemoveData( FALSE );
+        InvalidateRect( hWndIo, NULL, TRUE );
+    }
+    else
+    {
+        nop();
+    }
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : WM_COPY を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+ioOnCopy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+    DWORD   dwSize;
+    HGLOBAL hGlobal;
+    PTSTR   pGlobal;
+
+    dwSize = IoWndGetDataSize(IOWND_SELECTED);
+    if( dwSize )
+    {
+        hGlobal = GlobalAlloc( GHND|GMEM_SHARE, dwSize+1 );
+        pGlobal = GlobalLock( hGlobal );
+        GlobalUnlock(hGlobal);
+        IoWndBuffDataGet( pGlobal,dwSize,IOWND_SELECTED );
+        OpenClipboard(hwnd);
+        EmptyClipboard();
+        SetClipboardData( CF_TEXT, hGlobal );
+        CloseClipboard();
+    }
+    else
+    {
+        nop();
+    }
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : WM_PASTE を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+ioOnPaste( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+    DWORD   dwSize,dwSize2;
+    HGLOBAL hGlobal;
+    PTSTR   pGlobal;
+    PBYTE   dataPtr;
+
+    if( IsClipboardFormatAvailable(CF_TEXT) )
+    {
+        OpenClipboard(hwnd);
+
+        hGlobal = GetClipboardData(CF_TEXT);
+        dwSize = GlobalSize(hGlobal) - 1;
+        dataPtr = (PBYTE)malloc(dwSize);
+        pGlobal = GlobalLock( hGlobal );
+        strncpy( dataPtr, pGlobal, dwSize );
+        GlobalUnlock(hGlobal);
+        CloseClipboard();
+        dwSize2 = strlen( dataPtr );
+        if( dwSize2 < dwSize )
+        { /* クリップボードの最大サイズに達する前にNULLがあれば */
+            dwSize = dwSize2; /* NULLまでのデータを有効とする (アプリケーションによっては 余分なNULLが大量に入っていることがある) */
+        }
+        else
+        {
+            nop();
+        }
+        IoWndDataSet( dataPtr,dwSize,FALSE );
+        free( dataPtr );
+    }
+    else
+    {
+        nop();
+    }
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : WM_CLEAR を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+ioOnClear( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+
+    IoWndBuffRemoveData( FALSE );
+    InvalidateRect( hWndIo, NULL, TRUE );
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : WM_UNDO を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+ioOnUndo( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : EM_SETSEL を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+ioOnSetSel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+
+    if( (wParam == 0) && (lParam == -1) )
+    { /* ”すべて選択”のみ対応 */
+        if( IoWndBuffSelectAll() )
+        {
+            InvalidateRect( hWndIo, NULL, TRUE );
+        }
+        else
+        {
+            nop();
+        }
+    }
+    else
+    {
+        nop();
+    }
+
+    return rtn;
 }
 
 /********************************************************************************

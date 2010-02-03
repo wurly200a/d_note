@@ -25,6 +25,12 @@ typedef enum
     IOWND_ON_MBUTTONUP           , /* WM_MBUTTONUP            */
     IOWND_ON_RBUTTONUP           , /* WM_RBUTTONUP            */
     IOWND_ON_IME_STARTCOMPOSITION, /* WM_IME_STARTCOMPOSITION */
+    IOWND_ON_CUT                 , /* WM_CUT                  */
+    IOWND_ON_COPY                , /* WM_COPY                 */
+    IOWND_ON_PASTE               , /* WM_PASTE                */
+    IOWND_ON_CLEAR               , /* WM_CLEAR                */
+    IOWND_ON_UNDO                , /* WM_UNDO                 */
+    IOWND_ON_SETSEL              , /* EM_SETSEL               */
     IOWND_ON_DEFAULT             , /* default                 */
     IOWND_MAX
 } IOWND_INDEX;
