@@ -195,7 +195,7 @@ IoWndDataInit( void )
     IoWndBuffInit();
 
     setAllScrollInfo();
-    IoWndInvalidateRect(TRUE);
+    InvalidateRect( hWndIo, NULL, TRUE );
 }
 
 /********************************************************************************
@@ -212,7 +212,7 @@ IoWndDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit )
 
     IoWndBuffSelectOff();
     setAllScrollInfo();
-    IoWndInvalidateRect(TRUE);
+    InvalidateRect( hWndIo, NULL, TRUE );
 }
 
 /********************************************************************************
@@ -240,17 +240,6 @@ IoWndGetDataSize( IOWND_REGION region )
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウの矩形無効化
- * 引数  : BOOL bErase
- * 戻り値: なし
- ***************************************/
-void
-IoWndInvalidateRect( BOOL bErase )
-{
-    InvalidateRect( hWndIo, NULL, bErase );
-}
-
-/********************************************************************************
  * 内容  : IOウィンドウの改行コードセット
  * 引数  : NEWLINECODE_TYPE newLineCodeType
  * 戻り値: BOOL (TRUE:データが変更された)
@@ -263,7 +252,7 @@ IoWndNewLineCodeSet( NEWLINECODE_TYPE newLineCodeType )
     if( bRtn )
     {
         setAllScrollInfo();
-        IoWndInvalidateRect(TRUE);
+        InvalidateRect( hWndIo, NULL, TRUE );
     }
     else
     {
@@ -675,10 +664,12 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         if( IoWndGetCaretXpos() < ioWndData.iHorzPos )
         {
             setScrollPos( SB_HORZ, IoWndGetCaretXpos() );
+            bErase = TRUE;
         }
         else if( (ioWndData.iHorzPos+ioWndData.cxBuffer-1) < IoWndGetCaretXpos() )
         {
             setScrollPos( SB_HORZ, (ioWndData.iHorzPos+ioWndData.cxBuffer-1) );
+            bErase = TRUE;
         }
         else
         {
@@ -689,10 +680,12 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         if( IoWndGetCaretYpos() < ioWndData.iVertPos )
         {
             setScrollPos( SB_VERT, IoWndGetCaretYpos() );
+            bErase = TRUE;
         }
         else if( (ioWndData.iVertPos+ioWndData.cyBuffer-1) < IoWndGetCaretYpos() )
         {
             setScrollPos( SB_VERT, IoWndGetCaretYpos() - (ioWndData.cyBuffer-1) );
+            bErase = TRUE;
         }
         else
         {
@@ -702,7 +695,7 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         printCaretPos();
 
         HideCaret(hwnd);
-        IoWndInvalidateRect(bErase);
+        InvalidateRect( hWndIo, NULL, bErase );
         SetCaretPos( (IoWndGetCaretXpos()-ioWndData.iHorzPos)*ioWndData.cxChar, (IoWndGetCaretYpos()-ioWndData.iVertPos)*ioWndData.cyChar);
         ShowCaret(hwnd);
     }
@@ -737,14 +730,14 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break;
         case '\r':  /* carriage return */
             IoWndBuffAddNewLine();
-            IoWndInvalidateRect(TRUE);
+            InvalidateRect( hWndIo, NULL, TRUE );
             break;
         case '\t':  /* tab */
         default:
             /* 文字入力 */
             data = (TCHAR)wParam;
             IoWndBuffDataSet( &data,1,FALSE );
-            IoWndInvalidateRect(TRUE);
+            InvalidateRect( hWndIo, NULL, TRUE );
             break ;
         }
     }
@@ -998,7 +991,7 @@ ioOnMouseMove( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         IoWndSetCaretPos( ((x + (ioWndData.iHorzPos*ioWndData.cxChar))/ioWndData.cxChar), ((y + (ioWndData.iVertPos*ioWndData.cyChar))/ioWndData.cyChar) );
         SetCaretPos( (IoWndGetCaretXpos()-ioWndData.iHorzPos)*ioWndData.cxChar, (IoWndGetCaretYpos()-ioWndData.iVertPos)*ioWndData.cyChar);
         printCaretPos();
-        IoWndInvalidateRect(FALSE);
+        InvalidateRect( hWndIo, NULL, FALSE );
     }
     else
     {
@@ -1041,7 +1034,7 @@ ioOnLbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         IoWndBuffSelectOff();
         IoWndBuffSelectOn();
     }
-    IoWndInvalidateRect(TRUE);
+    InvalidateRect( hWndIo, NULL, TRUE );
 
     return rtn;
 }

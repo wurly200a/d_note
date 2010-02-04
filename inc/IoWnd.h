@@ -70,13 +70,6 @@ BOOL IoWndDataGet( TCHAR *dataPtr, DWORD dataSize, IOWND_REGION region );
  ***************************************/
 DWORD IoWndGetDataSize( IOWND_REGION region );
 
-/********************************************************************************
- * 内容  : IOウィンドウの矩形無効化
- * 引数  : BOOL bErase
- * 戻り値: なし
- ***************************************/
-void IoWndInvalidateRect( BOOL bErase );
-
 enum
 {
     NEWLINECODE_CRLF = 0,

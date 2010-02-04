@@ -9,7 +9,7 @@
 /* “à•”ŠÖ”’è‹` */
 #include "Version.h"
 /* “à•”•Ï”’è‹` */
-static WORD versionData = 0x0004;
+static WORD versionData = 0x0005;
 static TCHAR szVersion[64];
 
 /********************************************************************************
