@@ -981,10 +981,14 @@ static LRESULT
 ioOnMouseMove( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
-    int x,y;
+    SHORT x,y;
 
-    x = LOWORD(lParam);
-    y = HIWORD(lParam);
+    x = max(0,(SHORT)LOWORD(lParam));
+    y = max(0,(SHORT)HIWORD(lParam));
+
+#if 0 /* デバッグ */
+    StsBarSetText( STS_BAR_1,"%d,%d",x,y);
+#endif
 
     if( (wParam & MK_LBUTTON) )
     {
@@ -1031,6 +1035,7 @@ ioOnLbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     }
     else
     {
+        SetCapture(hwnd);
         IoWndBuffSelectOff();
         IoWndBuffSelectOn();
     }
@@ -1083,6 +1088,8 @@ static LRESULT
 ioOnLbuttonUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
+
+    ReleaseCapture();
 
     return rtn;
 }
