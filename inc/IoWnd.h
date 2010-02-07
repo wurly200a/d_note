@@ -3,10 +3,11 @@
 /********************************************************************************
  * 内容  : IOウィンドウクラスの登録、ウィンドウの生成
  * 引数  : HWND hWnd
+ * 引数  : HMENU id
  * 引数  : LOGFONT *logFontPtr
  * 戻り値: HWND
  ***************************************/
-HWND IoWndCreate( HWND hWnd, LOGFONT *logFontPtr );
+HWND IoWndCreate( HWND hWnd, HMENU id, LOGFONT *logFontPtr );
 
 /********************************************************************************
  * 内容  : IOウィンドウのフォント変更
@@ -43,7 +44,7 @@ void IoWndDataInit( void );
  * 内容  : IOウィンドウのデータセット
  * 引数  : TCHAR* dataPtr
  * 引数  : DWORD  length
- * 引数  : BOOL   bInit
+ * 引数  : BOOL   bInit (TRUE:既存データをクリア,FALSE:クリアしない)
  * 戻り値: なし
  ***************************************/
 void IoWndDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit );
@@ -81,7 +82,7 @@ typedef UINT NEWLINECODE_TYPE;
 /********************************************************************************
  * 内容  : IOウィンドウの改行コードセット
  * 引数  : NEWLINECODE_TYPE newLineCodeType
- * 戻り値: BOOL (TRUE:データが変更された)
+ * 戻り値: BOOL (TRUE:表示書き換え必要)
  ***************************************/
 BOOL IoWndNewLineCodeSet( NEWLINECODE_TYPE newLineCodeType );
 

@@ -797,44 +797,12 @@ IoWndBuffGetDispData( S_BUFF_LINE_DATA *lineDataPtr, DWORD dispPos, S_BUFF_DISP_
 /********************************************************************************
  * 内容  : IOウィンドウバッファの改行コードセット
  * 引数  : UINT newLineType
- * 戻り値: BOOL (TRUE:データが変更された)
+ * 戻り値: なし
  ***************************************/
-BOOL
+void
 IoWndBuffSetNewLineCode( UINT newLineType )
 {
-    BOOL rtn = FALSE;
-    DWORD allDataSize;
-    TCHAR *dataTopPtr,*dataPtr;
-    S_BUFF_LINE_DATA *nowPtr;
-
     ioWndBuffData.NewLineType = newLineType;
-
-    if( ioWndBuffListTopPtr == NULL )
-    {
-        nop();
-    }
-    else
-    {
-        allDataSize = IoWndGetBuffSize(BUFF_ALL);
-        dataTopPtr = malloc( sizeof(TCHAR) * allDataSize );
-        if( dataTopPtr != NULL )
-        {
-            for( nowPtr=ioWndBuffListTopPtr,dataPtr=dataTopPtr; nowPtr != NULL; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr )
-            {
-                memcpy( dataPtr, nowPtr->data, nowPtr->dataSize );
-                dataPtr += nowPtr->dataSize;
-            }
-            IoWndBuffDataSet( dataTopPtr, allDataSize, TRUE );
-            free( dataTopPtr );
-        }
-        else
-        {
-            nop();
-        }
-        rtn = TRUE;
-    }
-
-    return rtn;
 }
 
 /********************************************************************************
@@ -1074,29 +1042,28 @@ IoWndBuffRemoveData( BOOL bBackSpace )
 }
 
 /********************************************************************************
- * 内容  : 改行追加
- * 引数  : なし
- * 戻り値: なし
+ * 内容  : 改行データ取得
+ * 引数  : PTSTR dataPtr
+ * 戻り値: INT
  ***************************************/
-void
-IoWndBuffAddNewLine( void )
+INT
+IoWndBuffGetNewLineData( PTSTR dataPtr )
 {
-    TCHAR data[2];
     INT size = 0;
 
     switch( ioWndBuffData.NewLineType )
     {
     case IOWND_BUFF_NEWLINE_CRLF:
-        data[0] = '\r';
-        data[1] = '\n';
+        *dataPtr     = '\r';
+        *(dataPtr+1) = '\n';
         size = 2;
         break;
     case IOWND_BUFF_NEWLINE_LF  :
-        data[0] = '\n';
+        *dataPtr = '\n';
         size = 1;
         break;
     case IOWND_BUFF_NEWLINE_CR  :
-        data[0] = '\r';
+        *dataPtr = '\r';
         size = 1;
         break;
     case IOWND_BUFF_NEWLINE_NONE:
@@ -1104,14 +1071,7 @@ IoWndBuffAddNewLine( void )
         break;
     }
 
-    if( size )
-    {
-        IoWndBuffDataSet( data, size, FALSE );
-    }
-    else
-    {
-        nop();
-    }
+    return size;
 }
 
 /********************************************************************************

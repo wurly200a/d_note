@@ -166,9 +166,9 @@ enum
 /********************************************************************************
  * 内容  : IOウィンドウバッファの改行コードセット
  * 引数  : UINT newLineType
- * 戻り値: BOOL (TRUE:データが変更された)
+ * 戻り値: なし
  ***************************************/
-BOOL IoWndBuffSetNewLineCode( UINT newLineType );
+void IoWndBuffSetNewLineCode( UINT newLineType );
 
 /********************************************************************************
  * 内容  : データ削除
@@ -178,11 +178,11 @@ BOOL IoWndBuffSetNewLineCode( UINT newLineType );
 void IoWndBuffRemoveData( BOOL bBackSpace );
 
 /********************************************************************************
- * 内容  : 改行追加
- * 引数  : なし
- * 戻り値: なし
+ * 内容  : 改行データ取得
+ * 引数  : PTSTR *dataPtr
+ * 戻り値: INT
  ***************************************/
-void IoWndBuffAddNewLine( void );
+INT IoWndBuffGetNewLineData( PTSTR dataPtr );
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのタブサイズセット

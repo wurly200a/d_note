@@ -43,7 +43,8 @@ static LRESULT onInitMenuPopup   ( HWND hwnd, UINT message, WPARAM wParam, LPARA
 static LRESULT onApp             ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onDefault         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
-void doCaption( HWND hwnd, TCHAR* szTitleName );
+void doCaption( HWND hwnd, TCHAR* szTitleName, BOOL bNeedSave );
+short AskAboutSave( HWND hwnd, TCHAR * szTitleName );
 
 /* 内部変数定義 */
 static HWND hwndMain; /* メインウィンドウのハンドラ */
@@ -244,7 +245,7 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     FileInitialize( hwnd ); /* ファイル初期化     */
     FontInit();
 
-    mainWndData.hWndIo = IoWndCreate( hwnd, FontGetLogFont(FONT_ID_IO) );
+    mainWndData.hWndIo = IoWndCreate( hwnd, 0, FontGetLogFont(FONT_ID_IO) );
 #if 0
     SomeCtrlCreate( hwnd ); /* コントロールを生成 */
 #endif
@@ -253,7 +254,7 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     MenuCheckItem( IDM_VIEW_STS_BAR );
     MenuCheckItem( IDM_EXTEND_NEWLINE_CRLF );
 
-    doCaption( hwnd, "" );
+    doCaption( hwnd, "" , FALSE );
 
     return rtn;
 }
@@ -344,12 +345,19 @@ onWindowPosChanged( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 static LRESULT
 onClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
-    ConfigSaveDword( CONFIG_ID_WINDOW_POS_X , mainWndData.xWindowPos );
-    ConfigSaveDword( CONFIG_ID_WINDOW_POS_Y , mainWndData.yWindowPos );
-    ConfigSaveDword( CONFIG_ID_WINDOW_POS_DX, mainWndData.cxWindow   );
-    ConfigSaveDword( CONFIG_ID_WINDOW_POS_DY, mainWndData.cyWindow   );
+    if( mainWndData.bNeedSave && ((AskAboutSave( hwnd, FileGetTitleName(FILE_ID_BIN))) == IDCANCEL) )
+    {
+        nop();
+    }
+    else
+    {
+        ConfigSaveDword( CONFIG_ID_WINDOW_POS_X , mainWndData.xWindowPos );
+        ConfigSaveDword( CONFIG_ID_WINDOW_POS_Y , mainWndData.yWindowPos );
+        ConfigSaveDword( CONFIG_ID_WINDOW_POS_DX, mainWndData.cxWindow   );
+        ConfigSaveDword( CONFIG_ID_WINDOW_POS_DY, mainWndData.cyWindow   );
 
-    DestroyWindow( hwnd );
+        DestroyWindow( hwnd );
+    }
 
     return 0;
 }
@@ -378,8 +386,8 @@ onDestroy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 内容  : WM_COMMAND の処理
  * 引数  : HWND hwnd
  * 引数  : UINT message
- * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
- * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 引数  : WPARAM wParam 通常はLOWORDが通知コード。(コントロールからの通知時はHIWORDが通知コード、LOWORDがコントロールID)
+ * 引数  : LPARAM lParam 通常はNULL。(コントロールからの通知時はウィンドウハンドル)
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
@@ -391,160 +399,197 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     PTSTR strPtr;
     S_MODAL_DLG_DATA modalDlgData;
 
-    switch( LOWORD(wParam) )
+    if( lParam == mainWndData.hWndIo )
     {
-    case IDM_FILE_NEW:
-        IoWndDataInit();
-        doCaption( hwnd, "" );
-        break;
-    case IDM_FILE_OPEN:
-        if( FileOpenDlg( hwnd,FILE_ID_BIN ) )
+        switch( HIWORD(wParam) )
         {
-            dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
-            IoWndDataSet( dataPtr,dwSize,TRUE );
-            doCaption( hwnd, FileGetTitleName(FILE_ID_BIN) );
+        case EN_UPDATE:
+            mainWndData.bNeedSave = TRUE;
+            doCaption( hwnd, FileGetTitleName(FILE_ID_BIN),TRUE );
+            break;
+        default:
+            break;
         }
-        else
+    }
+    else
+    {
+        switch( LOWORD(wParam) )
         {
-            /* キャンセルされた。又はエラー */
-        }
-        break;
-    case IDM_FILE_SAVE:
-        dwSize = IoWndGetDataSize(IOWND_ALL);
-        dataPtr = malloc( dwSize * sizeof(TCHAR) );
-        if( dataPtr != NULL )
-        {
-            IoWndDataGet( dataPtr,dwSize,IOWND_ALL );
-            if( (FileWrite( FILE_ID_BIN, dataPtr, dwSize )) == FILE_NAME_NOT_SET )
+        case IDM_FILE_NEW:
+            if( mainWndData.bNeedSave && ((AskAboutSave( hwnd, FileGetTitleName(FILE_ID_BIN))) == IDCANCEL) )
             {
+                nop();
+            }
+            else
+            {
+                mainWndData.bNeedSave = FALSE;
+                IoWndDataInit();
+                doCaption( hwnd, "", FALSE);
+            }
+            break;
+        case IDM_FILE_OPEN:
+            if( mainWndData.bNeedSave && ((AskAboutSave( hwnd, FileGetTitleName(FILE_ID_BIN))) == IDCANCEL) )
+            {
+                nop();
+            }
+            else
+            {
+                if( FileOpenDlg( hwnd,FILE_ID_BIN ) )
+                {
+                    mainWndData.bNeedSave = FALSE;
+                    dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
+                    IoWndDataSet( dataPtr,dwSize,TRUE );
+                    doCaption( hwnd, FileGetTitleName(FILE_ID_BIN), FALSE );
+                }
+                else
+                {
+                    /* キャンセルされた。又はエラー */
+                }
+            }
+            break;
+        case IDM_FILE_SAVE:
+            dwSize = IoWndGetDataSize(IOWND_ALL);
+            dataPtr = malloc( dwSize * sizeof(TCHAR) );
+            if( dataPtr != NULL )
+            {
+                IoWndDataGet( dataPtr,dwSize,IOWND_ALL );
+                if( (FileWrite( FILE_ID_BIN, dataPtr, dwSize )) == FILE_NAME_NOT_SET )
+                {
+                    if( FileSaveDlg( hwnd,FILE_ID_BIN ) )
+                    {
+                        mainWndData.bNeedSave = FALSE;
+                        doCaption( hwnd, FileGetTitleName(FILE_ID_BIN),FALSE );
+                        FileWrite( FILE_ID_BIN, dataPtr, dwSize );
+                        rtn = 1;
+                    }
+                    else
+                    { /* キャンセル */
+                        nop();
+                    }
+                }
+                else
+                {
+                    mainWndData.bNeedSave = FALSE;
+                    doCaption( hwnd, FileGetTitleName(FILE_ID_BIN),FALSE );
+                    FileWrite( FILE_ID_BIN, dataPtr, dwSize );
+                    rtn = 1;
+                }
+                free( dataPtr );
+            }
+            else
+            {
+                nop();
+            }
+            break;
+        case IDM_FILE_SAVE_AS:
+            dwSize = IoWndGetDataSize(IOWND_ALL);
+            dataPtr = malloc( dwSize * sizeof(TCHAR) );
+            if( dataPtr != NULL )
+            {
+                IoWndDataGet( dataPtr,dwSize,IOWND_ALL );
                 if( FileSaveDlg( hwnd,FILE_ID_BIN ) )
                 {
-                    doCaption( hwnd, FileGetTitleName(FILE_ID_BIN) );
+                    mainWndData.bNeedSave = FALSE;
+                    doCaption( hwnd, FileGetTitleName(FILE_ID_BIN),FALSE );
                     FileWrite( FILE_ID_BIN, dataPtr, dwSize );
                 }
                 else
                 {
                     nop();
                 }
+                free( dataPtr );
             }
             else
             {
                 nop();
             }
-            free( dataPtr );
-        }
-        else
-        {
-            nop();
-        }
-        break;
-    case IDM_FILE_SAVE_AS:
-        dwSize = IoWndGetDataSize(IOWND_ALL);
-        dataPtr = malloc( dwSize * sizeof(TCHAR) );
-        if( dataPtr != NULL )
-        {
-            IoWndDataGet( dataPtr,dwSize,IOWND_ALL );
-            if( FileSaveDlg( hwnd,FILE_ID_BIN ) )
+            break;
+
+        case IDM_EDIT_CUT:
+            SendMessage( mainWndData.hWndIo, WM_CUT, 0, 0 );
+            break;
+
+        case IDM_EDIT_COPY:
+            SendMessage( mainWndData.hWndIo, WM_COPY, 0, 0 );
+            break;
+
+        case IDM_EDIT_PASTE:
+            SendMessage( mainWndData.hWndIo, WM_PASTE, 0, 0 );
+            break;
+
+        case IDM_EDIT_DELETE:
+            SendMessage( mainWndData.hWndIo, WM_CLEAR, 0, 0 );
+            break;
+
+        case IDM_EDIT_SELECT_ALL:
+            SendMessage( mainWndData.hWndIo, EM_SETSEL, 0, -1 );
+            break;
+
+        case IDM_EDIT_DATETIME:
+            strPtr = DateTimeGetString();
+            IoWndDataSet( strPtr, strlen(strPtr), FALSE );
+            break;
+
+        case IDM_FORMAT_FONT:
+            if( FontChooseFont( hwnd, FONT_ID_IO ) )
             {
-                doCaption( hwnd, FileGetTitleName(FILE_ID_BIN) );
-                FileWrite( FILE_ID_BIN, dataPtr, dwSize );
+                IoWndChangeFont( FontGetLogFont(FONT_ID_IO) );
             }
             else
             {
                 nop();
             }
-            free( dataPtr );
+            break;
+
+        case IDM_VIEW_STS_BAR:
+            if( MenuInqItemChecked(IDM_VIEW_STS_BAR) )
+            {
+                MenuUnCheckItem( IDM_VIEW_STS_BAR );
+                StsBarShowWindow( FALSE );
+            }
+            else
+            {
+                MenuCheckItem( IDM_VIEW_STS_BAR );
+                StsBarShowWindow( TRUE );
+            }
+            SendMessage(hwnd,WM_SIZE,0,MAKELONG(mainWndData.cxClient,mainWndData.cyClient));
+            break;
+
+        case IDM_EXTEND_NEWLINE_CRLF:
+            IoWndNewLineCodeSet(NEWLINECODE_CRLF);
+            MenuCheckItem  ( IDM_EXTEND_NEWLINE_CRLF );
+            MenuUnCheckItem( IDM_EXTEND_NEWLINE_LF   );
+            MenuUnCheckItem( IDM_EXTEND_NEWLINE_CR   );
+            StsBarSetText( STS_BAR_1,"CR+LF");
+            break;
+
+        case IDM_EXTEND_NEWLINE_LF  :
+            IoWndNewLineCodeSet(NEWLINECODE_LF);
+            MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_CRLF );
+            MenuCheckItem    ( IDM_EXTEND_NEWLINE_LF   );
+            MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_CR   );
+            StsBarSetText( STS_BAR_1,"LF");
+            break;
+
+        case IDM_EXTEND_NEWLINE_CR  :
+            IoWndNewLineCodeSet(NEWLINECODE_CR);
+            MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_CRLF );
+            MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_LF   );
+            MenuCheckItem    ( IDM_EXTEND_NEWLINE_CR   );
+            StsBarSetText( STS_BAR_1,"CR");
+            break;
+
+        case IDM_FILE_EXIT:
+            SendMessage( hwnd, WM_CLOSE, 0, 0 );
+            break;
+
+        case IDM_HELP_ABOUT:
+            ModalDlg( MODAL_DLG_ID_ABOUT, &modalDlgData, hwnd, mainWndData.xPos, mainWndData.yPos );
+            break;
+
+        default:
+            break;
         }
-        else
-        {
-            nop();
-        }
-        break;
-
-    case IDM_EDIT_CUT:
-        SendMessage( mainWndData.hWndIo, WM_CUT, 0, 0 );
-        break;
-
-    case IDM_EDIT_COPY:
-        SendMessage( mainWndData.hWndIo, WM_COPY, 0, 0 );
-        break;
-
-    case IDM_EDIT_PASTE:
-        SendMessage( mainWndData.hWndIo, WM_PASTE, 0, 0 );
-        break;
-
-    case IDM_EDIT_DELETE:
-        SendMessage( mainWndData.hWndIo, WM_CLEAR, 0, 0 );
-        break;
-
-    case IDM_EDIT_SELECT_ALL:
-        SendMessage( mainWndData.hWndIo, EM_SETSEL, 0, -1 );
-        break;
-
-    case IDM_EDIT_DATETIME:
-        strPtr = DateTimeGetString();
-        IoWndDataSet( strPtr, strlen(strPtr), FALSE );
-        break;
-
-    case IDM_FORMAT_FONT:
-        if( FontChooseFont( hwnd, FONT_ID_IO ) )
-        {
-            IoWndChangeFont( FontGetLogFont(FONT_ID_IO) );
-        }
-        else
-        {
-            nop();
-        }
-        break;
-
-    case IDM_VIEW_STS_BAR:
-        if( MenuInqItemChecked(IDM_VIEW_STS_BAR) )
-        {
-            MenuUnCheckItem( IDM_VIEW_STS_BAR );
-            StsBarShowWindow( FALSE );
-        }
-        else
-        {
-            MenuCheckItem( IDM_VIEW_STS_BAR );
-            StsBarShowWindow( TRUE );
-        }
-        SendMessage(hwnd,WM_SIZE,0,MAKELONG(mainWndData.cxClient,mainWndData.cyClient));
-        break;
-
-    case IDM_EXTEND_NEWLINE_CRLF:
-        IoWndNewLineCodeSet(NEWLINECODE_CRLF);
-        MenuCheckItem  ( IDM_EXTEND_NEWLINE_CRLF );
-        MenuUnCheckItem( IDM_EXTEND_NEWLINE_LF   );
-        MenuUnCheckItem( IDM_EXTEND_NEWLINE_CR   );
-        StsBarSetText( STS_BAR_1,"CR+LF");
-        break;
-
-    case IDM_EXTEND_NEWLINE_LF  :
-        IoWndNewLineCodeSet(NEWLINECODE_LF);
-        MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_CRLF );
-        MenuCheckItem    ( IDM_EXTEND_NEWLINE_LF   );
-        MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_CR   );
-        StsBarSetText( STS_BAR_1,"LF");
-        break;
-
-    case IDM_EXTEND_NEWLINE_CR  :
-        IoWndNewLineCodeSet(NEWLINECODE_CR);
-        MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_CRLF );
-        MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_LF   );
-        MenuCheckItem    ( IDM_EXTEND_NEWLINE_CR   );
-        StsBarSetText( STS_BAR_1,"CR");
-        break;
-
-    case IDM_FILE_EXIT:
-        SendMessage( hwnd, WM_CLOSE, 0, 0 );
-        break;
-
-    case IDM_HELP_ABOUT:
-        ModalDlg( MODAL_DLG_ID_ABOUT, &modalDlgData, hwnd, mainWndData.xPos, mainWndData.yPos );
-        break;
-
-    default:
-        break;
     }
 
     return rtn;
@@ -700,12 +745,20 @@ onDropFiles( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     DWORD dwSize;
     PBYTE dataPtr;
 
-    DragQueryFile( wParam, 0, szFileName, sizeof(szFileName) );
+    if( mainWndData.bNeedSave && ((AskAboutSave( hwnd, FileGetTitleName(FILE_ID_BIN))) == IDCANCEL) )
+    {
+        nop();
+    }
+    else
+    {
+        mainWndData.bNeedSave = FALSE;
+        DragQueryFile( wParam, 0, szFileName, sizeof(szFileName) );
 
-    FileSetName( FILE_ID_BIN, szFileName, FALSE );
-    dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
-    IoWndDataSet( dataPtr,dwSize,TRUE );
-    doCaption( hwnd, FileGetTitleName(FILE_ID_BIN) );
+        FileSetName( FILE_ID_BIN, szFileName, FALSE );
+        dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
+        IoWndDataSet( dataPtr,dwSize,TRUE );
+        doCaption( hwnd, FileGetTitleName(FILE_ID_BIN),FALSE );
+    }
 
     return rtn;
 }
@@ -796,14 +849,57 @@ onDefault( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 内容  :
  * 引数  : HWND hwnd
  * 引数  : TCHAR* szTitleName
+ * 引数  : BOOL bNeedSave
  * 戻り値: なし
  ***************************************/
 void
-doCaption( HWND hwnd, TCHAR* szTitleName )
+doCaption( HWND hwnd, TCHAR* szTitleName, BOOL bNeedSave )
 {
      TCHAR szCaption[64 + MAX_PATH];
 
-     wsprintf( szCaption, TEXT ("%s - %s"), (szTitleName[0] ? szTitleName : TEXT("無題")),GetAppName() );
+     if( bNeedSave )
+     {
+         wsprintf( szCaption, TEXT ("*%s - %s"), (szTitleName[0] ? szTitleName : TEXT("無題")),GetAppName() );
+     }
+     else
+     {
+         wsprintf( szCaption, TEXT ("%s - %s"), (szTitleName[0] ? szTitleName : TEXT("無題")),GetAppName() );
+     }
 
      SetWindowText( hwnd, szCaption );
+}
+
+/********************************************************************************
+ * 内容  :
+ * 引数  : HWND hwnd
+ * 引数  : TCHAR* szTitleName
+ * 戻り値: なし
+ ***************************************/
+short
+AskAboutSave( HWND hwnd, TCHAR * szTitleName )
+{
+    TCHAR szBuffer[64 + MAX_PATH];
+    int   iReturn;
+
+    wsprintf(szBuffer, TEXT("ファイル %s の内容は変更されています。\n\n変更を保存しますか?"), szTitleName[0] ? szTitleName : TEXT("無題") );
+
+    iReturn = MessageBox( hwnd,szBuffer,GetAppName(),MB_YESNOCANCEL|MB_ICONEXCLAMATION );
+
+    if( iReturn == IDYES )
+    {
+        if( !SendMessage( hwnd,WM_COMMAND,IDM_FILE_SAVE,0) )
+        {
+            iReturn = IDCANCEL;
+        }
+        else
+        {
+            nop();
+        }
+    }
+    else
+    {
+        nop();
+    }
+
+    return iReturn;
 }

@@ -48,6 +48,7 @@ static LRESULT ioOnUndo               ( HWND hwnd, UINT message, WPARAM wParam, 
 static LRESULT ioOnSetSel             ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT ioOnDefault            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
+static void ioWndRemoveData( HWND hwnd, BOOL bBackSpace );
 static void updateTextMetrics( HWND hwnd );
 static void getAllScrollInfo( void );
 static void setAllScrollInfo( void );
@@ -98,11 +99,12 @@ static LRESULT (*ioWndProcTbl[IOWND_MAX])( HWND hwnd, UINT message, WPARAM wPara
 /********************************************************************************
  * 内容  : IOウィンドウクラスの登録、ウィンドウの生成
  * 引数  : HWND hWnd
+ * 引数  : HMENU id
  * 引数  : LOGFONT *logFontPtr
  * 戻り値: HWND
  ***************************************/
 HWND
-IoWndCreate( HWND hWnd, LOGFONT *logFontPtr )
+IoWndCreate( HWND hWnd, HMENU id, LOGFONT *logFontPtr )
 {
     WNDCLASS wc = {0};
     HINSTANCE hInst = GetHinst();
@@ -129,7 +131,7 @@ IoWndCreate( HWND hWnd, LOGFONT *logFontPtr )
                              WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL,
                              CW_USEDEFAULT, CW_USEDEFAULT,
                              0, 0,
-                             hWnd, NULL, hInst, NULL );
+                             hWnd, id, hInst, NULL );
 
     if( hWndIo != NULL )
     {
@@ -144,7 +146,8 @@ IoWndCreate( HWND hWnd, LOGFONT *logFontPtr )
  * 引数  : LOGFONT *logFontPtr
  * 戻り値: なし
  ***************************************/
-void IoWndChangeFont( LOGFONT *logFontPtr )
+void
+IoWndChangeFont( LOGFONT *logFontPtr )
 {
     ioWndData.logFontPtr = logFontPtr;
 
@@ -202,13 +205,22 @@ IoWndDataInit( void )
  * 内容  : IOウィンドウのデータセット
  * 引数  : TCHAR* dataPtr
  * 引数  : DWORD  length
- * 引数  : BOOL   bInit
+ * 引数  : BOOL   bInit (TRUE:既存データをクリア,FALSE:クリアしない)
  * 戻り値: なし
  ***************************************/
 void
 IoWndDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit )
 {
     IoWndBuffDataSet( dataPtr, length, bInit );
+
+    if( bInit )
+    {
+        nop();
+    }
+    else
+    {
+        SendMessage(GetParent(hWndIo), WM_COMMAND, MAKEWPARAM(0,EN_UPDATE), hWndIo);
+    }
 
     IoWndBuffSelectOff();
     setAllScrollInfo();
@@ -242,21 +254,40 @@ IoWndGetDataSize( IOWND_REGION region )
 /********************************************************************************
  * 内容  : IOウィンドウの改行コードセット
  * 引数  : NEWLINECODE_TYPE newLineCodeType
- * 戻り値: BOOL (TRUE:データが変更された)
+ * 戻り値: BOOL (TRUE:表示書き換え必要)
  ***************************************/
 BOOL
 IoWndNewLineCodeSet( NEWLINECODE_TYPE newLineCodeType )
 {
-    BOOL bRtn = IoWndBuffSetNewLineCode( newLineCodeType );
+    DWORD allDataSize;
+    TCHAR *dataTopPtr,*dataPtr;
+    S_BUFF_LINE_DATA *nowPtr;
+    BOOL bRtn = FALSE;
 
-    if( bRtn )
+    IoWndBuffSetNewLineCode( newLineCodeType );
+
+    if( IoWndGetLineMaxSize() == 0 )
     {
-        setAllScrollInfo();
-        InvalidateRect( hWndIo, NULL, TRUE );
+        nop();
     }
     else
     {
-        nop();
+        allDataSize = IoWndGetBuffSize(BUFF_ALL);
+        dataTopPtr  = malloc( sizeof(TCHAR) * allDataSize );
+        if( dataTopPtr != NULL )
+        {
+            IoWndBuffDataGet( dataTopPtr, allDataSize, BUFF_ALL );
+            IoWndBuffDataSet( dataTopPtr, allDataSize, TRUE );
+            setAllScrollInfo();
+            InvalidateRect( hWndIo, NULL, TRUE );
+
+            free( dataTopPtr );
+            bRtn = TRUE;
+        }
+        else
+        {
+            nop();
+        }
     }
 
     return bRtn;
@@ -642,10 +673,10 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             IoWndIncCaretYpos();
             break;
         case VK_DELETE:
-            IoWndBuffRemoveData( FALSE );
+            ioWndRemoveData( hwnd, FALSE );
             break;
         case VK_BACK:
-            IoWndBuffRemoveData( TRUE );
+            ioWndRemoveData( hwnd, TRUE );
             break;
         default:
             break;
@@ -715,11 +746,14 @@ static LRESULT
 ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
-    TCHAR data;
+    TCHAR data[2];
     int i;
+    INT size;
 
     for( i=0; i<(int) LOWORD(lParam); i++ )
     {
+        size = 0;
+
         switch( wParam )
         {
         case '\b':  /* backspace */
@@ -729,16 +763,25 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         case '\n':  /* line feed */
             break;
         case '\r':  /* carriage return */
-            IoWndBuffAddNewLine();
-            InvalidateRect( hWndIo, NULL, TRUE );
+            size = IoWndBuffGetNewLineData(data);
             break;
         case '\t':  /* tab */
         default:
             /* 文字入力 */
-            data = (TCHAR)wParam;
-            IoWndBuffDataSet( &data,1,FALSE );
-            InvalidateRect( hWndIo, NULL, TRUE );
+            data[0] = (TCHAR)wParam;
+            size = 1;
             break ;
+        }
+
+        if( size )
+        {
+            IoWndBuffDataSet( data,size,FALSE );
+            InvalidateRect( hWndIo, NULL, TRUE );
+            SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_UPDATE), hwnd);
+        }
+        else
+        {
+            nop();
         }
     }
 
@@ -1226,7 +1269,7 @@ ioOnCut( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         CloseClipboard();
 
         /* CUTのみ */
-        IoWndBuffRemoveData( FALSE );
+        ioWndRemoveData( hwnd,FALSE );
         InvalidateRect( hWndIo, NULL, TRUE );
     }
     else
@@ -1334,7 +1377,7 @@ ioOnClear( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
-    IoWndBuffRemoveData( FALSE );
+    ioWndRemoveData( hwnd,FALSE );
     InvalidateRect( hWndIo, NULL, TRUE );
 
     return rtn;
@@ -1373,6 +1416,8 @@ ioOnSetSel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     { /* ”すべて選択”のみ対応 */
         if( IoWndBuffSelectAll() )
         {
+            IoWndSetCaretPos(0,IoWndGetLineMaxSize());
+            setScrollPos( SB_VERT, IoWndGetLineMaxSize() );
             InvalidateRect( hWndIo, NULL, TRUE );
         }
         else
@@ -1400,6 +1445,19 @@ static LRESULT
 ioOnDefault( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     return DefWindowProc( hwnd, message, wParam, lParam );
+}
+
+/********************************************************************************
+ * 内容  : データ削除
+ * 引数  : HWND hwnd
+ * 引数  : bBackSpace
+ * 戻り値: なし
+ ***************************************/
+static void
+ioWndRemoveData( HWND hwnd, BOOL bBackSpace )
+{
+    IoWndBuffRemoveData( bBackSpace );
+    SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_UPDATE), hwnd);
 }
 
 /********************************************************************************

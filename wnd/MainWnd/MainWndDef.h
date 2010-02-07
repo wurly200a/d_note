@@ -42,6 +42,7 @@ typedef struct
     int  cxCaps;
     HWND hWndIo;
     HACCEL hAccel;
+    BOOL bNeedSave;
 } S_MAINWND_DATA;
 
 #define MAINWND_DEF_H
