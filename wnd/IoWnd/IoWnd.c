@@ -266,28 +266,21 @@ IoWndNewLineCodeSet( NEWLINECODE_TYPE newLineCodeType )
 
     IoWndBuffSetNewLineCode( newLineCodeType );
 
-    if( IoWndGetLineMaxSize() == 0 )
+    allDataSize = IoWndGetBuffSize(BUFF_ALL);
+    dataTopPtr  = malloc( sizeof(TCHAR) * allDataSize );
+    if( dataTopPtr != NULL )
     {
-        nop();
+        IoWndBuffDataGet( dataTopPtr, allDataSize, BUFF_ALL );
+        IoWndBuffDataSet( dataTopPtr, allDataSize, TRUE );
+        setAllScrollInfo();
+        InvalidateRect( hWndIo, NULL, TRUE );
+
+        free( dataTopPtr );
+        bRtn = TRUE;
     }
     else
     {
-        allDataSize = IoWndGetBuffSize(BUFF_ALL);
-        dataTopPtr  = malloc( sizeof(TCHAR) * allDataSize );
-        if( dataTopPtr != NULL )
-        {
-            IoWndBuffDataGet( dataTopPtr, allDataSize, BUFF_ALL );
-            IoWndBuffDataSet( dataTopPtr, allDataSize, TRUE );
-            setAllScrollInfo();
-            InvalidateRect( hWndIo, NULL, TRUE );
-
-            free( dataTopPtr );
-            bRtn = TRUE;
-        }
-        else
-        {
-            nop();
-        }
+        nop();
     }
 
     return bRtn;
