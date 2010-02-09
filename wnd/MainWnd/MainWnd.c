@@ -404,8 +404,15 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         switch( HIWORD(wParam) )
         {
         case EN_UPDATE:
-            mainWndData.bNeedSave = TRUE;
-            doCaption( hwnd, FileGetTitleName(FILE_ID_BIN),TRUE );
+            if( mainWndData.bNeedSave )
+            {
+                nop();
+            }
+            else
+            {
+                doCaption( hwnd, FileGetTitleName(FILE_ID_BIN),TRUE );
+                mainWndData.bNeedSave = TRUE;
+            }
             break;
         default:
             break;

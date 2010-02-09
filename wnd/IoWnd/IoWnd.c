@@ -647,6 +647,22 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     {
         getAllScrollInfo();
 
+        if( (wParam==VK_LEFT)||(wParam==VK_RIGHT)||(wParam==VK_UP)||(wParam==VK_DOWN) )
+        {
+            if( ioWndData.bShiftKeyOn )
+            {
+                IoWndBuffSelectOn();
+            }
+            else
+            {
+                nop();
+            }
+        }
+        else
+        {
+            nop();
+        }
+
         switch(wParam)
         {
         case VK_LEFT:
@@ -742,6 +758,8 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     TCHAR data[2];
     int i;
     INT size;
+
+    IoWndBuffSelectOff();
 
     for( i=0; i<(int) LOWORD(lParam); i++ )
     {
