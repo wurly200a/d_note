@@ -1,6 +1,7 @@
 /* 共通インクルードファイル */
 #include "common.h"
 /* 個別インクルードファイル */
+#include <winnls.h>
 
 /* 外部関数定義 */
 #include "WinMain.h"
@@ -131,7 +132,7 @@ AboutDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
     HWND hCtrl;
-    MEMORYSTATUS memSts;
+    MEMORYSTATUSEX memSts;
     TCHAR szTemp[256];
     TCHAR szTemp2[256];
     TCHAR szTemp3[256];
@@ -179,9 +180,10 @@ AboutDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         hCtrl = CreateWindow( TEXT("static"), TEXT(""), WS_CHILD|WS_VISIBLE|SS_SUNKEN, 60, 242,410,2, hwnd, (HMENU)-1, GetHinst(), NULL );
 
         /* 物理メモリサイズ */
-        GlobalMemoryStatus( &memSts );
-        wsprintf( szTemp3, TEXT("%ld"),(memSts.dwTotalPhys/1024) );
-        GetNumberFormat( LOCALE_SYSTEM_DEFAULT, 0, szTemp3, &numberFormat, szTemp2, strlen(szTemp2) );
+        memSts.dwLength = sizeof(MEMORYSTATUSEX);
+        GlobalMemoryStatusEx( &memSts );
+        wsprintf( szTemp3, TEXT("%ld"),(memSts.ullTotalPhys/1024) );
+        GetNumberFormat( LOCALE_SYSTEM_DEFAULT, 0, szTemp3, &numberFormat, szTemp2, 256 );
         wsprintf( szTemp, TEXT("Windows が使用できる物理メモリ:\t        %s KB"),szTemp2 );
         hCtrl = CreateWindow( TEXT("static"), szTemp, WS_CHILD|WS_VISIBLE, 60, 252,400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
