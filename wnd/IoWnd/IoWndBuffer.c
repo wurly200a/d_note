@@ -19,7 +19,6 @@ static S_BUFF_LINE_DATA *shortenData( S_BUFF_LINE_DATA *dataPtr, DWORD size );
 static CHARSET_TYPE detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset );
 static DWORD getCaretDispXpos( S_BUFF_LINE_DATA *linePtr, DWORD dataPos );
 static BOOL getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
-static INT getNewLineSize( void );
 static void updateLineNum( S_BUFF_LINE_DATA *dataPtr );
 
 static void addLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *dataPtr );
@@ -54,7 +53,7 @@ IoWndBuffInit( void )
 {
     S_BUFF_LINE_DATA *lineDataPtr;
 
-    ClearLinkedList(&ioWndBuffListTopPtr,&ioWndBuffListEndPtr);
+    ClearLinkedList((S_LIST_HEADER **)&ioWndBuffListTopPtr,(S_LIST_HEADER **)&ioWndBuffListEndPtr);
 
     /* 空データを追加 */
     lineDataPtr = createBuffLineData( 0, 0, NULL, 0, 0 );
@@ -80,7 +79,7 @@ IoWndBuffInit( void )
 void
 IoWndBuffEnd( void )
 {
-    ClearLinkedList(&ioWndBuffListTopPtr,&ioWndBuffListEndPtr);
+    ClearLinkedList((S_LIST_HEADER **)&ioWndBuffListTopPtr,(S_LIST_HEADER **)&ioWndBuffListEndPtr);
 }
 
 /********************************************************************************
@@ -1324,8 +1323,6 @@ joinData( S_BUFF_LINE_DATA *data1Ptr, S_BUFF_LINE_DATA *data2Ptr )
 static void
 divideData( S_BUFF_LINE_DATA *dataPtr, S_BUFF_LINE_DATA **new1Ptr, S_BUFF_LINE_DATA **new2Ptr )
 {
-    S_BUFF_LINE_DATA *newPtr = NULL;
-
     if( (dataPtr != NULL) && (new1Ptr != NULL) && (new2Ptr != NULL) )
     {
         *new1Ptr = createBuffLineData( dataPtr->caretDataPos                  , 0                       , dataPtr->data                  , dataPtr->lineNum  , dataPtr->caretDataPos ); /* 改行より前 */
@@ -1438,7 +1435,7 @@ detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset )
 static DWORD
 getCaretDispXpos( S_BUFF_LINE_DATA *linePtr, DWORD dataPos )
 {
-    DWORD i,j=0,k;
+    DWORD i,j=0;
     DWORD literalMaxSize;
     int tab_offset;
     CHARSET_TYPE charType;
@@ -1471,7 +1468,7 @@ getCaretDispXpos( S_BUFF_LINE_DATA *linePtr, DWORD dataPos )
                 }
                 else if( ( (BYTE)(*(linePtr->data+i)) <= (BYTE)0x80) ||
                          (((BYTE)0xA0 <= (BYTE)(*(linePtr->data+i))) && ((BYTE)(*(linePtr->data+i)) <= (BYTE)0xDF)) ||
-                         (((BYTE)0xF0 <= (BYTE)(*(linePtr->data+i))) && ((BYTE)(*(linePtr->data+i)) <= (BYTE)0xFF)) )
+                         ((BYTE)0xF0 <= (BYTE)(*(linePtr->data+i))) )
                 { /* 処理中の文字は1byte文字 */
                     charType = SINGLE_CHAR;
                     j++;
@@ -1554,7 +1551,7 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dat
                 }
                 else if( ( (BYTE)(*(linePtr->data+dataPos)) <= (BYTE)0x80) ||
                          (((BYTE)0xA0 <= (BYTE)(*(linePtr->data+dataPos))) && ((BYTE)(*(linePtr->data+dataPos)) <= (BYTE)0xDF)) ||
-                         (((BYTE)0xF0 <= (BYTE)(*(linePtr->data+dataPos))) && ((BYTE)(*(linePtr->data+dataPos)) <= (BYTE)0xFF)) )
+                         ((BYTE)0xF0 <= (BYTE)(*(linePtr->data+dataPos))) )
                 { /* 処理中の文字は1byte文字 */
                     dataPtr->type = SINGLE_CHAR;
                     *(dataPtr->data) = *(linePtr->data+dataPos);
@@ -1719,33 +1716,6 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dat
 }
 
 /********************************************************************************
- * 内容  : 改行コードサイズを取得
- * 引数  : なし
- * 戻り値: なし
- ***************************************/
-static INT
-getNewLineSize( void )
-{
-    INT rtn = 0;
-
-    switch( ioWndBuffData.NewLineType )
-    {
-    case IOWND_BUFF_NEWLINE_CRLF:
-        rtn = 2;
-        break;
-    case IOWND_BUFF_NEWLINE_LF  :
-    case IOWND_BUFF_NEWLINE_CR  :
-        rtn = 1;
-        break;
-    case IOWND_BUFF_NEWLINE_NONE:
-    default:
-        break;
-    }
-
-    return rtn;
-}
-
-/********************************************************************************
  * 内容  : 行番号の更新
  * 引数  : S_BUFF_LINE_DATA *dataPtr
  * 戻り値: なし
@@ -1797,7 +1767,7 @@ addLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_D
         }
     }
 
-    AddLinkedList( topPtr, endPtr, dataPtr );
+    AddLinkedList( (S_LIST_HEADER **)topPtr, (S_LIST_HEADER **)endPtr, (S_LIST_HEADER *)dataPtr );
 }
 
 /********************************************************************************
@@ -1812,7 +1782,7 @@ removeLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LIN
 {
     S_BUFF_LINE_DATA *removeNextPtr;
 
-    removeNextPtr = RemoveLinkedList( topPtr,endPtr,dataPtr );
+    removeNextPtr = (S_BUFF_LINE_DATA *)RemoveLinkedList( (S_LIST_HEADER **)topPtr,(S_LIST_HEADER **)endPtr,(S_LIST_HEADER *)dataPtr );
     if( removeNextPtr != NULL )
     {
         if( removeNextPtr->header.prevPtr != NULL )
@@ -1847,7 +1817,7 @@ insertLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LIN
     {
         (*insertTopPtr)->lineNum = nowPtr->lineNum;
 
-        InsertLinkedList(topPtr,endPtr,nowPtr,insertTopPtr,insertEndPtr);
+        InsertLinkedList((S_LIST_HEADER **)topPtr,(S_LIST_HEADER **)endPtr,(S_LIST_HEADER *)nowPtr,(S_LIST_HEADER **)insertTopPtr,(S_LIST_HEADER **)insertEndPtr);
         updateLineNum( (*insertTopPtr) );
     }
     else
@@ -1870,7 +1840,7 @@ replaceLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LI
     if( (topPtr != NULL) && (endPtr != NULL) && (nowPtr != NULL) && (dataPtr != NULL) )
     {
         dataPtr->lineNum = nowPtr->lineNum;
-        dataPtr = ReplaceLinkedList(topPtr,endPtr,nowPtr,dataPtr);
+        dataPtr = (S_BUFF_LINE_DATA *)ReplaceLinkedList((S_LIST_HEADER **)topPtr,(S_LIST_HEADER **)endPtr,(S_LIST_HEADER *)nowPtr,(S_LIST_HEADER *)dataPtr);
     }
     else
     {
