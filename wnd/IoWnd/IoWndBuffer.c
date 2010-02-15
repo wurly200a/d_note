@@ -34,7 +34,7 @@ S_BUFF_LINE_DATA *ioWndBuffLineNowPtr;    /* キャレットがあるデータ             
 S_BUFF_LINE_DATA *ioWndBuffLineSelectPtr; /* 選択範囲の先頭のデータ                 */
 DWORD selectCaretPos;                     /* 選択範囲の先頭のデータのキャレット位置 */
 
-typedef struct
+typedef struct tagS_IOWND_BUFF_DATA
 {
     UINT  NewLineType;
     DWORD xCaret;
@@ -1840,7 +1840,7 @@ removeLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LIN
  * 引数  : S_BUFF_LINE_DATA **insertEndPtr
  * 戻り値: void
  ***************************************/
-void
+static void
 insertLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA **insertTopPtr, S_BUFF_LINE_DATA **insertEndPtr )
 {
     if( (nowPtr != NULL) && (insertTopPtr != NULL) )
