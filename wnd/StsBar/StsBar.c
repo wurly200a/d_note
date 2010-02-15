@@ -58,7 +58,6 @@ LONG
 StsBarSize( int cxClient,int cyClient )
 {
     RECT RectSbar;
-    int i;
     LONG vertSize = 0;
 
     sbarColWidth[STS_BAR_0]   = (cxClient/4);

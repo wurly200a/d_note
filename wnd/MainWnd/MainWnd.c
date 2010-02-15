@@ -399,7 +399,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     PTSTR strPtr;
     S_MODAL_DLG_DATA modalDlgData;
 
-    if( lParam == mainWndData.hWndIo )
+    if( (HWND)lParam == mainWndData.hWndIo )
     {
         switch( HIWORD(wParam) )
         {
@@ -759,7 +759,7 @@ onDropFiles( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     else
     {
         mainWndData.bNeedSave = FALSE;
-        DragQueryFile( wParam, 0, szFileName, sizeof(szFileName) );
+        DragQueryFile( (HDROP)wParam, (UINT)0, (LPSTR)szFileName, (UINT)sizeof(szFileName) );
 
         FileSetName( FILE_ID_BIN, szFileName, FALSE );
         dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);

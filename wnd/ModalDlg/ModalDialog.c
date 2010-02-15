@@ -203,7 +203,7 @@ AboutDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         case 0:
             DestroyWindow( hwnd );
             break;
-        defaut:
+        default:
             break;
         }
         break;

@@ -44,8 +44,7 @@ S_SOME_CTRL ctrlListTbl[SOME_CTRL_MAX] =
 BOOL
 SomeCtrlCreate( HWND hwnd )
 {
-    int i,j;
-    TCHAR buf[10];
+    int i;
 
     for(i=0; i<SOME_CTRL_MAX; i++)
     {

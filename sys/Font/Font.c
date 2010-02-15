@@ -81,16 +81,16 @@ FontChooseFont( HWND hwnd, FONT_ID id )
 LOGFONT *
 FontGetLogFont( FONT_ID id )
 {
-    HFONT rtn = NULL;
+    LOGFONT *rtnPtr = NULL;
 
     if( id < FONT_ID_MAX )
     {
-        rtn = &(fontData[id].logfont);
+        rtnPtr = &(fontData[id].logfont);
     }
     else
     {
         nop();
     }
 
-    return rtn;
+    return rtnPtr;
 }

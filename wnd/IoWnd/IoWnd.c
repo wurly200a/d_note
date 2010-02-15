@@ -152,7 +152,7 @@ IoWndChangeFont( LOGFONT *logFontPtr )
     ioWndData.logFontPtr = logFontPtr;
 
     updateTextMetrics( hWndIo );
-    SendMessage(hWndIo,WM_SIZE,0,MAKELONG(ioWndData.cxClient,ioWndData.cyClient));
+    SendMessage(hWndIo,(UINT)WM_SIZE,(WPARAM)0,MAKELPARAM(ioWndData.cyClient,ioWndData.cxClient));
     InvalidateRect( hWndIo, NULL, TRUE );
 }
 
@@ -219,7 +219,7 @@ IoWndDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit )
     }
     else
     {
-        SendMessage(GetParent(hWndIo), WM_COMMAND, MAKEWPARAM(0,EN_UPDATE), hWndIo);
+        SendMessage(GetParent(hWndIo), (UINT)WM_COMMAND, MAKEWPARAM(0,EN_UPDATE), (LPARAM)hWndIo);
     }
 
     IoWndBuffSelectOff();
@@ -260,8 +260,7 @@ BOOL
 IoWndNewLineCodeSet( NEWLINECODE_TYPE newLineCodeType )
 {
     DWORD allDataSize;
-    TCHAR *dataTopPtr,*dataPtr;
-    S_BUFF_LINE_DATA *nowPtr;
+    TCHAR *dataTopPtr;
     BOOL bRtn = FALSE;
 
     IoWndBuffSetNewLineCode( newLineCodeType );
@@ -788,7 +787,7 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         {
             IoWndBuffDataSet( data,size,FALSE );
             InvalidateRect( hWndIo, NULL, TRUE );
-            SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_UPDATE), hwnd);
+            SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_UPDATE), (LPARAM)hwnd);
         }
         else
         {
@@ -1235,7 +1234,6 @@ ioOnRbuttonUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 static LRESULT
 ioOnImeStartComposition( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
-    LRESULT rtn = 0;
     HIMC hImc;
     COMPOSITIONFORM cf;
 
@@ -1468,7 +1466,7 @@ static void
 ioWndRemoveData( HWND hwnd, BOOL bBackSpace )
 {
     IoWndBuffRemoveData( bBackSpace );
-    SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_UPDATE), hwnd);
+    SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_UPDATE), (LPARAM)hwnd);
 }
 
 /********************************************************************************

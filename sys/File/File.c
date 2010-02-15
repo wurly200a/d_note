@@ -270,7 +270,7 @@ FileReadByte( FILE_ID id, LPDWORD pSize )
 {
     HANDLE hFile;
     DWORD  dwBytesRead;
-    PBYTE  rtn;
+    PBYTE  rtn = NULL;
 
     if( (id < FILE_ID_MAX) && (fileList[id].init == TRUE) )
     {
@@ -288,7 +288,7 @@ FileReadByte( FILE_ID id, LPDWORD pSize )
         hFile = CreateFile( fileList[id].pFileName, GENERIC_READ, FILE_SHARE_READ,NULL, OPEN_EXISTING, 0, NULL );
         if( hFile == INVALID_HANDLE_VALUE )
         {
-            rtn = NULL; /* error */
+            nop();
         }
         else
         {
@@ -347,12 +347,11 @@ FileWrite( FILE_ID id, TCHAR *dataPtr, DWORD dataSize )
 {
     DWORD  dwBytesWritten;
     HANDLE hFile;
-    WORD   wByteOrderMark = 0xFEFF;
     FILE_RESULT result = FILE_OK;
 
     if( (id < FILE_ID_MAX) && (fileList[id].init == TRUE) )
     {
-        if( *(fileList[id].pFileName) != NULL  )
+        if( fileList[id].pFileName != NULL )
         {
             hFile = CreateFile( fileList[id].pFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL );
             if( hFile == INVALID_HANDLE_VALUE )

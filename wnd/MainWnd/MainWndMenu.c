@@ -117,7 +117,7 @@ MenuCreate( void )
 HACCEL
 AccelCreate( void )
 {
-    return CreateAcceleratorTable(accelTbl,(sizeof(accelTbl)/sizeof(ACCEL)));
+    return CreateAcceleratorTable((LPACCEL)accelTbl,(int)(sizeof(accelTbl)/sizeof(ACCEL)));
 }
 
 /********************************************************************************
@@ -129,12 +129,10 @@ BOOL
 MenuInqItemChecked( UINT itemID )
 {
     INT iMenuFlags;
-    MENUITEMINFO menuItemInfo;
     BOOL rtn = FALSE;
 
     if( hMenu != NULL )
     {
-#if 1
         iMenuFlags = GetMenuState( hMenu, itemID, MF_BYCOMMAND );
         if( iMenuFlags & MF_CHECKED )
         {
@@ -144,19 +142,6 @@ MenuInqItemChecked( UINT itemID )
         {
             nop();
         }
-#else
-        menuItemInfo.cbSize = sizeof(MENUITEMINFO);
-        menuItemInfo.fMask  = MIIM_STATE;
-        GetMenuItemInfo( hMenu, IDM_VIEW_STS_BAR, FALSE, &menuItemInfo );
-        if( menuItemInfo.fState & MFS_CHECKED )
-        {
-            rtn = TRUE;
-        }
-        else
-        {
-            nop();
-        }
-#endif
     }
     else
     {
