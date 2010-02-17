@@ -95,6 +95,7 @@ static LRESULT (*ioWndProcTbl[IOWND_MAX])( HWND hwnd, UINT message, WPARAM wPara
 };
 /* *INDENT-ON* */
 
+WORD DebugIoWndRect;
 
 /********************************************************************************
  * 内容  : IOウィンドウクラスの登録、ウィンドウの生成
@@ -455,6 +456,11 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                     SetBkColor(hdc, BK_COLOR_RGB );
                 }
 
+                if( DebugIoWndRect )
+                { /* デバッグ用 */
+                    SetBkColor(hdc, RGB(0xFF,0x00,0x00) );
+                }
+
                 if( buffDispData.bSelect )
                 {
                     SetBkColor(hdc, SELECT_BK_COLOR_RGB );
@@ -486,6 +492,8 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     EndPaint( hwnd, &ps );
 
     SetCaretPos( (IoWndGetCaretXpos()-ioWndData.iHorzPos)*ioWndData.cxChar, (IoWndGetCaretYpos()-ioWndData.iVertPos)*ioWndData.cyChar);
+
+    DebugIoWndRect = 0; /* デバッグ用 */
 
     return 0;
 }
@@ -632,6 +640,7 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
     BOOL bErase = TRUE;
+    BOOL bProc = TRUE;
 
     if( wParam == VK_SHIFT )
     {
@@ -687,56 +696,64 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             ioWndRemoveData( hwnd, TRUE );
             break;
         default:
+            bProc = FALSE;
             break;
         }
 
-        if( ioWndData.bShiftKeyOn )
+        if( bProc )
         {
-            nop();
+            if( ioWndData.bShiftKeyOn )
+            {
+                nop();
+            }
+            else
+            {
+                IoWndBuffSelectOff();
+            }
+
+            /* キャレットが表示範囲外に有った場合の処理(横方向) */
+            if( IoWndGetCaretXpos() < ioWndData.iHorzPos )
+            {
+                setScrollPos( SB_HORZ, IoWndGetCaretXpos() );
+                bErase = TRUE;
+            }
+            else if( (ioWndData.iHorzPos+ioWndData.cxBuffer-1) < IoWndGetCaretXpos() )
+            {
+                setScrollPos( SB_HORZ, (ioWndData.iHorzPos+ioWndData.cxBuffer-1) );
+                bErase = TRUE;
+            }
+            else
+            {
+                nop();
+            }
+
+            /* キャレットが表示範囲外に有った場合の処理(縦方向) */
+            if( IoWndGetCaretYpos() < ioWndData.iVertPos )
+            {
+                setScrollPos( SB_VERT, IoWndGetCaretYpos() );
+                bErase = TRUE;
+            }
+            else if( (ioWndData.iVertPos+ioWndData.cyBuffer-1) < IoWndGetCaretYpos() )
+            {
+                setScrollPos( SB_VERT, IoWndGetCaretYpos() - (ioWndData.cyBuffer-1) );
+                bErase = TRUE;
+            }
+            else
+            {
+                nop();
+            }
+
+            printCaretPos();
+
+            HideCaret(hwnd);
+            InvalidateRect( hWndIo, NULL, bErase );
+            SetCaretPos( (IoWndGetCaretXpos()-ioWndData.iHorzPos)*ioWndData.cxChar, (IoWndGetCaretYpos()-ioWndData.iVertPos)*ioWndData.cyChar);
+            ShowCaret(hwnd);
         }
         else
         {
-            IoWndBuffSelectOff();
-        }
-
-        /* キャレットが表示範囲外に有った場合の処理(横方向) */
-        if( IoWndGetCaretXpos() < ioWndData.iHorzPos )
-        {
-            setScrollPos( SB_HORZ, IoWndGetCaretXpos() );
-            bErase = TRUE;
-        }
-        else if( (ioWndData.iHorzPos+ioWndData.cxBuffer-1) < IoWndGetCaretXpos() )
-        {
-            setScrollPos( SB_HORZ, (ioWndData.iHorzPos+ioWndData.cxBuffer-1) );
-            bErase = TRUE;
-        }
-        else
-        {
             nop();
         }
-
-        /* キャレットが表示範囲外に有った場合の処理(縦方向) */
-        if( IoWndGetCaretYpos() < ioWndData.iVertPos )
-        {
-            setScrollPos( SB_VERT, IoWndGetCaretYpos() );
-            bErase = TRUE;
-        }
-        else if( (ioWndData.iVertPos+ioWndData.cyBuffer-1) < IoWndGetCaretYpos() )
-        {
-            setScrollPos( SB_VERT, IoWndGetCaretYpos() - (ioWndData.cyBuffer-1) );
-            bErase = TRUE;
-        }
-        else
-        {
-            nop();
-        }
-
-        printCaretPos();
-
-        HideCaret(hwnd);
-        InvalidateRect( hWndIo, NULL, bErase );
-        SetCaretPos( (IoWndGetCaretXpos()-ioWndData.iHorzPos)*ioWndData.cxChar, (IoWndGetCaretYpos()-ioWndData.iVertPos)*ioWndData.cyChar);
-        ShowCaret(hwnd);
     }
 
     return rtn;
@@ -757,6 +774,8 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     TCHAR data[2];
     int i;
     INT size;
+    RECT rect;
+    BOOL bRectSelect = FALSE;
 
     IoWndBuffSelectOff();
 
@@ -780,13 +799,28 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             /* 文字入力 */
             data[0] = (TCHAR)wParam;
             size = 1;
-            break ;
+            rect.left   = (IoWndGetCaretXpos()-ioWndData.iHorzPos)*ioWndData.cxChar;
+            rect.top    = (IoWndGetCaretYpos()-ioWndData.iVertPos)*ioWndData.cyChar;
+            rect.right  = ioWndData.cxClient;
+            rect.bottom = rect.top + ioWndData.cyChar;
+            bRectSelect = TRUE;
+            break;
         }
 
         if( size )
         {
             IoWndBuffDataSet( data,size,FALSE );
-            InvalidateRect( hWndIo, NULL, TRUE );
+            if( bRectSelect )
+            {
+#if 0 /* デバッグ用 */
+                DebugIoWndRect = 1;
+#endif
+                InvalidateRect( hWndIo, &rect, TRUE );
+            }
+            else
+            {
+                InvalidateRect( hWndIo, NULL, TRUE );
+            }
             SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_UPDATE), (LPARAM)hwnd);
         }
         else
