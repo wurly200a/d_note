@@ -1459,7 +1459,7 @@ ioOnSetSel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     { /* h‚·‚×‚Ä‘I‘ğh‚Ì‚İ‘Î‰ */
         if( IoWndBuffSelectAll() )
         {
-            IoWndSetCaretPos(0,IoWndGetLineMaxSize());
+            IoWndSetCaretPos(IoWndGetCaretXpos(),IoWndGetLineMaxSize());
             setScrollPos( SB_VERT, IoWndGetLineMaxSize() );
             InvalidateRect( hWndIo, NULL, TRUE );
         }
