@@ -40,6 +40,7 @@ static LRESULT onSetFocus        ( HWND hwnd, UINT message, WPARAM wParam, LPARA
 static LRESULT onKillFocus       ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onDropFiles       ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onInitMenuPopup   ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onFindMsgString   ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onApp             ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onDefault         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
@@ -53,26 +54,27 @@ static S_MAINWND_DATA mainWndData;
 /* *INDENT-OFF* */
 static LRESULT (*wndProcTbl[MAINWND_MAX])( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam ) =
 {
-    onCreate          , /* WM_CREATE           */
-    onPaint           , /* WM_PAINT            */
-    onSize            , /* WM_SIZE             */
-    onMove            , /* WM_MOVE             */
-    onWindowPosChanged, /* WM_WINDOWPOSCHANGED */
-    onClose           , /* WM_CLOSE            */
-    onDestroy         , /* WM_DESTROY          */
-    onCommand         , /* WM_COMMAND          */
-    onKeyUp           , /* WM_KEYUP            */
-    onKeyDown         , /* WM_KEYDOWN          */
-    onChar            , /* WM_CHAR             */
-    onHscroll         , /* WM_HSCROLL          */
-    onVscroll         , /* WM_VSCROLL          */
-    onMouseWheel      , /* WM_MOUSEWHEEL       */
-    onSetFocus        , /* WM_SETFOCUS         */
-    onKillFocus       , /* WM_KILLFOCUS        */
-    onDropFiles       , /* WM_DROPFILES        */
-    onInitMenuPopup   , /* WM_INITMENUPOPUP    */
-    onApp             , /* WM_APP              */
-    onDefault           /* default             */
+    onCreate          , /* WM_CREATE                     */
+    onPaint           , /* WM_PAINT                      */
+    onSize            , /* WM_SIZE                       */
+    onMove            , /* WM_MOVE                       */
+    onWindowPosChanged, /* WM_WINDOWPOSCHANGED           */
+    onClose           , /* WM_CLOSE                      */
+    onDestroy         , /* WM_DESTROY                    */
+    onCommand         , /* WM_COMMAND                    */
+    onKeyUp           , /* WM_KEYUP                      */
+    onKeyDown         , /* WM_KEYDOWN                    */
+    onChar            , /* WM_CHAR                       */
+    onHscroll         , /* WM_HSCROLL                    */
+    onVscroll         , /* WM_VSCROLL                    */
+    onMouseWheel      , /* WM_MOUSEWHEEL                 */
+    onSetFocus        , /* WM_SETFOCUS                   */
+    onKillFocus       , /* WM_KILLFOCUS                  */
+    onDropFiles       , /* WM_DROPFILES                  */
+    onInitMenuPopup   , /* WM_INITMENUPOPUP              */
+    onFindMsgString   , /* FINDMSGSTRINGの登録メッセージ */
+    onApp             , /* WM_APP                        */
+    onDefault           /* default                       */
 };
 /* *INDENT-ON* */
 
@@ -151,13 +153,25 @@ MainWndCreate( int nCmdShow, HACCEL *hAccelPtr )
 
 /********************************************************************************
  * 内容  : メインウィンドウ内で処理するメッセージを判定する
- * 引数  : MSG *msg
+ * 引数  : MSG *msgPtr
  * 戻り値: BOOL
  ***************************************/
 BOOL
-IsMainWndMessage( MSG *msg )
+IsMainWndMessage( MSG *msgPtr )
 {
-    return FALSE;
+    BOOL bRtn = FALSE;
+
+    if( (mainWndData.hDlgModeless) &&                      /* モードレスダイアログボックス表示中で、 */
+        IsDialogMessage(mainWndData.hDlgModeless,msgPtr) ) /* 本メッセージがモードレスダイアログボックスのウィンドウプロシージャで処理された */
+    {
+        bRtn = TRUE;
+    }
+    else
+    {
+        nop();
+    }
+
+    return bRtn;
 }
 
 /********************************************************************************
@@ -207,7 +221,16 @@ convertMSGtoINDEX( UINT message )
     case WM_KILLFOCUS       :rtn = MAINWND_ON_KILLFOCUS       ;break;
     case WM_DROPFILES       :rtn = MAINWND_ON_DROPFILES       ;break;
     case WM_INITMENUPOPUP   :rtn = MAINWND_ON_INITMENUPOPUP   ;break;
-    default                 :rtn = MAINWND_ON_DEFAULT         ;break;
+    default                 :
+        if( message == mainWndData.messageFindReplace )
+        {
+            rtn = MAINWND_ON_FINDMSGSTRING;
+        }
+        else
+        {
+            rtn = MAINWND_ON_DEFAULT;
+        }
+        break;
     }
     /* *INDENT-ON* */
 
@@ -236,6 +259,8 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     GetTextMetrics( hdc, &tm );
     mainWndData.cxChar = tm.tmAveCharWidth;
     mainWndData.cyChar = tm.tmHeight + (tm.tmHeight/2) + (GetSystemMetrics(SM_CYEDGE) * 2);
+
+    mainWndData.messageFindReplace = RegisterWindowMessage(FINDMSGSTRING);
 
     SelectObject(hdc, hOldFont);
     DeleteObject(hFont);
@@ -398,6 +423,8 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     PBYTE dataPtr;
     PTSTR strPtr;
     S_MODAL_DLG_DATA modalDlgData;
+    static FINDREPLACE fr;
+    static TCHAR strFind[80],strRep[80],strMsg[1024];
 
     if( (HWND)lParam == mainWndData.hWndIo )
     {
@@ -526,6 +553,28 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
         case IDM_EDIT_DELETE:
             SendMessage( mainWndData.hWndIo, WM_CLEAR, 0, 0 );
+            break;
+
+        case IDM_EDIT_FIND:
+            fr.lStructSize   = sizeof (FINDREPLACE);
+            fr.hwndOwner     = hwnd;
+            fr.Flags         = FR_MATCHCASE|FR_HIDEWHOLEWORD;
+            fr.lpstrFindWhat = strFind;
+            fr.wFindWhatLen  = 80;
+            mainWndData.hDlgModeless = FindText(&fr);
+            break;
+
+        case IDM_EDIT_REPLACE:
+            fr.lStructSize      = sizeof(FINDREPLACE);
+            fr.hwndOwner        = hwnd;
+            fr.Flags            = FR_MATCHCASE|FR_HIDEWHOLEWORD;
+            fr.lpstrFindWhat    = strFind;
+            fr.lpstrReplaceWith = strRep;
+            fr.wReplaceWithLen  = fr.wFindWhatLen = 80;
+            mainWndData.hDlgModeless = ReplaceText(&fr);
+            break;
+
+        case IDM_EDIT_FIND_NEXT:
             break;
 
         case IDM_EDIT_SELECT_ALL:
@@ -812,6 +861,63 @@ onInitMenuPopup( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     {
         nop();
     }
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : FINDMSGSTRINGの登録メッセージ の処理
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+    LPFINDREPLACE pfr;
+
+    pfr = (LPFINDREPLACE)lParam;
+
+    if( pfr->Flags & FR_DIALOGTERM )
+    {
+        mainWndData.hDlgModeless = NULL;
+    }
+    else
+    {
+        nop();
+    }
+
+#if 0
+    if( (pfr->Flags & FR_FINDNEXT) && !PopFindFindText(hwndEdit,&iOffset,pfr) )
+    {
+        OkMessage(hwnd, TEXT ("Text not found!"),TEXT ("\0")) ;
+    }
+    else
+    {
+        nop();
+    }
+
+    if( ((pfr->Flags & FR_REPLACE) || (pfr->Flags & FR_REPLACEALL)) && (!PopFindReplaceText(hwndEdit,&iOffset,pfr)) )
+    {
+        OkMessage (hwnd, TEXT ("Text not found!"),TEXT ("\0")) ;
+    }
+    else
+    {
+        nop();
+    }
+
+    if( pfr->Flags & FR_REPLACEALL )
+    {
+        while( PopFindReplaceText(hwndEdit, &iOffset, pfr) );
+    }
+    else
+    {
+        nop();
+    }
+#endif
 
     return rtn;
 }
