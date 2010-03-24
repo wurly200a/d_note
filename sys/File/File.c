@@ -9,6 +9,7 @@
 /* “à•”•Ï”’è‹` */
 static TCHAR nullStr = '\0';
 
+
 typedef struct
 {
     BOOL          init;       /* ‰Šú‰»Ï‚©‚Ç‚¤‚©         */
