@@ -10,15 +10,34 @@
 
 /* 内部関数定義 */
 #include "IoWndBuffer.h"
+
+typedef struct tagS_IOWND_BUFF_LOCAL
+{
+    S_IOWND_BUFF publicObj;
+    struct
+    {
+        S_BUFF_LINE_DATA *topPtr       ; /* 先頭のデータ                           */
+        S_BUFF_LINE_DATA *endPtr       ; /* 最後のデータ                           */
+        S_BUFF_LINE_DATA *nowPtr       ; /* キャレットがあるデータ                 */
+        S_BUFF_LINE_DATA *selectPtr    ; /* 選択範囲の先頭のデータ                 */
+        DWORD            selectCaretPos; /* 選択範囲の先頭のデータのキャレット位置 */
+    } lineData;
+    UINT  NewLineType;
+    DWORD xCaret     ;
+    DWORD yCaret     ;
+    INT   tabSize    ;
+} S_IOWND_BUFF_LOCAL;
+typedef S_IOWND_BUFF_LOCAL * H_IOWND_BUFF_LOCAL;
+
 static S_BUFF_LINE_DATA *createBuffLineData( DWORD size, INT newLineCodeSize, TCHAR *dataPtr, DWORD lineNum, DWORD caretPos );
 static void destroyBuffLineData( S_BUFF_LINE_DATA *dataPtr );
-static S_BUFF_LINE_DATA *getBuffLine( TCHAR *dataPtr, DWORD maxLength );
+static S_BUFF_LINE_DATA *getBuffLine( H_IOWND_BUFF_LOCAL h, TCHAR *dataPtr, DWORD maxLength );
 static S_BUFF_LINE_DATA *joinData( S_BUFF_LINE_DATA *data1Ptr, S_BUFF_LINE_DATA *data2Ptr );
 static void divideData( S_BUFF_LINE_DATA *dataPtr, S_BUFF_LINE_DATA **new1Ptr, S_BUFF_LINE_DATA **new2Ptr );
 static S_BUFF_LINE_DATA *shortenData( S_BUFF_LINE_DATA *dataPtr, DWORD size );
 static CHARSET_TYPE detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset );
-static DWORD getCaretDispXpos( S_BUFF_LINE_DATA *linePtr, DWORD dataPos );
-static BOOL getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
+static DWORD getCaretDispXpos( H_IOWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dataPos );
+static BOOL getDispCharData( H_IOWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
 static void updateLineNum( S_BUFF_LINE_DATA *dataPtr );
 
 static void addLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *dataPtr );
@@ -27,70 +46,113 @@ static void insertLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr
 static S_BUFF_LINE_DATA *replaceLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA *dataPtr );
 
 /* 内部変数定義 */
-S_BUFF_LINE_DATA *ioWndBuffListTopPtr;    /* 先頭のデータ                           */
-S_BUFF_LINE_DATA *ioWndBuffListEndPtr;    /* 最後のデータ                           */
-S_BUFF_LINE_DATA *ioWndBuffLineNowPtr;    /* キャレットがあるデータ                 */
-S_BUFF_LINE_DATA *ioWndBuffLineSelectPtr; /* 選択範囲の先頭のデータ                 */
-DWORD selectCaretPos;                     /* 選択範囲の先頭のデータのキャレット位置 */
-
-typedef struct tagS_IOWND_BUFF_DATA
-{
-    UINT  NewLineType;
-    DWORD xCaret;
-    DWORD yCaret;
-    INT   tabSize;
-} S_IOWND_BUFF_DATA;
-
-S_IOWND_BUFF_DATA ioWndBuffData = {IOWND_BUFF_NEWLINE_CRLF,0,0,8};
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファの初期化
+ * 内容  : IOウィンドウバッファのオブジェクト生成
  * 引数  : なし
- * 戻り値: なし
+ * 戻り値: H_IOWND_BUFF
  ***************************************/
-void
-IoWndBuffInit( void )
+H_IOWND_BUFF
+IoWndBuffCreate( void )
 {
-    S_BUFF_LINE_DATA *lineDataPtr;
+    H_IOWND_BUFF_LOCAL h;
 
-    ClearLinkedList((S_LIST_HEADER **)&ioWndBuffListTopPtr,(S_LIST_HEADER **)&ioWndBuffListEndPtr);
-
-    /* 空データを追加 */
-    lineDataPtr = createBuffLineData( 0, 0, NULL, 0, 0 );
-    if( lineDataPtr != NULL )
+    h = (H_IOWND_BUFF_LOCAL)malloc( sizeof(S_IOWND_BUFF_LOCAL) );
+    if( h != NULL )
     {
-        addLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,lineDataPtr );
-        ioWndBuffLineNowPtr = lineDataPtr;
+        h->lineData.topPtr         = NULL;
+        h->lineData.endPtr         = NULL;
+        h->lineData.nowPtr         = NULL;
+        h->lineData.selectPtr      = NULL;
+        h->lineData.selectCaretPos = 0;
+        h->publicObj.bValid = TRUE;
+        h->NewLineType = IOWND_BUFF_NEWLINE_CRLF;
+        h->xCaret      = 0;
+        h->yCaret      = 0;
+        h->tabSize     = 8;
     }
     else
     {
         nop();
     }
 
-    ioWndBuffLineSelectPtr = NULL;
-    selectCaretPos = 0;
+    return (H_IOWND_BUFF)h;
+}
+
+/********************************************************************************
+ * 内容  : IOウィンドウバッファのオブジェクト破棄
+ * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 戻り値: BOOL
+ ***************************************/
+BOOL
+IoWndBuffDestroy( H_IOWND_BUFF hIoWndBuff )
+{
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+
+    if( (h != NULL) && (h->publicObj.bValid == TRUE) )
+    {
+        free( h );
+    }
+    else
+    {
+        nop();
+    }
+
+    return TRUE;
+}
+
+/********************************************************************************
+ * 内容  : IOウィンドウバッファの初期化
+ * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 戻り値: なし
+ ***************************************/
+void
+IoWndBuffInit( H_IOWND_BUFF hIoWndBuff )
+{
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    S_BUFF_LINE_DATA *lineDataPtr;
+
+    ClearLinkedList((S_LIST_HEADER **)&(h->lineData.topPtr),(S_LIST_HEADER **)&(h->lineData.endPtr));
+
+    /* 空データを追加 */
+    lineDataPtr = createBuffLineData( 0, 0, NULL, 0, 0 );
+    if( lineDataPtr != NULL )
+    {
+        addLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),lineDataPtr );
+        (h->lineData.nowPtr) = lineDataPtr;
+    }
+    else
+    {
+        nop();
+    }
+
+    (h->lineData.selectPtr) = NULL;
+    (h->lineData.selectCaretPos) = 0;
 }
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファの終了
- * 引数  : なし
+ * 引数  : H_IOWND_BUFF hIoWndBuff
  * 戻り値: なし
  ***************************************/
 void
-IoWndBuffEnd( void )
+IoWndBuffEnd( H_IOWND_BUFF hIoWndBuff )
 {
-    ClearLinkedList((S_LIST_HEADER **)&ioWndBuffListTopPtr,(S_LIST_HEADER **)&ioWndBuffListEndPtr);
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+
+    ClearLinkedList((S_LIST_HEADER **)&(h->lineData.topPtr),(S_LIST_HEADER **)&(h->lineData.endPtr));
 }
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのデータセット
+ * 引数  : H_IOWND_BUFF hIoWndBuff
  * 引数  : TCHAR* dataPtr
  * 引数  : DWORD  length
  * 引数  : BOOL   bInit  (TRUE:既存データをクリア,FALSE:クリアしない)
  * 戻り値: なし
  ***************************************/
 void
-IoWndBuffDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit )
+IoWndBuffDataSet( H_IOWND_BUFF hIoWndBuff, TCHAR* dataPtr, DWORD length, BOOL bInit )
 {
     S_BUFF_LINE_DATA *lineDataPtr;
     S_BUFF_LINE_DATA *tempTopPtr = NULL;
@@ -99,10 +161,11 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit )
     S_BUFF_LINE_DATA *dividePrePtr,*dividePostPtr;
     DWORD lineLengthSum = 0;
     DWORD caretPos = 0;
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
 
     if( bInit )
     {
-        IoWndBuffInit();
+        IoWndBuffInit(hIoWndBuff);
     }
     else
     {
@@ -115,7 +178,7 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit )
         /* 改行で分割したデータを仮連結リスト(tempTopPtr～tempEndPtr)に登録(ここから) */
         while( lineLengthSum < length )
         {
-            lineDataPtr = (S_BUFF_LINE_DATA *)getBuffLine( dataPtr+lineLengthSum, length - lineLengthSum );
+            lineDataPtr = (S_BUFF_LINE_DATA *)getBuffLine( h, dataPtr+lineLengthSum, length - lineLengthSum );
 
             if( lineDataPtr != NULL )
             {
@@ -129,25 +192,25 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit )
         }
         /* 改行で分割したデータを仮連結リスト(tempTopPtr～tempEndPtr)に登録(ここまで) */
 
-        if( ioWndBuffLineNowPtr->caretDataPos == 0 )
+        if( (h->lineData.nowPtr)->caretDataPos == 0 )
         { /* 行の先頭に挿入 */
-            insertLineData(&ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineNowPtr,&tempTopPtr,&tempEndPtr);
+            insertLineData(&(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr),&tempTopPtr,&tempEndPtr);
 
             if( tempEndPtr->newLineCodeSize == 0 )
             { /* 挿入データの最後に改行がなければ */
-                newPtr = joinData(tempEndPtr,ioWndBuffLineNowPtr); /* 追加データの最終行と現在の行と結合した新たなデータ生成 */
+                newPtr = joinData(tempEndPtr,(h->lineData.nowPtr)); /* 追加データの最終行と現在の行と結合した新たなデータ生成 */
                 if( newPtr != NULL )
                 {
-                    targetPtr = ioWndBuffLineNowPtr;
-                    ioWndBuffLineNowPtr = replaceLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineNowPtr,newPtr ); /* 現在の行を置き換え */
+                    targetPtr = (h->lineData.nowPtr);
+                    (h->lineData.nowPtr) = replaceLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr),newPtr ); /* 現在の行を置き換え */
                     destroyBuffLineData( targetPtr );                                                       /* 現在の行のデータを解放                   */
 
                     caretPos = tempEndPtr->dataSize - tempEndPtr->newLineCodeSize;           /* キャレット位置は追加データの最終行の最後 */
-                    removeLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,tempEndPtr); /* 最終行自体は不要なので連結リストから外す */
+                    removeLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),tempEndPtr); /* 最終行自体は不要なので連結リストから外す */
                     destroyBuffLineData( tempEndPtr );
 
-                    ioWndBuffLineNowPtr = newPtr;                                            /* 結合したものを現在行とする */
-                    ioWndBuffLineNowPtr->caretDataPos = caretPos;                                /* キャレット位置は結合位置     */
+                    (h->lineData.nowPtr) = newPtr;                                            /* 結合したものを現在行とする */
+                    (h->lineData.nowPtr)->caretDataPos = caretPos;                                /* キャレット位置は結合位置     */
                 }
                 else
                 {
@@ -156,37 +219,37 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit )
             }
             else
             { /* 挿入データの最後に改行があった */
-                ioWndBuffLineNowPtr->caretDataPos = 0;
+                (h->lineData.nowPtr)->caretDataPos = 0;
             }
         }
         else
         { /* 行の途中に挿入 */
             /* 現在の行をキャレット位置で分割(ここから) */
-            divideData( ioWndBuffLineNowPtr, &dividePrePtr, &dividePostPtr );
+            divideData( (h->lineData.nowPtr), &dividePrePtr, &dividePostPtr );
             if( dividePrePtr != NULL )
             {
                 if( dividePostPtr != NULL )
                 {
-                    replaceLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineNowPtr,dividePostPtr ); /* まず 古いデータを改行以降のデータに置き換え */
-                    insertLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,dividePostPtr,&dividePrePtr,&dividePrePtr ); /* その前に改行前のデータを挿入 */
+                    replaceLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr),dividePostPtr ); /* まず 古いデータを改行以降のデータに置き換え */
+                    insertLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),dividePostPtr,&dividePrePtr,&dividePrePtr ); /* その前に改行前のデータを挿入 */
 
-                    destroyBuffLineData( ioWndBuffLineNowPtr );
-                    ioWndBuffLineNowPtr = dividePostPtr;
-                    ioWndBuffLineNowPtr->caretDataPos = 0;
+                    destroyBuffLineData( (h->lineData.nowPtr) );
+                    (h->lineData.nowPtr) = dividePostPtr;
+                    (h->lineData.nowPtr)->caretDataPos = 0;
                     /* 現在の行をキャレット位置で分割(ここまで) */
 
                     if( tempTopPtr == tempEndPtr )
                     { /* 1行挿入の場合 */
-                        insertLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineNowPtr,&tempEndPtr,&tempEndPtr );
+                        insertLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr),&tempEndPtr,&tempEndPtr );
 
                         /* 分割した前方データと、挿入データの先頭を結合(ここから) */
                         newPtr = joinData( dividePrePtr, tempTopPtr );
                         if( newPtr != NULL )
                         {
                             targetPtr = tempTopPtr;
-                            replaceLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,tempTopPtr,newPtr );
+                            replaceLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),tempTopPtr,newPtr );
                             destroyBuffLineData( targetPtr );
-                            removeLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,dividePrePtr);
+                            removeLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),dividePrePtr);
                             destroyBuffLineData( dividePrePtr );
                         }
                         else
@@ -201,10 +264,10 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit )
                             if( newPtr != NULL )
                             {
                                 newPtr->caretDataPos = tempEndPtr->dataSize - tempEndPtr->newLineCodeSize;
-                                replaceLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,dividePostPtr,newPtr );
+                                replaceLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),dividePostPtr,newPtr );
                                 destroyBuffLineData( dividePostPtr );
-                                ioWndBuffLineNowPtr = newPtr;
-                                removeLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,tempEndPtr);
+                                (h->lineData.nowPtr) = newPtr;
+                                removeLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),tempEndPtr);
                                 destroyBuffLineData( tempEndPtr );
                             }
                             else
@@ -220,7 +283,7 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit )
                     else
                     { /* 複数行挿入の場合 */
                         /* 分割した位置にデータを挿入(ここから) */
-                        insertLineData(&ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineNowPtr,&tempTopPtr,&tempEndPtr);
+                        insertLineData(&(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr),&tempTopPtr,&tempEndPtr);
 
                         if( tempEndPtr->newLineCodeSize == 0 )
                         { /* 挿入データの最後に改行がなければ */
@@ -228,10 +291,10 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit )
                             if( newPtr != NULL )
                             {
                                 newPtr->caretDataPos = tempEndPtr->dataSize - tempEndPtr->newLineCodeSize;
-                                replaceLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,dividePostPtr,newPtr );
+                                replaceLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),dividePostPtr,newPtr );
                                 destroyBuffLineData( dividePostPtr );
-                                ioWndBuffLineNowPtr = newPtr;
-                                removeLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,tempEndPtr);
+                                (h->lineData.nowPtr) = newPtr;
+                                removeLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),tempEndPtr);
                                 destroyBuffLineData( tempEndPtr );
                             }
                             else
@@ -249,9 +312,9 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit )
                         if( newPtr != NULL )
                         {
                             targetPtr = tempTopPtr;
-                            replaceLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,tempTopPtr,newPtr );
+                            replaceLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),tempTopPtr,newPtr );
                             destroyBuffLineData( targetPtr );
-                            removeLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,dividePrePtr);
+                            removeLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),dividePrePtr);
                             destroyBuffLineData( dividePrePtr );
                         }
                         else
@@ -278,10 +341,10 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit )
 
     if( bInit )
     {
-        if( ioWndBuffListTopPtr != NULL )
+        if( (h->lineData.topPtr) != NULL )
         {
-            ioWndBuffLineNowPtr = ioWndBuffListTopPtr;
-            ioWndBuffLineNowPtr->caretDataPos = 0;
+            (h->lineData.nowPtr) = (h->lineData.topPtr);
+            (h->lineData.nowPtr)->caretDataPos = 0;
         }
         else
         {
@@ -296,21 +359,23 @@ IoWndBuffDataSet( TCHAR* dataPtr, DWORD length, BOOL bInit )
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのデータ取得
+ * 引数  : H_IOWND_BUFF hIoWndBuff
  * 引数  : TCHAR *dataPtr
  * 引数  : DWORD dataSize
  * 引数  : IOWND_BUFF_REGION region
  * 戻り値: BOOL
  ***************************************/
 BOOL
-IoWndBuffDataGet( TCHAR *dataPtr, DWORD dataSize, IOWND_BUFF_REGION region )
+IoWndBuffDataGet( H_IOWND_BUFF hIoWndBuff, TCHAR *dataPtr, DWORD dataSize, IOWND_BUFF_REGION region )
 {
     BOOL rtn = FALSE;
     S_BUFF_LINE_DATA *nowPtr,*prevPtr;
     DWORD size;
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
 
     if( region == BUFF_ALL )
     {
-        if( ioWndBuffListTopPtr == NULL )
+        if( (h->lineData.topPtr) == NULL )
         {
             nop();
         }
@@ -318,7 +383,7 @@ IoWndBuffDataGet( TCHAR *dataPtr, DWORD dataSize, IOWND_BUFF_REGION region )
         {
             if( dataPtr != NULL )
             {
-                for( nowPtr=ioWndBuffListTopPtr; nowPtr != NULL; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr )
+                for( nowPtr=(h->lineData.topPtr); nowPtr != NULL; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr )
                 {
                     memcpy( dataPtr, nowPtr->data, nowPtr->dataSize );
                     dataPtr += nowPtr->dataSize;
@@ -335,19 +400,19 @@ IoWndBuffDataGet( TCHAR *dataPtr, DWORD dataSize, IOWND_BUFF_REGION region )
     {
         if( dataPtr != NULL )
         {
-            if( ioWndBuffLineSelectPtr != NULL )
+            if( (h->lineData.selectPtr) != NULL )
             { /* 選択開始位置有り */
-                if( (ioWndBuffLineSelectPtr->lineNum) < (ioWndBuffLineNowPtr->lineNum) )
+                if( ((h->lineData.selectPtr)->lineNum) < ((h->lineData.nowPtr)->lineNum) )
                 { /* 正方向に選択 */
-                    for( nowPtr = ioWndBuffLineSelectPtr,prevPtr = NULL; prevPtr != ioWndBuffLineNowPtr; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr )
+                    for( nowPtr = (h->lineData.selectPtr),prevPtr = NULL; prevPtr != (h->lineData.nowPtr); nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr )
                     {
-                        if( nowPtr == ioWndBuffLineSelectPtr )
+                        if( nowPtr == (h->lineData.selectPtr) )
                         {
-                            size = (nowPtr->dataSize - selectCaretPos);
-                            memcpy( dataPtr, (nowPtr->data + selectCaretPos),size );
+                            size = (nowPtr->dataSize - (h->lineData.selectCaretPos));
+                            memcpy( dataPtr, (nowPtr->data + (h->lineData.selectCaretPos)),size );
                             dataPtr += size;
                         }
-                        else if( nowPtr == ioWndBuffLineNowPtr )
+                        else if( nowPtr == (h->lineData.nowPtr) )
                         {
                             size = nowPtr->caretDataPos;
                             memcpy( dataPtr,nowPtr->data,size );
@@ -362,19 +427,19 @@ IoWndBuffDataGet( TCHAR *dataPtr, DWORD dataSize, IOWND_BUFF_REGION region )
                         prevPtr = nowPtr;
                     }
                 }
-                else if( (ioWndBuffLineSelectPtr->lineNum) > (ioWndBuffLineNowPtr->lineNum) )
+                else if( ((h->lineData.selectPtr)->lineNum) > ((h->lineData.nowPtr)->lineNum) )
                 { /* 負方向に選択 */
-                    for( nowPtr = ioWndBuffLineNowPtr,prevPtr = NULL; prevPtr != ioWndBuffLineSelectPtr; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr )
+                    for( nowPtr = (h->lineData.nowPtr),prevPtr = NULL; prevPtr != (h->lineData.selectPtr); nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr )
                     {
-                        if( nowPtr == ioWndBuffLineNowPtr )
+                        if( nowPtr == (h->lineData.nowPtr) )
                         {
                             size = (nowPtr->dataSize - nowPtr->caretDataPos);
                             memcpy( dataPtr, (nowPtr->data + nowPtr->caretDataPos),size );
                             dataPtr += size;
                         }
-                        else if( nowPtr == ioWndBuffLineSelectPtr )
+                        else if( nowPtr == (h->lineData.selectPtr) )
                         {
-                            size = selectCaretPos;
+                            size = (h->lineData.selectCaretPos);
                             memcpy( dataPtr,nowPtr->data,size );
                             dataPtr += size;
                         }
@@ -389,18 +454,18 @@ IoWndBuffDataGet( TCHAR *dataPtr, DWORD dataSize, IOWND_BUFF_REGION region )
                 }
                 else
                 { /* 同一行内で選択 */
-                    if( ioWndBuffLineNowPtr == ioWndBuffLineSelectPtr )
+                    if( (h->lineData.nowPtr) == (h->lineData.selectPtr) )
                     {
-                        if( ioWndBuffLineNowPtr->caretDataPos < selectCaretPos )
+                        if( (h->lineData.nowPtr)->caretDataPos < (h->lineData.selectCaretPos) )
                         {
-                            size = (selectCaretPos - ioWndBuffLineNowPtr->caretDataPos);
-                            memcpy( dataPtr, (ioWndBuffLineNowPtr->data + ioWndBuffLineNowPtr->caretDataPos),size );
+                            size = ((h->lineData.selectCaretPos) - (h->lineData.nowPtr)->caretDataPos);
+                            memcpy( dataPtr, ((h->lineData.nowPtr)->data + (h->lineData.nowPtr)->caretDataPos),size );
                             dataPtr += size;
                         }
-                        else if( ioWndBuffLineNowPtr->caretDataPos > selectCaretPos )
+                        else if( (h->lineData.nowPtr)->caretDataPos > (h->lineData.selectCaretPos) )
                         {
-                            size = (ioWndBuffLineNowPtr->caretDataPos - selectCaretPos);
-                            memcpy( dataPtr, (ioWndBuffLineNowPtr->data + selectCaretPos),size );
+                            size = ((h->lineData.nowPtr)->caretDataPos - (h->lineData.selectCaretPos));
+                            memcpy( dataPtr, ((h->lineData.nowPtr)->data + (h->lineData.selectCaretPos)),size );
                             dataPtr += size;
                         }
                         else
@@ -430,35 +495,37 @@ IoWndBuffDataGet( TCHAR *dataPtr, DWORD dataSize, IOWND_BUFF_REGION region )
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのデータサイズ取得
+ * 引数  : H_IOWND_BUFF hIoWndBuff
  * 引数  : IOWND_BUFF_REGION region
  * 戻り値: DWORD
  ***************************************/
 DWORD
-IoWndGetBuffSize( IOWND_BUFF_REGION region )
+IoWndGetBuffSize( H_IOWND_BUFF hIoWndBuff, IOWND_BUFF_REGION region )
 {
     DWORD dataSize = 0;
     S_BUFF_LINE_DATA *nowPtr,*prevPtr;
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
 
     if( region == BUFF_ALL )
     {
-        for( nowPtr = ioWndBuffListTopPtr; nowPtr != NULL; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr )
+        for( nowPtr = (h->lineData.topPtr); nowPtr != NULL; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr )
         {
             dataSize += nowPtr->dataSize;
         }
     }
     else
     {
-        if( ioWndBuffLineSelectPtr != NULL )
+        if( (h->lineData.selectPtr) != NULL )
         { /* 選択開始位置有り */
-            if( (ioWndBuffLineSelectPtr->lineNum) < (ioWndBuffLineNowPtr->lineNum) )
+            if( ((h->lineData.selectPtr)->lineNum) < ((h->lineData.nowPtr)->lineNum) )
             { /* 正方向に選択 */
-                for( nowPtr = ioWndBuffLineSelectPtr,prevPtr = NULL; prevPtr != ioWndBuffLineNowPtr; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr )
+                for( nowPtr = (h->lineData.selectPtr),prevPtr = NULL; prevPtr != (h->lineData.nowPtr); nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr )
                 {
-                    if( nowPtr == ioWndBuffLineSelectPtr )
+                    if( nowPtr == (h->lineData.selectPtr) )
                     {
-                        dataSize += (nowPtr->dataSize - selectCaretPos);
+                        dataSize += (nowPtr->dataSize - (h->lineData.selectCaretPos));
                     }
-                    else if( nowPtr == ioWndBuffLineNowPtr )
+                    else if( nowPtr == (h->lineData.nowPtr) )
                     {
                         dataSize += nowPtr->caretDataPos;
                     }
@@ -469,17 +536,17 @@ IoWndGetBuffSize( IOWND_BUFF_REGION region )
                     prevPtr = nowPtr;
                 }
             }
-            else if( (ioWndBuffLineSelectPtr->lineNum) > (ioWndBuffLineNowPtr->lineNum) )
+            else if( ((h->lineData.selectPtr)->lineNum) > ((h->lineData.nowPtr)->lineNum) )
             { /* 負方向に選択 */
-                for( nowPtr = ioWndBuffLineNowPtr,prevPtr = NULL; prevPtr != ioWndBuffLineSelectPtr; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr )
+                for( nowPtr = (h->lineData.nowPtr),prevPtr = NULL; prevPtr != (h->lineData.selectPtr); nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr )
                 {
-                    if( nowPtr == ioWndBuffLineNowPtr )
+                    if( nowPtr == (h->lineData.nowPtr) )
                     {
                         dataSize += (nowPtr->dataSize - nowPtr->caretDataPos);
                     }
-                    else if( nowPtr == ioWndBuffLineSelectPtr )
+                    else if( nowPtr == (h->lineData.selectPtr) )
                     {
-                        dataSize += selectCaretPos;
+                        dataSize += (h->lineData.selectCaretPos);
                     }
                     else
                     {
@@ -490,15 +557,15 @@ IoWndGetBuffSize( IOWND_BUFF_REGION region )
             }
             else
             { /* 同一行内で選択 */
-                if( ioWndBuffLineNowPtr == ioWndBuffLineSelectPtr )
+                if( (h->lineData.nowPtr) == (h->lineData.selectPtr) )
                 {
-                    if( ioWndBuffLineNowPtr->caretDataPos < selectCaretPos )
+                    if( (h->lineData.nowPtr)->caretDataPos < (h->lineData.selectCaretPos) )
                     {
-                        dataSize += (selectCaretPos - ioWndBuffLineNowPtr->caretDataPos);
+                        dataSize += ((h->lineData.selectCaretPos) - (h->lineData.nowPtr)->caretDataPos);
                     }
-                    else if( ioWndBuffLineNowPtr->caretDataPos > selectCaretPos )
+                    else if( (h->lineData.nowPtr)->caretDataPos > (h->lineData.selectCaretPos) )
                     {
-                        dataSize += (ioWndBuffLineNowPtr->caretDataPos - selectCaretPos);
+                        dataSize += ((h->lineData.nowPtr)->caretDataPos - (h->lineData.selectCaretPos));
                     }
                     else
                     {
@@ -522,27 +589,30 @@ IoWndGetBuffSize( IOWND_BUFF_REGION region )
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファの最大行サイズ取得
- * 引数  : なし
+ * 引数  : H_IOWND_BUFF hIoWndBuff
  * 戻り値: DWORD
  ***************************************/
 DWORD
-IoWndGetLineMaxSize( void )
+IoWndGetLineMaxSize( H_IOWND_BUFF hIoWndBuff )
 {
-    return ioWndBuffListEndPtr->lineNum;
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+
+    return (h->lineData.endPtr)->lineNum;
 }
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファの最大文字サイズ取得
- * 引数  : なし
+ * 引数  : H_IOWND_BUFF hIoWndBuff
  * 戻り値: DWORD
  ***************************************/
 DWORD
-IoWndGetColumnMaxSize( void )
+IoWndGetColumnMaxSize( H_IOWND_BUFF hIoWndBuff)
 {
     DWORD columnMaxSize = 0;
     S_BUFF_LINE_DATA *nowPtr;
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
 
-    for( nowPtr = ioWndBuffListTopPtr; nowPtr != NULL; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr )
+    for( nowPtr = (h->lineData.topPtr); nowPtr != NULL; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr )
     {
         columnMaxSize = max( columnMaxSize, (nowPtr->dataSize - nowPtr->newLineCodeSize) );
     }
@@ -552,46 +622,52 @@ IoWndGetColumnMaxSize( void )
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのキャレットX位置取得
- * 引数  : なし
+ * 引数  : H_IOWND_BUFF hIoWndBuff
  * 戻り値: DWORD
  ***************************************/
 DWORD
-IoWndGetCaretXpos( void )
+IoWndGetCaretXpos( H_IOWND_BUFF hIoWndBuff )
 {
-    return getCaretDispXpos(ioWndBuffLineNowPtr,ioWndBuffLineNowPtr->caretDataPos);
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+
+    return getCaretDispXpos(h,(h->lineData.nowPtr),(h->lineData.nowPtr)->caretDataPos);
 }
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのキャレットY位置取得
- * 引数  : なし
+ * 引数  : H_IOWND_BUFF hIoWndBuff
  * 戻り値: DWORD
  ***************************************/
 DWORD
-IoWndGetCaretYpos( void )
+IoWndGetCaretYpos( H_IOWND_BUFF hIoWndBuff )
 {
-    return ioWndBuffLineNowPtr->lineNum;
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+
+    return (h->lineData.nowPtr)->lineNum;
 }
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのキャレット位置セット
+ * 引数  : H_IOWND_BUFF hIoWndBuff
  * 引数  : DWORD xPos
  * 引数  : DWORD lineNum
  * 戻り値: なし
  ***************************************/
 void
-IoWndSetCaretPos( DWORD xPos, DWORD lineNum )
+IoWndSetCaretPos( H_IOWND_BUFF hIoWndBuff, DWORD xPos, DWORD lineNum )
 {
     S_BUFF_LINE_DATA *nowPtr = NULL;
     S_BUFF_DISP_DATA dispData;
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
 
-    nowPtr = IoWndBuffGetLinePtr( lineNum );
+    nowPtr = IoWndBuffGetLinePtr( hIoWndBuff, lineNum );
 
     if( nowPtr != NULL )
     {
-        ioWndBuffLineNowPtr = nowPtr;
+        (h->lineData.nowPtr) = nowPtr;
 
-        getDispCharData( ioWndBuffLineNowPtr, xPos, &dispData );
-        ioWndBuffLineNowPtr->caretDataPos = dispData.caretPos;
+        getDispCharData( h,(h->lineData.nowPtr), xPos, &dispData );
+        (h->lineData.nowPtr)->caretDataPos = dispData.caretPos;
     }
     else
     {
@@ -601,17 +677,18 @@ IoWndSetCaretPos( DWORD xPos, DWORD lineNum )
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのキャレットX位置加算
- * 引数  : なし
+ * 引数  : H_IOWND_BUFF hIoWndBuff
  * 戻り値: なし
  ***************************************/
 void
-IoWndIncCaretXpos( void )
+IoWndIncCaretXpos( H_IOWND_BUFF hIoWndBuff )
 {
     int moveAmount = 0;
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
 
-    if( ioWndBuffLineNowPtr != NULL )
+    if( (h->lineData.nowPtr) != NULL )
     {
-        if( detectCharSet(ioWndBuffLineNowPtr,ioWndBuffLineNowPtr->caretDataPos) == DOUBLE_CHAR_HIGH )
+        if( detectCharSet((h->lineData.nowPtr),(h->lineData.nowPtr)->caretDataPos) == DOUBLE_CHAR_HIGH )
         { /* 次の文字で移動量を判断 */
             moveAmount = 2;
         }
@@ -620,12 +697,12 @@ IoWndIncCaretXpos( void )
             moveAmount = 1;
         }
 
-        if( (ioWndBuffLineNowPtr->caretDataPos + moveAmount) > (ioWndBuffLineNowPtr->dataSize - ioWndBuffLineNowPtr->newLineCodeSize) )
+        if( ((h->lineData.nowPtr)->caretDataPos + moveAmount) > ((h->lineData.nowPtr)->dataSize - (h->lineData.nowPtr)->newLineCodeSize) )
         { /* キャレットはすでに行の最右端 */
-            if( (ioWndBuffLineNowPtr->header.nextPtr != NULL) )
+            if( ((h->lineData.nowPtr)->header.nextPtr != NULL) )
             { /* 次行有り */
-                ioWndBuffLineNowPtr = (S_BUFF_LINE_DATA *)ioWndBuffLineNowPtr->header.nextPtr;
-                ioWndBuffLineNowPtr->caretDataPos = 0;
+                (h->lineData.nowPtr) = (S_BUFF_LINE_DATA *)(h->lineData.nowPtr)->header.nextPtr;
+                (h->lineData.nowPtr)->caretDataPos = 0;
             }
             else
             { /* 次行無し */
@@ -634,7 +711,7 @@ IoWndIncCaretXpos( void )
         }
         else
         { /* まだ右へ移動可能 */
-            ioWndBuffLineNowPtr->caretDataPos += moveAmount;
+            (h->lineData.nowPtr)->caretDataPos += moveAmount;
         }
     }
     else
@@ -645,18 +722,19 @@ IoWndIncCaretXpos( void )
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのキャレットX位置減算
- * 引数  : なし
+ * 引数  : H_IOWND_BUFF hIoWndBuff
  * 戻り値: なし
  ***************************************/
 void
-IoWndDecCaretXpos( void )
+IoWndDecCaretXpos( H_IOWND_BUFF hIoWndBuff )
 {
     int moveAmount = 0;
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
 
-    if( ioWndBuffLineNowPtr != NULL )
+    if( (h->lineData.nowPtr) != NULL )
     {
-        if( (ioWndBuffLineNowPtr->caretDataPos>0) &&
-            (detectCharSet(ioWndBuffLineNowPtr,ioWndBuffLineNowPtr->caretDataPos-1) == DOUBLE_CHAR_LOW) )
+        if( ((h->lineData.nowPtr)->caretDataPos>0) &&
+            (detectCharSet((h->lineData.nowPtr),(h->lineData.nowPtr)->caretDataPos-1) == DOUBLE_CHAR_LOW) )
         { /* 前の文字で移動量を判断 */
             moveAmount = 2;
         }
@@ -665,12 +743,12 @@ IoWndDecCaretXpos( void )
             moveAmount = 1;
         }
 
-        if( ioWndBuffLineNowPtr->caretDataPos == 0 )
+        if( (h->lineData.nowPtr)->caretDataPos == 0 )
         { /* キャレットはすでに行の最左端 */
-            if( (ioWndBuffLineNowPtr->header.prevPtr != NULL) )
+            if( ((h->lineData.nowPtr)->header.prevPtr != NULL) )
             { /* 前行有り */
-                ioWndBuffLineNowPtr = (S_BUFF_LINE_DATA *)ioWndBuffLineNowPtr->header.prevPtr;
-                ioWndBuffLineNowPtr->caretDataPos = ioWndBuffLineNowPtr->dataSize - ioWndBuffLineNowPtr->newLineCodeSize;
+                (h->lineData.nowPtr) = (S_BUFF_LINE_DATA *)(h->lineData.nowPtr)->header.prevPtr;
+                (h->lineData.nowPtr)->caretDataPos = (h->lineData.nowPtr)->dataSize - (h->lineData.nowPtr)->newLineCodeSize;
             }
             else
             { /* 前行無し */
@@ -679,7 +757,7 @@ IoWndDecCaretXpos( void )
         }
         else
         { /* まだ左へ移動可能 */
-            ioWndBuffLineNowPtr->caretDataPos = max( ioWndBuffLineNowPtr->caretDataPos - moveAmount, 0 );
+            (h->lineData.nowPtr)->caretDataPos = max( (h->lineData.nowPtr)->caretDataPos - moveAmount, 0 );
         }
     }
     else
@@ -690,24 +768,25 @@ IoWndDecCaretXpos( void )
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのキャレットY位置加算
- * 引数  : なし
+ * 引数  : H_IOWND_BUFF hIoWndBuff
  * 戻り値: なし
  ***************************************/
 void
-IoWndIncCaretYpos( void )
+IoWndIncCaretYpos( H_IOWND_BUFF hIoWndBuff )
 {
     DWORD preDispPos = 0;
     S_BUFF_LINE_DATA *nextPtr;
     S_BUFF_DISP_DATA dispData;
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
 
-    nextPtr = (S_BUFF_LINE_DATA *)(ioWndBuffLineNowPtr->header.nextPtr);
+    nextPtr = (S_BUFF_LINE_DATA *)((h->lineData.nowPtr)->header.nextPtr);
 
-    if( (ioWndBuffLineNowPtr != NULL) && (nextPtr != NULL) )
+    if( ((h->lineData.nowPtr) != NULL) && (nextPtr != NULL) )
     {
-        preDispPos = getCaretDispXpos(ioWndBuffLineNowPtr,ioWndBuffLineNowPtr->caretDataPos);
-        getDispCharData( nextPtr, preDispPos, &dispData );
+        preDispPos = getCaretDispXpos(h,(h->lineData.nowPtr),(h->lineData.nowPtr)->caretDataPos);
+        getDispCharData( h, nextPtr, preDispPos, &dispData );
         nextPtr->caretDataPos = dispData.caretPos;
-        ioWndBuffLineNowPtr = nextPtr;
+        (h->lineData.nowPtr) = nextPtr;
     }
     else
     {
@@ -717,24 +796,25 @@ IoWndIncCaretYpos( void )
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのキャレットY位置減算
- * 引数  : なし
+ * 引数  : H_IOWND_BUFF hIoWndBuff
  * 戻り値: なし
  ***************************************/
 void
-IoWndDecCaretYpos( void )
+IoWndDecCaretYpos( H_IOWND_BUFF hIoWndBuff )
 {
     DWORD preDispPos = 0;
     S_BUFF_LINE_DATA *prevPtr;
     S_BUFF_DISP_DATA dispData;
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
 
-    prevPtr = (S_BUFF_LINE_DATA *)ioWndBuffLineNowPtr->header.prevPtr;
+    prevPtr = (S_BUFF_LINE_DATA *)(h->lineData.nowPtr)->header.prevPtr;
 
-    if( (ioWndBuffLineNowPtr != NULL) && (prevPtr != NULL) )
+    if( ((h->lineData.nowPtr) != NULL) && (prevPtr != NULL) )
     {
-        preDispPos = getCaretDispXpos(ioWndBuffLineNowPtr,ioWndBuffLineNowPtr->caretDataPos);
-        getDispCharData( prevPtr, preDispPos, &dispData );
+        preDispPos = getCaretDispXpos(h,(h->lineData.nowPtr),(h->lineData.nowPtr)->caretDataPos);
+        getDispCharData( h, prevPtr, preDispPos, &dispData );
         prevPtr->caretDataPos = dispData.caretPos;
-        ioWndBuffLineNowPtr = prevPtr;
+        (h->lineData.nowPtr) = prevPtr;
     }
     else
     {
@@ -744,22 +824,24 @@ IoWndDecCaretYpos( void )
 
 /********************************************************************************
  * 内容  : 指定行のデータアドレス取得
+ * 引数  : H_IOWND_BUFF hIoWndBuff
  * 引数  : DWORD lineNum
  * 戻り値: S_BUFF_LINE_DATA *
  ***************************************/
 S_BUFF_LINE_DATA *
-IoWndBuffGetLinePtr( DWORD lineNum )
+IoWndBuffGetLinePtr( H_IOWND_BUFF hIoWndBuff, DWORD lineNum )
 {
     S_BUFF_LINE_DATA *nowPtr,*nextPtr,*rtnPtr = NULL;
     DWORD i;
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
 
-    if( ioWndBuffListTopPtr == NULL )
+    if( (h->lineData.topPtr) == NULL )
     {
         nop();
     }
     else
     {
-        for( i=0,nowPtr = nextPtr = ioWndBuffListTopPtr; (nowPtr != NULL) && (i<=lineNum); nowPtr=nextPtr,i++ )
+        for( i=0,nowPtr = nextPtr = (h->lineData.topPtr); (nowPtr != NULL) && (i<=lineNum); nowPtr=nextPtr,i++ )
         {
             nextPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr;
 
@@ -780,15 +862,18 @@ IoWndBuffGetLinePtr( DWORD lineNum )
 
 /********************************************************************************
  * 内容  : 指定行、指定列のデータを取得
+ * 引数  : H_IOWND_BUFF hIoWndBuff
  * 引数  : S_BUFF_LINE_DATA *lineDataPtr
  * 引数  : DWORD             dispPos     表示位置
  * 引数  : S_BUFF_DISP_DATA *dataPtr
  * 戻り値: BOOL
  ***************************************/
 BOOL
-IoWndBuffGetDispData( S_BUFF_LINE_DATA *lineDataPtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr )
+IoWndBuffGetDispData( H_IOWND_BUFF hIoWndBuff, S_BUFF_LINE_DATA *lineDataPtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr )
 {
-    getDispCharData( lineDataPtr, dispPos, dataPtr );
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+
+    getDispCharData( h, lineDataPtr, dispPos, dataPtr );
 
     return TRUE;
 }
@@ -799,63 +884,67 @@ IoWndBuffGetDispData( S_BUFF_LINE_DATA *lineDataPtr, DWORD dispPos, S_BUFF_DISP_
  * 戻り値: なし
  ***************************************/
 void
-IoWndBuffSetNewLineCode( UINT newLineType )
+IoWndBuffSetNewLineCode( H_IOWND_BUFF hIoWndBuff, UINT newLineType )
 {
-    ioWndBuffData.NewLineType = newLineType;
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+
+    h->NewLineType = newLineType;
 }
 
 /********************************************************************************
  * 内容  : データ削除
+ * 引数  : H_IOWND_BUFF hIoWndBuff
  * 引数  : BOOL bBackSpace
  * 戻り値: なし
  ***************************************/
 void
-IoWndBuffRemoveData( BOOL bBackSpace )
+IoWndBuffRemoveData( H_IOWND_BUFF hIoWndBuff, BOOL bBackSpace )
 {
     DWORD removeSize = 0,saveCaretPos;
     S_BUFF_LINE_DATA *newPtr = NULL,*prevPtr = NULL,*nextPtr = NULL,*nowPtr = NULL,*savePtr;
     S_BUFF_LINE_DATA *dividePrePtr,*dividePostPtr;
     BOOL bValid = FALSE;
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
 
-    if( ioWndBuffLineNowPtr != NULL )
+    if( (h->lineData.nowPtr) != NULL )
     {
-        if( ioWndBuffLineSelectPtr != NULL )
+        if( (h->lineData.selectPtr) != NULL )
         { /* 選択開始位置有り */
-            if( (ioWndBuffLineSelectPtr->lineNum) == (ioWndBuffLineNowPtr->lineNum) )
+            if( ((h->lineData.selectPtr)->lineNum) == ((h->lineData.nowPtr)->lineNum) )
             { /* 同一行内で選択 */
-                if( ioWndBuffLineNowPtr == ioWndBuffLineSelectPtr )
+                if( (h->lineData.nowPtr) == (h->lineData.selectPtr) )
                 {
-                    if( ioWndBuffLineNowPtr->caretDataPos < selectCaretPos )
+                    if( (h->lineData.nowPtr)->caretDataPos < (h->lineData.selectCaretPos) )
                     {
-                        removeSize += (selectCaretPos - ioWndBuffLineNowPtr->caretDataPos);
-                        saveCaretPos = ioWndBuffLineNowPtr->caretDataPos;
-                        ioWndBuffLineNowPtr->caretDataPos = selectCaretPos;
-                        selectCaretPos = saveCaretPos;
+                        removeSize += ((h->lineData.selectCaretPos) - (h->lineData.nowPtr)->caretDataPos);
+                        saveCaretPos = (h->lineData.nowPtr)->caretDataPos;
+                        (h->lineData.nowPtr)->caretDataPos = (h->lineData.selectCaretPos);
+                        (h->lineData.selectCaretPos) = saveCaretPos;
                     }
-                    else if( ioWndBuffLineNowPtr->caretDataPos > selectCaretPos )
+                    else if( (h->lineData.nowPtr)->caretDataPos > (h->lineData.selectCaretPos) )
                     {
-                        removeSize += (ioWndBuffLineNowPtr->caretDataPos - selectCaretPos);
+                        removeSize += ((h->lineData.nowPtr)->caretDataPos - (h->lineData.selectCaretPos));
                     }
                     else
                     {
                         nop();
                     }
 
-                    divideData( ioWndBuffLineNowPtr, &dividePrePtr, &dividePostPtr ); /* キャレット位置で分割 */
+                    divideData( (h->lineData.nowPtr), &dividePrePtr, &dividePostPtr ); /* キャレット位置で分割 */
                     newPtr = shortenData( dividePrePtr, removeSize );                 /* 分割後の前方データの末尾から所定量削除 */
                     destroyBuffLineData( dividePrePtr );                                 /* 前方データを */
                     dividePrePtr = newPtr;                                            /* 書き換え     */
 
                     newPtr = joinData( dividePrePtr, dividePostPtr );                 /* 再結合 */
-                    newPtr->lineNum = ioWndBuffLineNowPtr->lineNum;                   /* 行番号は同じ */
-                    newPtr->caretDataPos = ioWndBuffLineNowPtr->caretDataPos - removeSize;    /* キャレット位置は削除量分前方になる */
+                    newPtr->lineNum = (h->lineData.nowPtr)->lineNum;                   /* 行番号は同じ */
+                    newPtr->caretDataPos = (h->lineData.nowPtr)->caretDataPos - removeSize;    /* キャレット位置は削除量分前方になる */
                     destroyBuffLineData( dividePrePtr );                                 /* 作業データを削除 */
                     destroyBuffLineData( dividePostPtr );                                /* 作業データを削除 */
 
                     /* 古い行データと置き換える */
-                    replaceLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineNowPtr,newPtr );
-                    destroyBuffLineData( ioWndBuffLineNowPtr );
-                    ioWndBuffLineNowPtr = newPtr;
+                    replaceLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr),newPtr );
+                    destroyBuffLineData( (h->lineData.nowPtr) );
+                    (h->lineData.nowPtr) = newPtr;
                 }
                 else
                 {
@@ -864,61 +953,61 @@ IoWndBuffRemoveData( BOOL bBackSpace )
             }
             else
             {
-                if( (ioWndBuffLineSelectPtr->lineNum) < (ioWndBuffLineNowPtr->lineNum) )
+                if( ((h->lineData.selectPtr)->lineNum) < ((h->lineData.nowPtr)->lineNum) )
                 { /* 正方向に選択 */
                     nop();
                 }
                 else
                 { /* 負方向に選択 */
-                    savePtr = ioWndBuffLineSelectPtr;
-                    saveCaretPos = selectCaretPos;
-                    ioWndBuffLineSelectPtr = ioWndBuffLineNowPtr;
-                    selectCaretPos = ioWndBuffLineNowPtr->caretDataPos;
-                    ioWndBuffLineNowPtr = savePtr;
-                    ioWndBuffLineNowPtr->caretDataPos = saveCaretPos;
+                    savePtr = (h->lineData.selectPtr);
+                    saveCaretPos = (h->lineData.selectCaretPos);
+                    (h->lineData.selectPtr) = (h->lineData.nowPtr);
+                    (h->lineData.selectCaretPos) = (h->lineData.nowPtr)->caretDataPos;
+                    (h->lineData.nowPtr) = savePtr;
+                    (h->lineData.nowPtr)->caretDataPos = saveCaretPos;
                 }
 
                 /* 先頭から最後まで選択された行を削除 */
-                for( nowPtr = (S_BUFF_LINE_DATA *)ioWndBuffLineSelectPtr->header.nextPtr; nowPtr != ioWndBuffLineNowPtr; nowPtr = nextPtr )
+                for( nowPtr = (S_BUFF_LINE_DATA *)(h->lineData.selectPtr)->header.nextPtr; nowPtr != (h->lineData.nowPtr); nowPtr = nextPtr )
                 {
                     nextPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr;
-                    removeLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,nowPtr);
+                    removeLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),nowPtr);
                     destroyBuffLineData( nowPtr );
                 }
                 /* 先頭行のうち、選択位置から前を残す */
-                if( selectCaretPos == 0 )
+                if( (h->lineData.selectCaretPos) == 0 )
                 { /* 選択位置が先頭だったら、1行丸々削除 */
-                    removeLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineSelectPtr);
+                    removeLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.selectPtr));
                 }
                 else
                 {
-                    ioWndBuffLineSelectPtr->caretDataPos = selectCaretPos;
-                    divideData( ioWndBuffLineSelectPtr, &dividePrePtr, &dividePostPtr ); /* キャレット位置で分割 */
-                    replaceLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineSelectPtr,dividePrePtr );
-                    destroyBuffLineData( ioWndBuffLineSelectPtr );
+                    (h->lineData.selectPtr)->caretDataPos = (h->lineData.selectCaretPos);
+                    divideData( (h->lineData.selectPtr), &dividePrePtr, &dividePostPtr ); /* キャレット位置で分割 */
+                    replaceLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.selectPtr),dividePrePtr );
+                    destroyBuffLineData( (h->lineData.selectPtr) );
                 }
 
                 /* 最終行のうち、選択位置から後を残す */
-                divideData( ioWndBuffLineNowPtr, &dividePrePtr, &dividePostPtr ); /* キャレット位置で分割 */
-                replaceLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineNowPtr,dividePostPtr );
-                destroyBuffLineData( ioWndBuffLineNowPtr );
-                ioWndBuffLineNowPtr = dividePostPtr;
-                ioWndBuffLineNowPtr->caretDataPos = 0;
-                updateLineNum( ioWndBuffLineNowPtr );
+                divideData( (h->lineData.nowPtr), &dividePrePtr, &dividePostPtr ); /* キャレット位置で分割 */
+                replaceLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr),dividePostPtr );
+                destroyBuffLineData( (h->lineData.nowPtr) );
+                (h->lineData.nowPtr) = dividePostPtr;
+                (h->lineData.nowPtr)->caretDataPos = 0;
+                updateLineNum( (h->lineData.nowPtr) );
             }
 
-            ioWndBuffLineSelectPtr = NULL;
-            selectCaretPos = 0;
+            (h->lineData.selectPtr) = NULL;
+            (h->lineData.selectCaretPos) = 0;
         }
         else
         { /* 選択無し */
             if( bBackSpace )
             { /* BSキー */
-                if( ioWndBuffLineNowPtr->caretDataPos > 0  )
+                if( (h->lineData.nowPtr)->caretDataPos > 0  )
                 {
                     bValid = TRUE;
 
-                    if( detectCharSet(ioWndBuffLineNowPtr,ioWndBuffLineNowPtr->caretDataPos-1) == DOUBLE_CHAR_LOW )
+                    if( detectCharSet((h->lineData.nowPtr),(h->lineData.nowPtr)->caretDataPos-1) == DOUBLE_CHAR_LOW )
                     { /* 次の文字で削除量を判断 */
                         removeSize = 2;
                     }
@@ -929,10 +1018,10 @@ IoWndBuffRemoveData( BOOL bBackSpace )
                 }
                 else
                 { /* キャレットが行の先頭位置。つまり、前行との結合。*/
-                    if( ioWndBuffLineNowPtr->header.prevPtr != NULL )
+                    if( (h->lineData.nowPtr)->header.prevPtr != NULL )
                     {
-                        prevPtr = (S_BUFF_LINE_DATA *)ioWndBuffLineNowPtr->header.prevPtr;
-                        newPtr = joinData( prevPtr,ioWndBuffLineNowPtr ); /* 前行と本行を結合した新しい行データを生成 */
+                        prevPtr = (S_BUFF_LINE_DATA *)(h->lineData.nowPtr)->header.prevPtr;
+                        newPtr = joinData( prevPtr,(h->lineData.nowPtr) ); /* 前行と本行を結合した新しい行データを生成 */
 
                         if( newPtr != NULL )
                         {
@@ -940,14 +1029,14 @@ IoWndBuffRemoveData( BOOL bBackSpace )
                             newPtr->lineNum  = prevPtr->lineNum;
                             newPtr->caretDataPos = prevPtr->dataSize - prevPtr->newLineCodeSize;
 
-                            removeLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineNowPtr ); /* 本行は削除 */
-                            replaceLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,prevPtr,newPtr );    /* 前行は新しい行データに置き換える */
+                            removeLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr) ); /* 本行は削除 */
+                            replaceLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),prevPtr,newPtr );    /* 前行は新しい行データに置き換える */
 
-                            destroyBuffLineData( ioWndBuffLineNowPtr );
+                            destroyBuffLineData( (h->lineData.nowPtr) );
                             destroyBuffLineData( prevPtr );
-                            ioWndBuffLineNowPtr = newPtr;
+                            (h->lineData.nowPtr) = newPtr;
 
-                            updateLineNum( ioWndBuffLineNowPtr );
+                            updateLineNum( (h->lineData.nowPtr) );
                         }
                         else
                         {
@@ -962,11 +1051,11 @@ IoWndBuffRemoveData( BOOL bBackSpace )
             }
             else
             { /* DELキー */
-                if( ioWndBuffLineNowPtr->caretDataPos != (ioWndBuffLineNowPtr->dataSize - ioWndBuffLineNowPtr->newLineCodeSize) )
+                if( (h->lineData.nowPtr)->caretDataPos != ((h->lineData.nowPtr)->dataSize - (h->lineData.nowPtr)->newLineCodeSize) )
                 {
                     bValid = TRUE;
 
-                    if( detectCharSet(ioWndBuffLineNowPtr,ioWndBuffLineNowPtr->caretDataPos) == DOUBLE_CHAR_HIGH )
+                    if( detectCharSet((h->lineData.nowPtr),(h->lineData.nowPtr)->caretDataPos) == DOUBLE_CHAR_HIGH )
                     { /* キャレット位置の文字で削除量を判断 */
                         removeSize = 2;
                     }
@@ -974,29 +1063,29 @@ IoWndBuffRemoveData( BOOL bBackSpace )
                     {
                         removeSize = 1;
                     }
-                    ioWndBuffLineNowPtr->caretDataPos += removeSize;
+                    (h->lineData.nowPtr)->caretDataPos += removeSize;
                 }
                 else
                 { /* キャレットが行の最終位置。つまり、次行との結合。*/
-                    if( ioWndBuffLineNowPtr->header.nextPtr != NULL )
+                    if( (h->lineData.nowPtr)->header.nextPtr != NULL )
                     {
-                        nextPtr = (S_BUFF_LINE_DATA *)ioWndBuffLineNowPtr->header.nextPtr;
-                        newPtr = joinData( ioWndBuffLineNowPtr,nextPtr ); /* 本行と次行を結合した新しい行データを生成 */
+                        nextPtr = (S_BUFF_LINE_DATA *)(h->lineData.nowPtr)->header.nextPtr;
+                        newPtr = joinData( (h->lineData.nowPtr),nextPtr ); /* 本行と次行を結合した新しい行データを生成 */
 
                         if( newPtr != NULL )
                         {
                             /* 行番号、キャレット位置は本行データによって決まる */
-                            newPtr->lineNum  = ioWndBuffLineNowPtr->lineNum;
-                            newPtr->caretDataPos = ioWndBuffLineNowPtr->caretDataPos;
+                            newPtr->lineNum  = (h->lineData.nowPtr)->lineNum;
+                            newPtr->caretDataPos = (h->lineData.nowPtr)->caretDataPos;
 
-                            removeLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,nextPtr );         /* 次行は削除 */
-                            replaceLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineNowPtr,newPtr ); /* 本行は新しい行データに置き換える */
+                            removeLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),nextPtr );         /* 次行は削除 */
+                            replaceLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr),newPtr ); /* 本行は新しい行データに置き換える */
 
-                            destroyBuffLineData( ioWndBuffLineNowPtr );
+                            destroyBuffLineData( (h->lineData.nowPtr) );
                             destroyBuffLineData( nextPtr );
-                            ioWndBuffLineNowPtr = newPtr;
+                            (h->lineData.nowPtr) = newPtr;
 
-                            updateLineNum( ioWndBuffLineNowPtr );
+                            updateLineNum( (h->lineData.nowPtr) );
                         }
                         else
                         {
@@ -1012,21 +1101,21 @@ IoWndBuffRemoveData( BOOL bBackSpace )
 
             if( bValid )
             { /* 削除有効 */
-                divideData( ioWndBuffLineNowPtr, &dividePrePtr, &dividePostPtr ); /* キャレット位置で分割 */
+                divideData( (h->lineData.nowPtr), &dividePrePtr, &dividePostPtr ); /* キャレット位置で分割 */
                 newPtr = shortenData( dividePrePtr, removeSize );                 /* 分割後の前方データの末尾から所定量削除 */
                 destroyBuffLineData( dividePrePtr );                                 /* 前方データを */
                 dividePrePtr = newPtr;                                            /* 書き換え     */
 
                 newPtr = joinData( dividePrePtr, dividePostPtr );                 /* 再結合 */
-                newPtr->lineNum = ioWndBuffLineNowPtr->lineNum;                   /* 行番号は同じ */
-                newPtr->caretDataPos = ioWndBuffLineNowPtr->caretDataPos - removeSize;    /* キャレット位置は削除量分前方になる */
+                newPtr->lineNum = (h->lineData.nowPtr)->lineNum;                   /* 行番号は同じ */
+                newPtr->caretDataPos = (h->lineData.nowPtr)->caretDataPos - removeSize;    /* キャレット位置は削除量分前方になる */
                 destroyBuffLineData( dividePrePtr );                                 /* 作業データを削除 */
                 destroyBuffLineData( dividePostPtr );                                /* 作業データを削除 */
 
                 /* 古い行データと置き換える */
-                replaceLineData( &ioWndBuffListTopPtr,&ioWndBuffListEndPtr,ioWndBuffLineNowPtr,newPtr );
-                destroyBuffLineData( ioWndBuffLineNowPtr );
-                ioWndBuffLineNowPtr = newPtr;
+                replaceLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr),newPtr );
+                destroyBuffLineData( (h->lineData.nowPtr) );
+                (h->lineData.nowPtr) = newPtr;
             }
             else
             {
@@ -1042,15 +1131,17 @@ IoWndBuffRemoveData( BOOL bBackSpace )
 
 /********************************************************************************
  * 内容  : 改行データ取得
+ * 引数  : H_IOWND_BUFF hIoWndBuff
  * 引数  : PTSTR dataPtr
  * 戻り値: INT
  ***************************************/
 INT
-IoWndBuffGetNewLineData( PTSTR dataPtr )
+IoWndBuffGetNewLineData( H_IOWND_BUFF hIoWndBuff, PTSTR dataPtr )
 {
     INT size = 0;
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
 
-    switch( ioWndBuffData.NewLineType )
+    switch( h->NewLineType )
     {
     case IOWND_BUFF_NEWLINE_CRLF:
         *dataPtr     = '\r';
@@ -1075,17 +1166,19 @@ IoWndBuffGetNewLineData( PTSTR dataPtr )
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのタブサイズセット
+ * 引数  : H_IOWND_BUFF hIoWndBuff
  * 引数  : INT tabSize
  * 戻り値: BOOL (TRUE:変更された)
  ***************************************/
 BOOL
-IoWndBuffSetTabSize( INT tabSize )
+IoWndBuffSetTabSize( H_IOWND_BUFF hIoWndBuff, INT tabSize )
 {
     BOOL bRtn = FALSE;
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
 
-    if( tabSize != ioWndBuffData.tabSize )
+    if( tabSize != h->tabSize )
     {
-        ioWndBuffData.tabSize = tabSize;
+        h->tabSize = tabSize;
         bRtn = TRUE;
     }
     else
@@ -1098,60 +1191,65 @@ IoWndBuffSetTabSize( INT tabSize )
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファの範囲選択ON
- * 引数  : なし
+ * 引数  : H_IOWND_BUFF hIoWndBuff
  * 戻り値: なし
  ***************************************/
 void
-IoWndBuffSelectOn( void )
+IoWndBuffSelectOn( H_IOWND_BUFF hIoWndBuff )
 {
-    if( ioWndBuffLineSelectPtr )
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+
+    if( (h->lineData.selectPtr) )
     { /* 既に選択済みの場合 */
         nop(); /* 変更しない */
     }
     else
     {
-        ioWndBuffLineSelectPtr = ioWndBuffLineNowPtr;
-        selectCaretPos = ioWndBuffLineNowPtr->caretDataPos;
+        (h->lineData.selectPtr) = (h->lineData.nowPtr);
+        (h->lineData.selectCaretPos) = (h->lineData.nowPtr)->caretDataPos;
     }
 }
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファの範囲選択OFF
- * 引数  : なし
+ * 引数  : H_IOWND_BUFF hIoWndBuff
  * 戻り値: なし
  ***************************************/
 void
-IoWndBuffSelectOff( void )
+IoWndBuffSelectOff( H_IOWND_BUFF hIoWndBuff )
 {
-    ioWndBuffLineSelectPtr = NULL;
-    selectCaretPos = 0;
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+
+    (h->lineData.selectPtr) = NULL;
+    (h->lineData.selectCaretPos) = 0;
 }
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファの全範囲選択
- * 引数  : なし
+ * 引数  : H_IOWND_BUFF hIoWndBuff
  * 戻り値: BOOL
  ***************************************/
 BOOL
-IoWndBuffSelectAll( void )
+IoWndBuffSelectAll( H_IOWND_BUFF hIoWndBuff )
 {
     BOOL bRtn = FALSE;
+    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
 
-    if( ioWndBuffListTopPtr != NULL )
+    if( (h->lineData.topPtr) != NULL )
     {
-        if( (ioWndBuffLineSelectPtr == ioWndBuffListTopPtr) &&
-            (selectCaretPos == 0) &&
-            (ioWndBuffLineNowPtr == ioWndBuffListEndPtr) &&
-            (ioWndBuffLineNowPtr->caretDataPos == (ioWndBuffLineNowPtr->dataSize - ioWndBuffLineNowPtr->newLineCodeSize) ) )
+        if( ((h->lineData.selectPtr) == (h->lineData.topPtr)) &&
+            ((h->lineData.selectCaretPos) == 0) &&
+            ((h->lineData.nowPtr) == (h->lineData.endPtr)) &&
+            ((h->lineData.nowPtr)->caretDataPos == ((h->lineData.nowPtr)->dataSize - (h->lineData.nowPtr)->newLineCodeSize) ) )
         {
             nop();
         }
         else
         {
-            ioWndBuffLineSelectPtr = ioWndBuffListTopPtr;
-            selectCaretPos = 0;
-            ioWndBuffLineNowPtr = ioWndBuffListEndPtr;
-            ioWndBuffLineNowPtr->caretDataPos = ioWndBuffLineNowPtr->dataSize - ioWndBuffLineNowPtr->newLineCodeSize;
+            (h->lineData.selectPtr) = (h->lineData.topPtr);
+            (h->lineData.selectCaretPos) = 0;
+            (h->lineData.nowPtr) = (h->lineData.endPtr);
+            (h->lineData.nowPtr)->caretDataPos = (h->lineData.nowPtr)->dataSize - (h->lineData.nowPtr)->newLineCodeSize;
             bRtn = TRUE;
         }
     }
@@ -1217,12 +1315,13 @@ destroyBuffLineData( S_BUFF_LINE_DATA *dataPtr )
 
 /********************************************************************************
  * 内容  : バッファ行データを取得
+ * 引数  : H_IOWND_BUFF_LOCAL h
  * 引数  : TCHAR *dataPtr  データの先頭
  * 引数  : DWORD maxLength 最大長さ
  * 戻り値: S_BUFF_LINE_DATA *
  ***************************************/
 static S_BUFF_LINE_DATA *
-getBuffLine( TCHAR *dataPtr, DWORD maxLength )
+getBuffLine( H_IOWND_BUFF_LOCAL h, TCHAR *dataPtr, DWORD maxLength )
 {
     S_BUFF_LINE_DATA *lineDataPtr = NULL;
     DWORD i;
@@ -1230,7 +1329,7 @@ getBuffLine( TCHAR *dataPtr, DWORD maxLength )
 
     for( i=0; i<maxLength; i++ )
     {
-        if( ioWndBuffData.NewLineType == IOWND_BUFF_NEWLINE_CRLF )
+        if( h->NewLineType == IOWND_BUFF_NEWLINE_CRLF )
         {
             if( (i>0) &&
                 (*(dataPtr+i-1) == '\r') &&
@@ -1245,7 +1344,7 @@ getBuffLine( TCHAR *dataPtr, DWORD maxLength )
                 nop();
             }
         }
-        else if( ioWndBuffData.NewLineType == IOWND_BUFF_NEWLINE_LF )
+        else if( h->NewLineType == IOWND_BUFF_NEWLINE_LF )
         {
             if( (*(dataPtr+i) == '\n') )
             {
@@ -1258,7 +1357,7 @@ getBuffLine( TCHAR *dataPtr, DWORD maxLength )
                 nop();
             }
         }
-        else if( ioWndBuffData.NewLineType == IOWND_BUFF_NEWLINE_CR )
+        else if( h->NewLineType == IOWND_BUFF_NEWLINE_CR )
         {
             if( (*(dataPtr+i) == '\r') )
             {
@@ -1428,12 +1527,13 @@ detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset )
 
 /********************************************************************************
  * 内容  : キャレットX表示位置取得
+ * 引数  : H_IOWND_BUFF_LOCAL h
  * 引数  : S_BUFF_LINE_DATA *linePtr   行データ
  * 引数  : DWORD             dataPos   列位置(データ上の)
  * 戻り値: DWORD
  ***************************************/
 static DWORD
-getCaretDispXpos( S_BUFF_LINE_DATA *linePtr, DWORD dataPos )
+getCaretDispXpos( H_IOWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dataPos )
 {
     DWORD i,j=0;
     DWORD literalMaxSize;
@@ -1463,7 +1563,7 @@ getCaretDispXpos( S_BUFF_LINE_DATA *linePtr, DWORD dataPos )
                 { /* 処理中の文字はTAB */
                     charType = TAB_CHAR;
 
-                    tab_offset = ioWndBuffData.tabSize - (j % ioWndBuffData.tabSize);
+                    tab_offset = h->tabSize - (j % h->tabSize);
                     j+=tab_offset;
                 }
                 else if( ( (BYTE)(*(linePtr->data+i)) <= (BYTE)0x80) ||
@@ -1491,13 +1591,14 @@ getCaretDispXpos( S_BUFF_LINE_DATA *linePtr, DWORD dataPos )
 
 /********************************************************************************
  * 内容  : 指定位置の表示データを取得する
+ * 引数  : H_IOWND_BUFF_LOCAL h
  * 引数  : S_BUFF_LINE_DATA *linePtr   行データ
  * 引数  : DWORD             dispPos   列位置(表示上の)
  * 引数  : S_BUFF_DISP_DATA *dataPtr
  * 戻り値: BOOL
  ***************************************/
 static BOOL
-getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr )
+getDispCharData( H_IOWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr )
 {
     DWORD dataPos,j,k;
     DWORD literalMaxSize;
@@ -1531,7 +1632,7 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dat
                 { /* 処理中の文字はTAB */
                     dataPtr->type = TAB_CHAR;
 
-                    tab_offset = ioWndBuffData.tabSize - (j % ioWndBuffData.tabSize);
+                    tab_offset = h->tabSize - (j % h->tabSize);
 
                     if( dispPos < (j+tab_offset) )
                     {
@@ -1611,19 +1712,19 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dat
                 break;
             }
 
-            if( ioWndBuffLineSelectPtr != NULL )
+            if( (h->lineData.selectPtr) != NULL )
             { /* 選択開始位置有り */
-                if( (ioWndBuffLineSelectPtr->lineNum) < (ioWndBuffLineNowPtr->lineNum) )
+                if( ((h->lineData.selectPtr)->lineNum) < ((h->lineData.nowPtr)->lineNum) )
                 { /* 正方向に選択 */
-                    if( (ioWndBuffLineSelectPtr->lineNum < linePtr->lineNum) && (linePtr->lineNum < ioWndBuffLineNowPtr->lineNum) )
+                    if( ((h->lineData.selectPtr)->lineNum < linePtr->lineNum) && (linePtr->lineNum < (h->lineData.nowPtr)->lineNum) )
                     {
                         dataPtr->bSelect = TRUE;
                     }
-                    else if( (ioWndBuffLineSelectPtr->lineNum == linePtr->lineNum) && (selectCaretPos <= dataPos) )
+                    else if( ((h->lineData.selectPtr)->lineNum == linePtr->lineNum) && ((h->lineData.selectCaretPos) <= dataPos) )
                     {
                         dataPtr->bSelect = TRUE;
                     }
-                    else if( (ioWndBuffLineNowPtr->lineNum == linePtr->lineNum) && (dataPos < linePtr->caretDataPos) )
+                    else if( ((h->lineData.nowPtr)->lineNum == linePtr->lineNum) && (dataPos < linePtr->caretDataPos) )
                     {
                         dataPtr->bSelect = TRUE;
                     }
@@ -1632,17 +1733,17 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dat
                         nop();
                     }
                 }
-                else if( (ioWndBuffLineSelectPtr->lineNum) > (ioWndBuffLineNowPtr->lineNum) )
+                else if( ((h->lineData.selectPtr)->lineNum) > ((h->lineData.nowPtr)->lineNum) )
                 { /* 負方向に選択 */
-                    if( (ioWndBuffLineNowPtr->lineNum < linePtr->lineNum) && (linePtr->lineNum < ioWndBuffLineSelectPtr->lineNum) )
+                    if( ((h->lineData.nowPtr)->lineNum < linePtr->lineNum) && (linePtr->lineNum < (h->lineData.selectPtr)->lineNum) )
                     {
                         dataPtr->bSelect = TRUE;
                     }
-                    else if( (ioWndBuffLineNowPtr->lineNum == linePtr->lineNum) && (linePtr->caretDataPos <= dataPos) )
+                    else if( ((h->lineData.nowPtr)->lineNum == linePtr->lineNum) && (linePtr->caretDataPos <= dataPos) )
                     {
                         dataPtr->bSelect = TRUE;
                     }
-                    else if( (ioWndBuffLineSelectPtr->lineNum == linePtr->lineNum) && (dataPos < selectCaretPos) )
+                    else if( ((h->lineData.selectPtr)->lineNum == linePtr->lineNum) && (dataPos < (h->lineData.selectCaretPos)) )
                     {
                         dataPtr->bSelect = TRUE;
                     }
@@ -1653,11 +1754,11 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dat
                 }
                 else
                 { /* 同一行内で選択 */
-                    if( ioWndBuffLineNowPtr == linePtr )
+                    if( (h->lineData.nowPtr) == linePtr )
                     {
-                        if( linePtr->caretDataPos < selectCaretPos )
+                        if( linePtr->caretDataPos < (h->lineData.selectCaretPos) )
                         {
-                            if( (linePtr->caretDataPos <= dataPos) && (dataPos < selectCaretPos) )
+                            if( (linePtr->caretDataPos <= dataPos) && (dataPos < (h->lineData.selectCaretPos)) )
                             {
                                 dataPtr->bSelect = TRUE;
                             }
@@ -1666,9 +1767,9 @@ getDispCharData( S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dat
                                 nop();
                             }
                         }
-                        else if( linePtr->caretDataPos > selectCaretPos )
+                        else if( linePtr->caretDataPos > (h->lineData.selectCaretPos) )
                         {
-                            if( (selectCaretPos <= dataPos) && (dataPos < linePtr->caretDataPos) )
+                            if( ((h->lineData.selectCaretPos) <= dataPos) && (dataPos < linePtr->caretDataPos) )
                             {
                                 dataPtr->bSelect = TRUE;
                             }
