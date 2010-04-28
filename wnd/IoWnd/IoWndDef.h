@@ -35,24 +35,6 @@ typedef enum
     IOWND_MAX
 } IOWND_INDEX;
 
-typedef struct
-{
-    int    cxChar;    /* 文字サイズ(X)             */
-    int    cyChar;    /* 文字サイズ(Y)             */
-    int    cxClient;  /* クライアント領域サイズ(X) */
-    int    cyClient;  /* クライアント領域サイズ(Y) */
-    int    cxBuffer;  /* 表示可能な文字数(X)       */
-    int    cyBuffer;  /* 表示可能な文字数(Y)       */
-    DWORD  dwCharSet;
-    int    cxCaps;    /*  */
-    int    iAccumDelta;
-    int    iDeltaPerLine;
-    int    iHorzPos;     /* スクロールバーの横位置  */
-    int    iVertPos;     /* スクロールバーの縦位置  */
-    LOGFONT *logFontPtr;
-    BOOL   bShiftKeyOn;
-} S_IOWND_DATA;
-
 #if 1
 #define BG_COLOR_RGB          RGB(0xFF,0xFF,0xFF)
 #define TAB_BK_COLOR_RGB      RGB(0xE0,0xFF,0xFF) /* 水色 */

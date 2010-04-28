@@ -270,7 +270,7 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     FileInitialize( hwnd ); /* ファイル初期化     */
     FontInit();
 
-    mainWndData.hWndIo = IoWndCreate( hwnd, 0, FontGetLogFont(FONT_ID_IO) );
+    mainWndData.hWndIo = IoWndCreate( GetHinst(), hwnd );
 #if 0
     SomeCtrlCreate( hwnd ); /* コントロールを生成 */
 #endif
@@ -318,7 +318,7 @@ onSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     topSizeSum += SomeCtrlSize( mainWndData.cxClient, mainWndData.cyChar ); /* コントロール   */
 #endif
     bottomSizeSum += StsBarSize( mainWndData.cxClient, mainWndData.cyChar ); /* ステータスバー */
-    IoWndSize( 0, topSizeSum, mainWndData.cxClient, mainWndData.cyClient - topSizeSum - bottomSizeSum );
+    IoWndSize( mainWndData.hWndIo, 0, topSizeSum, mainWndData.cxClient, mainWndData.cyClient - topSizeSum - bottomSizeSum );
 
     return 0;
 }
@@ -400,7 +400,7 @@ onDestroy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     DestroyAcceleratorTable( mainWndData.hAccel );
 
-    IoWndDestroy();
+    IoWndDestroy(mainWndData.hWndIo);
     FileEnd();
 
     PostQuitMessage(0); /* WM_QUITメッセージをポストする */
@@ -457,7 +457,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             else
             {
                 mainWndData.bNeedSave = FALSE;
-                IoWndDataInit();
+                IoWndDataInit(mainWndData.hWndIo);
                 doCaption( hwnd, "", FALSE);
             }
             break;
@@ -472,7 +472,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                 {
                     mainWndData.bNeedSave = FALSE;
                     dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
-                    IoWndDataSet( dataPtr,dwSize,TRUE );
+                    IoWndDataSet( mainWndData.hWndIo, dataPtr,dwSize,TRUE );
                     doCaption( hwnd, FileGetTitleName(FILE_ID_BIN), FALSE );
                 }
                 else
@@ -482,11 +482,11 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             }
             break;
         case IDM_FILE_SAVE:
-            dwSize = IoWndGetDataSize(IOWND_ALL);
+            dwSize = IoWndGetDataSize(mainWndData.hWndIo,IOWND_ALL);
             dataPtr = malloc( dwSize * sizeof(TCHAR) );
             if( dataPtr != NULL )
             {
-                IoWndDataGet( dataPtr,dwSize,IOWND_ALL );
+                IoWndDataGet( mainWndData.hWndIo, dataPtr,dwSize,IOWND_ALL );
                 if( (FileWrite( FILE_ID_BIN, dataPtr, dwSize )) == FILE_NAME_NOT_SET )
                 {
                     if( FileSaveDlg( hwnd,FILE_ID_BIN ) )
@@ -516,11 +516,11 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             }
             break;
         case IDM_FILE_SAVE_AS:
-            dwSize = IoWndGetDataSize(IOWND_ALL);
+            dwSize = IoWndGetDataSize(mainWndData.hWndIo,IOWND_ALL);
             dataPtr = malloc( dwSize * sizeof(TCHAR) );
             if( dataPtr != NULL )
             {
-                IoWndDataGet( dataPtr,dwSize,IOWND_ALL );
+                IoWndDataGet( mainWndData.hWndIo, dataPtr,dwSize,IOWND_ALL );
                 if( FileSaveDlg( hwnd,FILE_ID_BIN ) )
                 {
                     mainWndData.bNeedSave = FALSE;
@@ -583,13 +583,13 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
         case IDM_EDIT_DATETIME:
             strPtr = DateTimeGetString();
-            IoWndDataSet( strPtr, strlen(strPtr), FALSE );
+            IoWndDataSet( mainWndData.hWndIo, strPtr, strlen(strPtr), FALSE );
             break;
 
         case IDM_FORMAT_FONT:
             if( FontChooseFont( hwnd, FONT_ID_IO ) )
             {
-                IoWndChangeFont( FontGetLogFont(FONT_ID_IO) );
+                IoWndChangeFont( mainWndData.hWndIo, FontGetLogFont(FONT_ID_IO) );
             }
             else
             {
@@ -612,7 +612,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break;
 
         case IDM_EXTEND_NEWLINE_CRLF:
-            IoWndNewLineCodeSet(NEWLINECODE_CRLF);
+            IoWndNewLineCodeSet(mainWndData.hWndIo,NEWLINECODE_CRLF);
             MenuCheckItem  ( IDM_EXTEND_NEWLINE_CRLF );
             MenuUnCheckItem( IDM_EXTEND_NEWLINE_LF   );
             MenuUnCheckItem( IDM_EXTEND_NEWLINE_CR   );
@@ -620,7 +620,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break;
 
         case IDM_EXTEND_NEWLINE_LF  :
-            IoWndNewLineCodeSet(NEWLINECODE_LF);
+            IoWndNewLineCodeSet(mainWndData.hWndIo,NEWLINECODE_LF);
             MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_CRLF );
             MenuCheckItem    ( IDM_EXTEND_NEWLINE_LF   );
             MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_CR   );
@@ -628,7 +628,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break;
 
         case IDM_EXTEND_NEWLINE_CR  :
-            IoWndNewLineCodeSet(NEWLINECODE_CR);
+            IoWndNewLineCodeSet(mainWndData.hWndIo,NEWLINECODE_CR);
             MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_CRLF );
             MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_LF   );
             MenuCheckItem    ( IDM_EXTEND_NEWLINE_CR   );
@@ -812,7 +812,7 @@ onDropFiles( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
         FileSetName( FILE_ID_BIN, szFileName, FALSE );
         dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
-        IoWndDataSet( dataPtr,dwSize,TRUE );
+        IoWndDataSet( mainWndData.hWndIo,dataPtr,dwSize,TRUE );
         doCaption( hwnd, FileGetTitleName(FILE_ID_BIN),FALSE );
     }
 
@@ -835,7 +835,7 @@ onInitMenuPopup( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     if( LOWORD(lParam) == 1 )
     { /* 「編集」 */
 
-        if( IoWndGetDataSize(IOWND_SELECTED) )
+        if( IoWndGetDataSize(mainWndData.hWndIo,IOWND_SELECTED) )
         {
             MenuEnableItem( IDM_EDIT_CUT    );
             MenuEnableItem( IDM_EDIT_COPY   );
