@@ -1,7 +1,6 @@
 /* 共通インクルードファイル */
 #include "common.h"
 /* 個別インクルードファイル */
-#include "mbctype.h"
 #include "MenuId.h"
 #include "IoWndDef.h"
 
@@ -526,6 +525,7 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     EndPaint( hwnd, &ps );
 
     SetCaretPos( (IoWndGetCaretXpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iHorzPos)*ioWndDataPtr->cxChar, (IoWndGetCaretYpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iVertPos)*ioWndDataPtr->cyChar);
+    printCaretPos(hwnd);
 
     DebugIoWndRect = 0; /* デバッグ用 */
 
@@ -556,7 +556,6 @@ ioOnSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     if( hwnd == GetFocus() )
     {
         SetCaretPos( IoWndGetCaretXpos(ioWndDataPtr->hIoWndBuff) * ioWndDataPtr->cxChar, IoWndGetCaretYpos(ioWndDataPtr->hIoWndBuff) * ioWndDataPtr->cyChar );
-        printCaretPos(hwnd);
     }
     else
     {
@@ -785,8 +784,6 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                 nop();
             }
 
-            printCaretPos(hwnd);
-
             HideCaret(hwnd);
             InvalidateRect( hwnd, NULL, bErase );
             SetCaretPos( (IoWndGetCaretXpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iHorzPos)*ioWndDataPtr->cxChar, (IoWndGetCaretYpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iVertPos)*ioWndDataPtr->cyChar);
@@ -875,7 +872,6 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     ioOnImeStartComposition( hwnd, message, wParam, lParam );
 
     SetCaretPos( (IoWndGetCaretXpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iHorzPos)*ioWndDataPtr->cxChar, (IoWndGetCaretYpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iVertPos)*ioWndDataPtr->cyChar);
-    printCaretPos(hwnd);
     setAllScrollInfo(hwnd);
 
     return rtn;
@@ -1125,7 +1121,6 @@ ioOnMouseMove( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     {
         IoWndSetCaretPos( ioWndDataPtr->hIoWndBuff, ((x + (ioWndDataPtr->iHorzPos*ioWndDataPtr->cxChar))/ioWndDataPtr->cxChar), ((y + (ioWndDataPtr->iVertPos*ioWndDataPtr->cyChar))/ioWndDataPtr->cyChar) );
         SetCaretPos( (IoWndGetCaretXpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iHorzPos)*ioWndDataPtr->cxChar, (IoWndGetCaretYpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iVertPos)*ioWndDataPtr->cyChar);
-        printCaretPos(hwnd);
         InvalidateRect( hwnd, NULL, FALSE );
     }
     else
@@ -1159,7 +1154,6 @@ ioOnLbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     IoWndSetCaretPos( ioWndDataPtr->hIoWndBuff, ((x + (ioWndDataPtr->iHorzPos*ioWndDataPtr->cxChar))/ioWndDataPtr->cxChar), ((y + (ioWndDataPtr->iVertPos*ioWndDataPtr->cyChar))/ioWndDataPtr->cyChar) );
 
     SetCaretPos( (IoWndGetCaretXpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iHorzPos)*ioWndDataPtr->cxChar, (IoWndGetCaretYpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iVertPos)*ioWndDataPtr->cyChar);
-    printCaretPos(hwnd);
 
     if( wParam & MK_SHIFT )
     {

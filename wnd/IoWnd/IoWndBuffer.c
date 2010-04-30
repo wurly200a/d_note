@@ -3,7 +3,6 @@
 /* 個別インクルードファイル */
 
 /* 外部関数定義 */
-#include "WinMain.h"
 #include "LinkedList.h"
 
 /* 外部変数定義 */
@@ -44,6 +43,7 @@ static void addLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S
 static void removeLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *dataPtr );
 static void insertLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA **insertTopPtr, S_BUFF_LINE_DATA **insertEndPtr );
 static S_BUFF_LINE_DATA *replaceLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA *dataPtr );
+static void clearBuffLineData( H_IOWND_BUFF_LOCAL h );
 
 /* 内部変数定義 */
 
@@ -112,7 +112,7 @@ IoWndBuffInit( H_IOWND_BUFF hIoWndBuff )
     H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
     S_BUFF_LINE_DATA *lineDataPtr;
 
-    ClearLinkedList((S_LIST_HEADER **)&(h->lineData.topPtr),(S_LIST_HEADER **)&(h->lineData.endPtr));
+    clearBuffLineData(h);
 
     /* 空データを追加 */
     lineDataPtr = createBuffLineData( 0, 0, NULL, 0, 0 );
@@ -140,7 +140,7 @@ IoWndBuffEnd( H_IOWND_BUFF hIoWndBuff )
 {
     H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
 
-    ClearLinkedList((S_LIST_HEADER **)&(h->lineData.topPtr),(S_LIST_HEADER **)&(h->lineData.endPtr));
+    clearBuffLineData(h);
 }
 
 /********************************************************************************
@@ -1949,4 +1949,23 @@ replaceLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LI
     }
 
     return dataPtr;
+}
+
+/********************************************************************************
+ * 内容  : バッファデータのクリア
+ * 引数  : H_IOWND_BUFF_LOCAL h
+ * 戻り値: なし
+ ***************************************/
+static void
+clearBuffLineData( H_IOWND_BUFF_LOCAL h )
+{
+    S_BUFF_LINE_DATA *lineDataPtr,*nextPtr;
+
+    lineDataPtr = h->lineData.topPtr;
+    while( lineDataPtr != NULL )
+    {
+        nextPtr = (S_BUFF_LINE_DATA *)RemoveLinkedList((S_LIST_HEADER **)&(h->lineData.topPtr),(S_LIST_HEADER **)&(h->lineData.endPtr),(S_LIST_HEADER *)lineDataPtr);
+        destroyBuffLineData(lineDataPtr);
+        lineDataPtr = nextPtr;
+    }
 }

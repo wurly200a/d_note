@@ -11,34 +11,6 @@
 #include "LinkedList.h"
 
 /********************************************************************************
- * 内容  : 連結リストのデータをクリア
- * 引数  : S_LIST_HEADER **topPtr 先頭データがつないであるポインタ
- * 引数  : S_LIST_HEADER **endPtr 最終データがつないであるポインタ
- * 戻り値: なし
- ***************************************/
-void
-ClearLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr )
-{
-    S_LIST_HEADER *nowPtr,*nextPtr;
-
-    for( nowPtr = nextPtr = *topPtr; nowPtr != NULL; nowPtr = nextPtr )
-    {
-        nextPtr = nowPtr->nextPtr;
-        free( nowPtr );
-
-        if( nextPtr == NULL )
-        { /* 次につながれているデータ無し */
-            *topPtr = NULL;
-            *endPtr = NULL;
-        }
-        else
-        { /* 次につながれているデータ有り */
-            nop();
-        }
-    }
-}
-
-/********************************************************************************
  * 内容  : 連結リストにデータを追加する
  * 引数  : S_LIST_HEADER **topPtr 先頭データをつなぐポインタ
  * 引数  : S_LIST_HEADER **topPtr 最終データをつなぐポインタ
