@@ -72,35 +72,35 @@ BOOL IoWndBuffDataGet( H_IOWND_BUFF hIoWndBuff, TCHAR *dataPtr, DWORD dataSize, 
  * 引数  : IOWND_BUFF_REGION region
  * 戻り値: DWORD
  ***************************************/
-DWORD IoWndGetBuffSize( H_IOWND_BUFF hIoWndBuff, IOWND_BUFF_REGION region );
+DWORD IoWndBuffGetDataSize( H_IOWND_BUFF hIoWndBuff, IOWND_BUFF_REGION region );
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファの最大行サイズ取得
  * 引数  : H_IOWND_BUFF hIoWndBuff
  * 戻り値: DWORD
  ***************************************/
-DWORD IoWndGetLineMaxSize( H_IOWND_BUFF hIoWndBuff );
+DWORD IoWndBuffGetLineMaxSize( H_IOWND_BUFF hIoWndBuff );
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファの最大文字サイズ取得
  * 引数  : H_IOWND_BUFF hIoWndBuff
  * 戻り値: DWORD
  ***************************************/
-DWORD IoWndGetColumnMaxSize( H_IOWND_BUFF hIoWndBuff);
+DWORD IoWndBuffGetColumnMaxSize( H_IOWND_BUFF hIoWndBuff);
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのキャレットX位置取得
  * 引数  : H_IOWND_BUFF hIoWndBuff
  * 戻り値: DWORD
  ***************************************/
-DWORD IoWndGetCaretXpos( H_IOWND_BUFF hIoWndBuff );
+DWORD IoWndBuffGetCaretXpos( H_IOWND_BUFF hIoWndBuff );
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのキャレットY位置取得
  * 引数  : H_IOWND_BUFF hIoWndBuff
  * 戻り値: DWORD
  ***************************************/
-DWORD IoWndGetCaretYpos( H_IOWND_BUFF hIoWndBuff );
+DWORD IoWndBuffGetCaretYpos( H_IOWND_BUFF hIoWndBuff );
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのキャレット位置セット
@@ -109,35 +109,35 @@ DWORD IoWndGetCaretYpos( H_IOWND_BUFF hIoWndBuff );
  * 引数  : DWORD lineNum
  * 戻り値: なし
  ***************************************/
-void IoWndSetCaretPos( H_IOWND_BUFF hIoWndBuff, DWORD xPos, DWORD lineNum );
+void IoWndBuffSetCaretPos( H_IOWND_BUFF hIoWndBuff, DWORD xPos, DWORD lineNum );
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのキャレットX位置加算
  * 引数  : H_IOWND_BUFF hIoWndBuff
  * 戻り値: なし
  ***************************************/
-void IoWndIncCaretXpos( H_IOWND_BUFF hIoWndBuff );
+void IoWndBuffIncCaretXpos( H_IOWND_BUFF hIoWndBuff );
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのキャレットX位置減算
  * 引数  : H_IOWND_BUFF hIoWndBuff
  * 戻り値: なし
  ***************************************/
-void IoWndDecCaretXpos( H_IOWND_BUFF hIoWndBuff );
+void IoWndBuffDecCaretXpos( H_IOWND_BUFF hIoWndBuff );
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのキャレットY位置加算
  * 引数  : H_IOWND_BUFF hIoWndBuff
  * 戻り値: なし
  ***************************************/
-void IoWndIncCaretYpos( H_IOWND_BUFF hIoWndBuff );
+void IoWndBuffIncCaretYpos( H_IOWND_BUFF hIoWndBuff );
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのキャレットY位置減算
  * 引数  : H_IOWND_BUFF hIoWndBuff
  * 戻り値: なし
  ***************************************/
-void IoWndDecCaretYpos( H_IOWND_BUFF hIoWndBuff );
+void IoWndBuffDecCaretYpos( H_IOWND_BUFF hIoWndBuff );
 
 /********************************************************************************
  * 内容  : 指定行データのハンドル取得

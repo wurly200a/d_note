@@ -76,6 +76,34 @@ BOOL IoWndDataGet( HWND hwnd, TCHAR *dataPtr, DWORD dataSize, IOWND_REGION regio
  ***************************************/
 DWORD IoWndGetDataSize( HWND hwnd, IOWND_REGION region );
 
+/********************************************************************************
+ * 内容  : IOウィンドウバッファの最大行サイズ取得
+ * 引数  : HWND hwnd
+ * 戻り値: DWORD
+ ***************************************/
+DWORD IoWndGetLineMaxSize( HWND hwnd );
+
+/********************************************************************************
+ * 内容  : IOウィンドウバッファの最大文字サイズ取得
+ * 引数  : HWND hwnd
+ * 戻り値: DWORD
+ ***************************************/
+DWORD IoWndGetColumnMaxSize( HWND hwnd );
+
+/********************************************************************************
+ * 内容  : IOウィンドウバッファのキャレットX位置取得
+ * 引数  : HWND hwnd
+ * 戻り値: DWORD
+ ***************************************/
+DWORD IoWndGetCaretXpos( HWND hwnd );
+
+/********************************************************************************
+ * 内容  : IOウィンドウバッファのキャレットY位置取得
+ * 引数  : HWND hwnd
+ * 戻り値: DWORD
+ ***************************************/
+DWORD IoWndGetCaretYpos( HWND hwnd );
+
 enum
 {
     NEWLINECODE_CRLF = 0,

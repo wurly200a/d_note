@@ -508,7 +508,7 @@ IoWndBuffDataGet( H_IOWND_BUFF hIoWndBuff, TCHAR *dataPtr, DWORD dataSize, IOWND
  * 戻り値: DWORD
  ***************************************/
 DWORD
-IoWndGetBuffSize( H_IOWND_BUFF hIoWndBuff, IOWND_BUFF_REGION region )
+IoWndBuffGetDataSize( H_IOWND_BUFF hIoWndBuff, IOWND_BUFF_REGION region )
 {
     DWORD dataSize = 0;
     S_BUFF_LINE_DATA *nowPtr,*prevPtr;
@@ -601,7 +601,7 @@ IoWndGetBuffSize( H_IOWND_BUFF hIoWndBuff, IOWND_BUFF_REGION region )
  * 戻り値: DWORD
  ***************************************/
 DWORD
-IoWndGetLineMaxSize( H_IOWND_BUFF hIoWndBuff )
+IoWndBuffGetLineMaxSize( H_IOWND_BUFF hIoWndBuff )
 {
     H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
 
@@ -614,7 +614,7 @@ IoWndGetLineMaxSize( H_IOWND_BUFF hIoWndBuff )
  * 戻り値: DWORD
  ***************************************/
 DWORD
-IoWndGetColumnMaxSize( H_IOWND_BUFF hIoWndBuff)
+IoWndBuffGetColumnMaxSize( H_IOWND_BUFF hIoWndBuff)
 {
     DWORD columnMaxSize = 0;
     S_BUFF_LINE_DATA *nowPtr;
@@ -634,7 +634,7 @@ IoWndGetColumnMaxSize( H_IOWND_BUFF hIoWndBuff)
  * 戻り値: DWORD
  ***************************************/
 DWORD
-IoWndGetCaretXpos( H_IOWND_BUFF hIoWndBuff )
+IoWndBuffGetCaretXpos( H_IOWND_BUFF hIoWndBuff )
 {
     H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
 
@@ -647,7 +647,7 @@ IoWndGetCaretXpos( H_IOWND_BUFF hIoWndBuff )
  * 戻り値: DWORD
  ***************************************/
 DWORD
-IoWndGetCaretYpos( H_IOWND_BUFF hIoWndBuff )
+IoWndBuffGetCaretYpos( H_IOWND_BUFF hIoWndBuff )
 {
     H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
 
@@ -662,7 +662,7 @@ IoWndGetCaretYpos( H_IOWND_BUFF hIoWndBuff )
  * 戻り値: なし
  ***************************************/
 void
-IoWndSetCaretPos( H_IOWND_BUFF hIoWndBuff, DWORD xPos, DWORD lineNum )
+IoWndBuffSetCaretPos( H_IOWND_BUFF hIoWndBuff, DWORD xPos, DWORD lineNum )
 {
     S_BUFF_LINE_DATA *nowPtr = NULL;
     S_BUFF_DISP_DATA dispData;
@@ -689,7 +689,7 @@ IoWndSetCaretPos( H_IOWND_BUFF hIoWndBuff, DWORD xPos, DWORD lineNum )
  * 戻り値: なし
  ***************************************/
 void
-IoWndIncCaretXpos( H_IOWND_BUFF hIoWndBuff )
+IoWndBuffIncCaretXpos( H_IOWND_BUFF hIoWndBuff )
 {
     int moveAmount = 0;
     H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
@@ -734,7 +734,7 @@ IoWndIncCaretXpos( H_IOWND_BUFF hIoWndBuff )
  * 戻り値: なし
  ***************************************/
 void
-IoWndDecCaretXpos( H_IOWND_BUFF hIoWndBuff )
+IoWndBuffDecCaretXpos( H_IOWND_BUFF hIoWndBuff )
 {
     int moveAmount = 0;
     H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
@@ -780,7 +780,7 @@ IoWndDecCaretXpos( H_IOWND_BUFF hIoWndBuff )
  * 戻り値: なし
  ***************************************/
 void
-IoWndIncCaretYpos( H_IOWND_BUFF hIoWndBuff )
+IoWndBuffIncCaretYpos( H_IOWND_BUFF hIoWndBuff )
 {
     DWORD preDispPos = 0;
     S_BUFF_LINE_DATA *nextPtr;
@@ -808,7 +808,7 @@ IoWndIncCaretYpos( H_IOWND_BUFF hIoWndBuff )
  * 戻り値: なし
  ***************************************/
 void
-IoWndDecCaretYpos( H_IOWND_BUFF hIoWndBuff )
+IoWndBuffDecCaretYpos( H_IOWND_BUFF hIoWndBuff )
 {
     DWORD preDispPos = 0;
     S_BUFF_LINE_DATA *prevPtr;
