@@ -51,5 +51,12 @@ typedef enum
 #define SELECT_TEXT_COLOR_RGB TEXT_COLOR_RGB
 #endif
 
+#define IDM_EDIT_UNDO                   40011
+#define IDM_EDIT_CUT                    40012
+#define IDM_EDIT_COPY                   40013
+#define IDM_EDIT_PASTE                  40014
+#define IDM_EDIT_DELETE                 40015
+#define IDM_EDIT_SELECT_ALL             40020
+
 #define IOWND_DEF_H
 #endif /* IOWND_DEF_H */

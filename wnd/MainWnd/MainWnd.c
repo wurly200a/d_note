@@ -431,6 +431,10 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         switch( HIWORD(wParam) )
         {
         case EN_UPDATE:
+            StsBarSetText( STS_BAR_0  ,"%d バイト、全 %d 行",IoWndGetDataSize(mainWndData.hWndIo, IOWND_ALL),0/* IoWndGetLineMaxSize(ioWndDataPtr->hIoWndBuff)*/ );
+            StsBarSetText( STS_BAR_MAX,"   %d 行、%d 列",0/* IoWndGetCaretYpos(ioWndDataPtr->hIoWndBuff)+1*/,0/*IoWndGetCaretXpos(ioWndDataPtr->hIoWndBuff)+1*/);
+            break;
+        case EN_CHANGE:
             if( mainWndData.bNeedSave )
             {
                 nop();

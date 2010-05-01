@@ -1,11 +1,9 @@
 /* 共通インクルードファイル */
 #include "common.h"
 /* 個別インクルードファイル */
-#include "MenuId.h"
 #include "IoWndDef.h"
 
 /* 外部関数定義 */
-#include "StsBar.h"
 #include "IoWndBuffer.h"
 
 /* 外部変数定義 */
@@ -50,7 +48,6 @@ static void updateTextMetrics( HWND hwnd );
 static void setAllScrollInfo( HWND hwnd );
 static void getAllScrollInfo( HWND hwnd );
 static void setScrollPos( HWND hwnd, int fnBar, DWORD nPos );
-static void printCaretPos( HWND hwnd );
 
 /* 内部変数定義 */
 typedef struct
@@ -236,7 +233,7 @@ IoWndDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bInit )
     }
     else
     {
-        SendMessage(GetParent(hwnd), (UINT)WM_COMMAND, MAKEWPARAM(0,EN_UPDATE), (LPARAM)hwnd);
+        SendMessage(GetParent(hwnd), (UINT)WM_COMMAND, MAKEWPARAM(0,EN_CHANGE), (LPARAM)hwnd);
     }
 
     IoWndBuffSelectOff(ioWndDataPtr->hIoWndBuff);
@@ -524,7 +521,7 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     EndPaint( hwnd, &ps );
 
     SetCaretPos( (IoWndGetCaretXpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iHorzPos)*ioWndDataPtr->cxChar, (IoWndGetCaretYpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iVertPos)*ioWndDataPtr->cyChar);
-    printCaretPos(hwnd);
+    SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_UPDATE), (LPARAM)hwnd);
 
     DebugIoWndRect = 0; /* デバッグ用 */
 
@@ -860,7 +857,7 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             {
                 InvalidateRect( hwnd, NULL, TRUE );
             }
-            SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_UPDATE), (LPARAM)hwnd);
+            SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_CHANGE), (LPARAM)hwnd);
         }
         else
         {
@@ -1544,7 +1541,7 @@ ioWndRemoveData( HWND hwnd, BOOL bBackSpace )
     S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
     IoWndBuffRemoveData( ioWndDataPtr->hIoWndBuff, bBackSpace );
-    SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_UPDATE), (LPARAM)hwnd);
+    SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_CHANGE), (LPARAM)hwnd);
 }
 
 /********************************************************************************
@@ -1636,18 +1633,4 @@ setScrollPos( HWND hwnd, int fnBar, DWORD nPos )
     GetScrollInfo( hwnd, fnBar, &si );
     si.nPos   = nPos;
     SetScrollInfo( hwnd, fnBar, &si, TRUE );
-}
-
-/********************************************************************************
- * 内容  : カーソル位置をステータスバーに出力
- * 引数  : HWND hwnd
- * 戻り値: なし
- ***************************************/
-static void
-printCaretPos( HWND hwnd )
-{
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
-
-    StsBarSetText( STS_BAR_0  ,"%d バイト、全 %d 行",IoWndGetBuffSize(ioWndDataPtr->hIoWndBuff, BUFF_ALL),IoWndGetLineMaxSize(ioWndDataPtr->hIoWndBuff) );
-    StsBarSetText( STS_BAR_MAX,"   %d 行、%d 列",IoWndGetCaretYpos(ioWndDataPtr->hIoWndBuff)+1,IoWndGetCaretXpos(ioWndDataPtr->hIoWndBuff)+1);
 }
