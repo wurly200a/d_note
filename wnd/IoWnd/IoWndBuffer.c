@@ -3,12 +3,17 @@
 /* 個別インクルードファイル */
 
 /* 外部関数定義 */
-#include "LinkedList.h"
 
 /* 外部変数定義 */
 
 /* 内部関数定義 */
 #include "IoWndBuffer.h"
+
+typedef struct tagS_LIST
+{
+    struct tagS_LIST *prevPtr;
+    struct tagS_LIST *nextPtr;
+} S_LIST_HEADER;
 
 typedef struct tag_buffer_line_data
 {
@@ -53,6 +58,11 @@ static void removeLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr
 static void insertLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA **insertTopPtr, S_BUFF_LINE_DATA **insertEndPtr );
 static S_BUFF_LINE_DATA *replaceLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA *dataPtr );
 static void clearBuffLineData( H_IOWND_BUFF_LOCAL h );
+
+static void addLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr, S_LIST_HEADER *dataPtr );
+static S_LIST_HEADER *replaceLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr, S_LIST_HEADER *nowPtr, S_LIST_HEADER *dataPtr );
+static S_LIST_HEADER *removeLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr, S_LIST_HEADER *dataPtr );
+static void insertLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr, S_LIST_HEADER *nowPtr, S_LIST_HEADER **insertTopPtr, S_LIST_HEADER **insertEndPtr );
 
 /* 内部変数定義 */
 
@@ -1887,7 +1897,7 @@ addLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_D
         }
     }
 
-    AddLinkedList( (S_LIST_HEADER **)topPtr, (S_LIST_HEADER **)endPtr, (S_LIST_HEADER *)dataPtr );
+    addLinkedList( (S_LIST_HEADER **)topPtr, (S_LIST_HEADER **)endPtr, (S_LIST_HEADER *)dataPtr );
 }
 
 /********************************************************************************
@@ -1902,7 +1912,7 @@ removeLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LIN
 {
     S_BUFF_LINE_DATA *removeNextPtr;
 
-    removeNextPtr = (S_BUFF_LINE_DATA *)RemoveLinkedList( (S_LIST_HEADER **)topPtr,(S_LIST_HEADER **)endPtr,(S_LIST_HEADER *)dataPtr );
+    removeNextPtr = (S_BUFF_LINE_DATA *)removeLinkedList( (S_LIST_HEADER **)topPtr,(S_LIST_HEADER **)endPtr,(S_LIST_HEADER *)dataPtr );
     if( removeNextPtr != NULL )
     {
         if( removeNextPtr->header.prevPtr != NULL )
@@ -1937,7 +1947,7 @@ insertLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LIN
     {
         (*insertTopPtr)->lineNum = nowPtr->lineNum;
 
-        InsertLinkedList((S_LIST_HEADER **)topPtr,(S_LIST_HEADER **)endPtr,(S_LIST_HEADER *)nowPtr,(S_LIST_HEADER **)insertTopPtr,(S_LIST_HEADER **)insertEndPtr);
+        insertLinkedList((S_LIST_HEADER **)topPtr,(S_LIST_HEADER **)endPtr,(S_LIST_HEADER *)nowPtr,(S_LIST_HEADER **)insertTopPtr,(S_LIST_HEADER **)insertEndPtr);
         updateLineNum( (*insertTopPtr) );
     }
     else
@@ -1960,7 +1970,7 @@ replaceLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LI
     if( (topPtr != NULL) && (endPtr != NULL) && (nowPtr != NULL) && (dataPtr != NULL) )
     {
         dataPtr->lineNum = nowPtr->lineNum;
-        dataPtr = (S_BUFF_LINE_DATA *)ReplaceLinkedList((S_LIST_HEADER **)topPtr,(S_LIST_HEADER **)endPtr,(S_LIST_HEADER *)nowPtr,(S_LIST_HEADER *)dataPtr);
+        dataPtr = (S_BUFF_LINE_DATA *)replaceLinkedList((S_LIST_HEADER **)topPtr,(S_LIST_HEADER **)endPtr,(S_LIST_HEADER *)nowPtr,(S_LIST_HEADER *)dataPtr);
     }
     else
     {
@@ -1983,8 +1993,165 @@ clearBuffLineData( H_IOWND_BUFF_LOCAL h )
     lineDataPtr = h->lineData.topPtr;
     while( lineDataPtr != NULL )
     {
-        nextPtr = (S_BUFF_LINE_DATA *)RemoveLinkedList((S_LIST_HEADER **)&(h->lineData.topPtr),(S_LIST_HEADER **)&(h->lineData.endPtr),(S_LIST_HEADER *)lineDataPtr);
+        nextPtr = (S_BUFF_LINE_DATA *)removeLinkedList((S_LIST_HEADER **)&(h->lineData.topPtr),(S_LIST_HEADER **)&(h->lineData.endPtr),(S_LIST_HEADER *)lineDataPtr);
         destroyBuffLineData(lineDataPtr);
         lineDataPtr = nextPtr;
+    }
+}
+
+/********************************************************************************
+ * 内容  : 連結リストにデータを追加する
+ * 引数  : S_LIST_HEADER **topPtr 先頭データをつなぐポインタ
+ * 引数  : S_LIST_HEADER **topPtr 最終データをつなぐポインタ
+ * 引数  : S_LIST_HEADER *dataPtr つなぐデータ
+ * 戻り値: なし
+ ***************************************/
+static void
+addLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr, S_LIST_HEADER *dataPtr )
+{
+    if( *topPtr == NULL )
+    {
+        dataPtr->prevPtr = NULL;
+        dataPtr->nextPtr = NULL;
+        *topPtr = dataPtr;
+        *endPtr = dataPtr;
+    }
+    else
+    {
+        if( *endPtr != NULL )
+        {
+            dataPtr->prevPtr   = *endPtr;
+            dataPtr->nextPtr   = NULL;
+            (*endPtr)->nextPtr = dataPtr;
+            *endPtr            = dataPtr;
+        }
+        else
+        {
+            nop(); /* 異常 */
+        }
+    }
+}
+
+/********************************************************************************
+ * 内容  : 連結リストのデータを置き換える
+ * 引数  : S_LIST_HEADER **topPtr 先頭データをつなぐポインタ
+ * 引数  : S_LIST_HEADER **topPtr 最終データをつなぐポインタ
+ * 引数  : S_LIST_HEADER *nowPtr  置き換え対象のデータ
+ * 引数  : S_LIST_HEADER *dataPtr 置き換えるデータ
+ * 戻り値: 置き換えたデータ
+ ***************************************/
+static S_LIST_HEADER *
+replaceLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr, S_LIST_HEADER *nowPtr, S_LIST_HEADER *dataPtr )
+{
+    if( (topPtr != NULL) && (endPtr != NULL) && (nowPtr != NULL) && (dataPtr != NULL) )
+    {
+        dataPtr->prevPtr = nowPtr->prevPtr;
+        dataPtr->nextPtr = nowPtr->nextPtr;
+
+        if( dataPtr->prevPtr != NULL )
+        {
+            (dataPtr->prevPtr)->nextPtr = dataPtr;
+        }
+        else
+        {
+            *(topPtr) = dataPtr;
+        }
+        if( dataPtr->nextPtr != NULL )
+        {
+            (dataPtr->nextPtr)->prevPtr = dataPtr;
+        }
+        else
+        {
+            *(endPtr) = dataPtr;
+        }
+    }
+    else
+    {
+        nop();
+    }
+
+    return dataPtr;
+}
+
+/********************************************************************************
+ * 内容  : 連結リストからデータを削除する
+ * 引数  : S_LIST_HEADER **topPtr 先頭データがつないであるポインタ
+ * 引数  : S_LIST_HEADER **topPtr 最終データをつないであるポインタ
+ * 引数  : S_LIST_HEADER *dataPtr 削除するデータ
+ * 戻り値: S_LIST_HEADER *        削除した次のデータ
+ ***************************************/
+static S_LIST_HEADER *
+removeLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr, S_LIST_HEADER *dataPtr )
+{
+    S_LIST_HEADER *nextPtr = NULL;
+
+    if( (topPtr != NULL) && (endPtr != NULL) && (dataPtr != NULL) )
+    {
+        nextPtr = dataPtr->nextPtr; /* 戻り値 */
+
+        if( dataPtr->prevPtr != NULL )
+        { /* 前データ有り */
+            (dataPtr->prevPtr)->nextPtr = dataPtr->nextPtr; /* 次データを、前データの次データとする */
+            if( (dataPtr->prevPtr)->nextPtr != NULL )
+            { /* 次データがあった場合 */
+                ((dataPtr->prevPtr)->nextPtr)->prevPtr = dataPtr->prevPtr; /* 次データの前データは、前データ */
+            }
+            else
+            { /* 次データ無し */
+                (*endPtr) = dataPtr->prevPtr; /* 前データが最後のデータとなる */
+            }
+        }
+        else
+        { /* 前データ無し */
+            *topPtr = dataPtr->nextPtr;
+            if( *topPtr != NULL )
+            { /* 次データがあった場合 */
+                (*topPtr)->prevPtr = NULL;
+            }
+            else
+            { /* 次データ無し */
+                (*endPtr) = NULL; /* データは全部無くなった */
+            }
+        }
+    }
+    else
+    {
+        nop();
+    }
+
+    return nextPtr;
+}
+
+/********************************************************************************
+ * 内容  : 連結リストへの挿入
+ * 引数  : S_LIST_HEADER **topPtr       先頭データをつなぐポインタ
+ * 引数  : S_LIST_HEADER **topPtr       最終データをつなぐポインタ
+ * 引数  : S_LIST_HEADER *nowPtr        挿入位置
+ * 引数  : S_LIST_HEADER **insertTopPtr 挿入する連結リストの先頭
+ * 引数  : S_LIST_HEADER **insertEndPtr 挿入する連結リストの最後
+ * 戻り値: void
+ ***************************************/
+static void
+insertLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr, S_LIST_HEADER *nowPtr, S_LIST_HEADER **insertTopPtr, S_LIST_HEADER **insertEndPtr )
+{
+    if( (topPtr != NULL) && (endPtr != NULL) && (nowPtr != NULL) && (insertTopPtr != NULL) && (insertEndPtr != NULL) )
+    {
+        (*insertTopPtr)->prevPtr = nowPtr->prevPtr;
+
+        if( (*insertTopPtr)->prevPtr != NULL )
+        {
+            ((*insertTopPtr)->prevPtr)->nextPtr = (*insertTopPtr);
+        }
+        else
+        {
+            (*topPtr) = (*insertTopPtr);
+        }
+
+        (*insertEndPtr)->nextPtr = nowPtr;
+        nowPtr->prevPtr = (*insertEndPtr);
+    }
+    else
+    {
+        nop();
     }
 }
