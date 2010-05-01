@@ -2,20 +2,15 @@
 
 typedef struct tagS_IOWND_BUFF
 {
-    BOOL bValid;
+    int unused;
 } S_IOWND_BUFF;
-
 typedef S_IOWND_BUFF * H_IOWND_BUFF;
 
-typedef struct tag_buffer_line_data
+typedef struct tagS_IOWND_BUFF_LINE
 {
-    S_LIST_HEADER header         ;
-    DWORD         lineNum        ; /* Y位置            */
-    DWORD         caretDataPos   ; /* X位置            */
-    DWORD         dataSize       ; /* データサイズ     */
-    INT           newLineCodeSize; /* 改行コードサイズ */
-    TCHAR         data[]         ;
-} S_BUFF_LINE_DATA;
+    int unused;
+} S_IOWND_BUFF_LINE;
+typedef S_IOWND_BUFF_LINE * H_IOWND_BUFF_LINE;
 
 /********************************************************************************
  * 内容  : IOウィンドウバッファのオブジェクト生成
@@ -145,12 +140,19 @@ void IoWndIncCaretYpos( H_IOWND_BUFF hIoWndBuff );
 void IoWndDecCaretYpos( H_IOWND_BUFF hIoWndBuff );
 
 /********************************************************************************
- * 内容  : 指定行のデータアドレス取得
+ * 内容  : 指定行データのハンドル取得
  * 引数  : H_IOWND_BUFF hIoWndBuff
  * 引数  : DWORD lineNum
- * 戻り値: S_BUFF_LINE_DATA *
+ * 戻り値: H_IOWND_BUFF_LINE
  ***************************************/
-S_BUFF_LINE_DATA *IoWndBuffGetLinePtr( H_IOWND_BUFF hIoWndBuff, DWORD lineNum );
+H_IOWND_BUFF_LINE IoWndBuffGetLinePtr( H_IOWND_BUFF hIoWndBuff, DWORD lineNum );
+
+/********************************************************************************
+ * 内容  : 次の行データのハンドル取得
+ * 引数  : H_IOWND_BUFF_LINE hLineData
+ * 戻り値: H_IOWND_BUFF_LINE
+ ***************************************/
+H_IOWND_BUFF_LINE IoWndBuffGetLineNextPtr( H_IOWND_BUFF_LINE hLineData );
 
 enum
 {
@@ -176,12 +178,12 @@ typedef struct
 /********************************************************************************
  * 内容  : 指定行、指定列のデータを取得
  * 引数  : H_IOWND_BUFF hIoWndBuff
- * 引数  : S_BUFF_LINE_DATA *lineDataPtr
+ * 引数  : H_IOWND_BUFF_LINE hLineData
  * 引数  : DWORD             dispPos     表示位置
  * 引数  : S_BUFF_DISP_DATA *dataPtr
  * 戻り値: BOOL
  ***************************************/
-BOOL IoWndBuffGetDispData( H_IOWND_BUFF hIoWndBuff, S_BUFF_LINE_DATA *lineDataPtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
+BOOL IoWndBuffGetDispData( H_IOWND_BUFF hIoWndBuff, H_IOWND_BUFF_LINE hLineData, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
 
 enum
 {

@@ -6,7 +6,6 @@
 
 /* 外部関数定義 */
 #include "StsBar.h"
-#include "LinkedList.h"
 #include "IoWndBuffer.h"
 
 /* 外部変数定義 */
@@ -456,7 +455,7 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     int         x;
     COLORREF    bkColor,textColor;
     S_BUFF_DISP_DATA buffDispData;
-    S_BUFF_LINE_DATA *lineDataPtr;
+    H_IOWND_BUFF_LINE hLineData;
     S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
     hdc = BeginPaint( hwnd, &ps );
@@ -469,11 +468,11 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     iPaintBeg = max(0, iVertPos + ps.rcPaint.top / ioWndDataPtr->cyChar);
     iPaintEnd = min(IoWndGetLineMaxSize(ioWndDataPtr->hIoWndBuff),iVertPos + ps.rcPaint.bottom / ioWndDataPtr->cyChar);
 
-    for( y=iPaintBeg,lineDataPtr=IoWndBuffGetLinePtr(ioWndDataPtr->hIoWndBuff,y); (y<=iPaintEnd)&&(lineDataPtr != NULL); y++,lineDataPtr = (S_BUFF_LINE_DATA *)lineDataPtr->header.nextPtr )
+    for( y=iPaintBeg,hLineData=IoWndBuffGetLinePtr(ioWndDataPtr->hIoWndBuff,y); (y<=iPaintEnd)&&(hLineData != NULL); y++,hLineData = IoWndBuffGetLineNextPtr(hLineData) )
     { /* 再描画領域のみ1行ずつ処理 */
         for( x=0; x<ioWndDataPtr->cxBuffer+1;x++ )
         {
-            IoWndBuffGetDispData(ioWndDataPtr->hIoWndBuff,lineDataPtr,x+iHorzPos,&buffDispData );
+            IoWndBuffGetDispData(ioWndDataPtr->hIoWndBuff,hLineData,x+iHorzPos,&buffDispData );
 
             if( buffDispData.size )
             {

@@ -10,9 +10,18 @@
 /* 内部関数定義 */
 #include "IoWndBuffer.h"
 
+typedef struct tag_buffer_line_data
+{
+    S_LIST_HEADER header         ;
+    DWORD         lineNum        ; /* Y位置            */
+    DWORD         caretDataPos   ; /* X位置            */
+    DWORD         dataSize       ; /* データサイズ     */
+    INT           newLineCodeSize; /* 改行コードサイズ */
+    TCHAR         data[]         ;
+} S_BUFF_LINE_DATA;
+
 typedef struct tagS_IOWND_BUFF_LOCAL
 {
-    S_IOWND_BUFF publicObj;
     struct
     {
         S_BUFF_LINE_DATA *topPtr       ; /* 先頭のデータ                           */
@@ -65,7 +74,6 @@ IoWndBuffCreate( void )
         h->lineData.nowPtr         = NULL;
         h->lineData.selectPtr      = NULL;
         h->lineData.selectCaretPos = 0;
-        h->publicObj.bValid = TRUE;
         h->NewLineType = IOWND_BUFF_NEWLINE_CRLF;
         h->xCaret      = 0;
         h->yCaret      = 0;
@@ -89,7 +97,7 @@ IoWndBuffDestroy( H_IOWND_BUFF hIoWndBuff )
 {
     H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
 
-    if( (h != NULL) && (h->publicObj.bValid == TRUE) )
+    if( (h != NULL) )
     {
         free( h );
     }
@@ -660,7 +668,7 @@ IoWndSetCaretPos( H_IOWND_BUFF hIoWndBuff, DWORD xPos, DWORD lineNum )
     S_BUFF_DISP_DATA dispData;
     H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
 
-    nowPtr = IoWndBuffGetLinePtr( hIoWndBuff, lineNum );
+    nowPtr = (S_BUFF_LINE_DATA *)IoWndBuffGetLinePtr( hIoWndBuff, lineNum );
 
     if( nowPtr != NULL )
     {
@@ -823,12 +831,12 @@ IoWndDecCaretYpos( H_IOWND_BUFF hIoWndBuff )
 }
 
 /********************************************************************************
- * 内容  : 指定行のデータアドレス取得
+ * 内容  : 指定行データのハンドル取得
  * 引数  : H_IOWND_BUFF hIoWndBuff
  * 引数  : DWORD lineNum
- * 戻り値: S_BUFF_LINE_DATA *
+ * 戻り値: H_IOWND_BUFF_LINE
  ***************************************/
-S_BUFF_LINE_DATA *
+H_IOWND_BUFF_LINE
 IoWndBuffGetLinePtr( H_IOWND_BUFF hIoWndBuff, DWORD lineNum )
 {
     S_BUFF_LINE_DATA *nowPtr,*nextPtr,*rtnPtr = NULL;
@@ -857,23 +865,34 @@ IoWndBuffGetLinePtr( H_IOWND_BUFF hIoWndBuff, DWORD lineNum )
         }
     }
 
-    return rtnPtr;
+    return (H_IOWND_BUFF_LINE)rtnPtr;
+}
+
+/********************************************************************************
+ * 内容  : 次の行データのハンドル取得
+ * 引数  : H_IOWND_BUFF_LINE hLineData
+ * 戻り値: H_IOWND_BUFF_LINE
+ ***************************************/
+H_IOWND_BUFF_LINE
+IoWndBuffGetLineNextPtr( H_IOWND_BUFF_LINE hLineData )
+{
+    return (H_IOWND_BUFF_LINE)(((S_BUFF_LINE_DATA *)hLineData)->header.nextPtr);
 }
 
 /********************************************************************************
  * 内容  : 指定行、指定列のデータを取得
  * 引数  : H_IOWND_BUFF hIoWndBuff
- * 引数  : S_BUFF_LINE_DATA *lineDataPtr
+ * 引数  : H_IOWND_BUFF_LINE hLineData
  * 引数  : DWORD             dispPos     表示位置
  * 引数  : S_BUFF_DISP_DATA *dataPtr
  * 戻り値: BOOL
  ***************************************/
 BOOL
-IoWndBuffGetDispData( H_IOWND_BUFF hIoWndBuff, S_BUFF_LINE_DATA *lineDataPtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr )
+IoWndBuffGetDispData( H_IOWND_BUFF hIoWndBuff, H_IOWND_BUFF_LINE hLineData, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr )
 {
     H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
 
-    getDispCharData( h, lineDataPtr, dispPos, dataPtr );
+    getDispCharData( h, (S_BUFF_LINE_DATA *)hLineData, dispPos, dataPtr );
 
     return TRUE;
 }
