@@ -19,6 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="../inc"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -31,6 +32,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="comctl32.lib imm32.lib"
 				OutputFile="$(OutDir)/tedd.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="TRUE"
@@ -108,21 +110,45 @@
 	<References>
 	</References>
 	<Files>
-		<Filter
-			Name="ソース ファイル"
-			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
-		</Filter>
-		<Filter
-			Name="ヘッダー ファイル"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
-		</Filter>
-		<Filter
-			Name="リソース ファイル"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}">
-		</Filter>
+		<File
+			RelativePath="..\sys\Config\Config.c">
+		</File>
+		<File
+			RelativePath="..\sys\DateTime\DateTime.c">
+		</File>
+		<File
+			RelativePath="..\sys\File\File.c">
+		</File>
+		<File
+			RelativePath="..\sys\Font\Font.c">
+		</File>
+		<File
+			RelativePath="..\wnd\IoWnd\IoWnd.c">
+		</File>
+		<File
+			RelativePath="..\wnd\IoWnd\IoWndBuffer.c">
+		</File>
+		<File
+			RelativePath="..\wnd\MainWnd\MainWnd.c">
+		</File>
+		<File
+			RelativePath="..\wnd\MainWnd\MainWndMenu.c">
+		</File>
+		<File
+			RelativePath="..\wnd\ModalDlg\ModalDialog.c">
+		</File>
+		<File
+			RelativePath="..\wnd\SomeCtrl\SomeCtrl.c">
+		</File>
+		<File
+			RelativePath="..\wnd\StsBar\StsBar.c">
+		</File>
+		<File
+			RelativePath="..\sys\Version\Version.c">
+		</File>
+		<File
+			RelativePath="..\sys\WinMain\WinMain.c">
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

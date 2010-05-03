@@ -9,7 +9,7 @@ static HWND initializeApp( HINSTANCE hInst, int nCmdShow, HACCEL *hAccelPtr );
 
 /* 内部変数定義 */
 static HINSTANCE hInstance;    /* インスタンスのハンドラ     */
-static TCHAR szAppName[] = TEXT("hdt"); /* アプリケーションの名称 */
+static TCHAR szAppName[] = TEXT("TEDD"); /* アプリケーションの名称 */
 
 /********************************************************************************
  * 内容  : WINDOWSプログラムのエントリポイント

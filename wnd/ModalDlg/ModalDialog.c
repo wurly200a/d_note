@@ -136,6 +136,7 @@ AboutDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     TCHAR szTemp[256];
     TCHAR szTemp2[256];
     TCHAR szTemp3[256];
+    INT x,y;
 #if 0
     static HBITMAP hBitmap = 0;
 #endif
@@ -159,21 +160,30 @@ AboutDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         /* 白矩形 */
         CreateWindow(TEXT("static"),TEXT(""),WS_CHILD|WS_VISIBLE|SS_WHITERECT,0,0,481,90,hwnd,(HMENU)-1,GetHinst(),NULL);
 
+        x = 60;
+        y = 100;
         /* アプリケーション名 */
-        hCtrl = CreateWindow( TEXT("static"), GetAppName(), WS_CHILD|WS_VISIBLE, 60, 100, 400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
+        hCtrl = CreateWindow( TEXT("static"), GetAppName(), WS_CHILD|WS_VISIBLE, x, y, 400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
+        SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
+
+        /* アプリケーション名(補足) */
+        hCtrl = CreateWindow( TEXT("static"), TEXT("(Text EDitor for Developers)"), WS_CHILD|WS_VISIBLE, x+35, y, 400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
 
         /* バージョン */
+        y += 15;
         wsprintf( szTemp, TEXT("Version %s"),VersionStringGet() );
-        hCtrl = CreateWindow( TEXT("static"), szTemp, WS_CHILD|WS_VISIBLE, 60, 115, 400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
+        hCtrl = CreateWindow( TEXT("static"), szTemp, WS_CHILD|WS_VISIBLE, x, y, 400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
 
         /* Copyright */
-        hCtrl = CreateWindow( TEXT("static"), TEXT("Copyright (C) 2009-2010 Wurly"), WS_CHILD|WS_VISIBLE, 60, 130, 400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
+        y += 15;
+        hCtrl = CreateWindow( TEXT("static"), TEXT("Copyright (C) 2009-2010 Wurly"), WS_CHILD|WS_VISIBLE, x, y, 400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
 
         /* ライセンス */
-        hCtrl = CreateWindow( TEXT("static"), TEXT("この製品はフリーソフトウェアです。"), WS_CHILD|WS_VISIBLE, 60, 180, 400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
+        y = 180;
+        hCtrl = CreateWindow( TEXT("static"), TEXT("この製品はフリーソフトウェアです。"), WS_CHILD|WS_VISIBLE, x, y, 400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
 
         /* 線 */
