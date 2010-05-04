@@ -168,35 +168,6 @@ IoWndChangeFont( HWND hwnd, LOGFONT *logFontPtr )
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウのサイズ変更
- * 引数  : HWND hwnd
- * 引数  : int x
- * 引数  : int y
- * 引数  : int cxClient
- * 引数  : int cyClient
- * 戻り値: BOOL
- ***************************************/
-BOOL
-IoWndSize( HWND hwnd, int x, int y, int cxClient, int cyClient )
-{
-    MoveWindow( hwnd,x,y,cxClient,cyClient, TRUE);
-
-    return TRUE;
-}
-
-/********************************************************************************
- * 内容  : IOウィンドウの破壊
- * 引数  : HWND hwnd
- * 引数  : int nCmdShow
- * 戻り値: なし
- ***************************************/
-void
-IoWndDestroy( HWND hwnd )
-{
-    DestroyWindow( hwnd );
-}
-
-/********************************************************************************
  * 内容  : IOウィンドウの初期化
  * 引数  : HWND hwnd
  * 戻り値: なし

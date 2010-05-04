@@ -1,5 +1,32 @@
 #ifndef IOWND_H
 
+/* [対応メッセージ] */
+/*                                                                              */
+/*                                                                              */
+/*                                                                              */
+/*                                                                              */
+/* WM_CUT                                                                       */
+/* WM_COPY                                                                      */
+/* WM_PASTE                                                                     */
+/* WM_CLEAR                                                                     */
+/*                                                                              */
+/* EM_SETSEL                                                                    */
+/*                                                                              */
+/*                                                                              */
+/* [未対応]                                                                     */
+/* WM_SETFONT                                                                   */
+/*                                                                              */
+/*                                                                              */
+/* [互換性の無いもの]                                                           */
+/*                                                                              */
+/* GetWindowTextLength(HWND hWnd)                                               */
+/* GetWindowText(HWND hWnd,LPTSTR lpString,int nMaxCount)                       */
+/* SetWindowText(HWND hWnd,LPCTSTR lpString)                                    */
+/*                                                                              */
+/*                                                                              */
+/*                                                                              */
+/*                                                                              */
+
 /********************************************************************************
  * 内容  : IOウィンドウクラスの登録、ウィンドウの生成
  * 引数  : HINSTANCE hInst
@@ -15,25 +42,6 @@ HWND IoWndCreate( HINSTANCE hInst, HWND hWndParent );
  * 戻り値: なし
  ***************************************/
 void IoWndChangeFont( HWND hwnd, LOGFONT *logFontPtr );
-
-/********************************************************************************
- * 内容  : IOウィンドウのサイズ変更
- * 引数  : HWND hwnd
- * 引数  : int x
- * 引数  : int y
- * 引数  : int cxClient
- * 引数  : int cyClient
- * 戻り値: BOOL
- ***************************************/
-BOOL IoWndSize( HWND hwnd, int x, int y, int cxClient, int cyClient );
-
-/********************************************************************************
- * 内容  : IOウィンドウの破壊
- * 引数  : HWND hwnd
- * 引数  : int nCmdShow
- * 戻り値: BOOL
- ***************************************/
-void IoWndDestroy( HWND hwnd );
 
 /********************************************************************************
  * 内容  : IOウィンドウの初期化
