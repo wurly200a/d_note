@@ -41,6 +41,7 @@ static LRESULT ioOnPaste              ( HWND hwnd, UINT message, WPARAM wParam, 
 static LRESULT ioOnClear              ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT ioOnUndo               ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT ioOnSetSel             ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT ioOnSetFont            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT ioOnDefault            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
 static void ioWndRemoveData( HWND hwnd, BOOL bBackSpace );
@@ -101,6 +102,7 @@ static LRESULT (*ioWndProcTbl[IOWND_MAX])( HWND hwnd, UINT message, WPARAM wPara
     ioOnClear              , /* WM_CLEAR               */
     ioOnUndo               , /* WM_UNDO                */
     ioOnSetSel             , /* EM_SETSEL              */
+    ioOnSetFont            , /* WM_SETFONT             */
     ioOnDefault              /* default                */
 };
 /* *INDENT-ON* */
@@ -147,24 +149,6 @@ IoWndCreate( HINSTANCE hInst, HWND hWndParent )
     }
 
     return hwnd;
-}
-
-/********************************************************************************
- * 内容  : IOウィンドウのフォント変更
- * 引数  : HWND hwnd
- * 引数  : HFONT hFont
- * 戻り値: なし
- ***************************************/
-void
-IoWndChangeFont( HWND hwnd, HFONT hFont )
-{
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
-
-    ioWndDataPtr->hFont = hFont;
-
-    updateTextMetrics( hwnd );
-    SendMessage(hwnd,(UINT)WM_SIZE,(WPARAM)0,MAKELPARAM(ioWndDataPtr->cyClient,ioWndDataPtr->cxClient));
-    InvalidateRect( hwnd, NULL, TRUE );
 }
 
 /********************************************************************************
@@ -394,6 +378,7 @@ ioWndConvertMSGtoINDEX( UINT message )
     case WM_CLEAR               :rtn = IOWND_ON_CLEAR               ;break;
     case WM_UNDO                :rtn = IOWND_ON_UNDO                ;break;
     case EM_SETSEL              :rtn = IOWND_ON_SETSEL              ;break;
+    case WM_SETFONT             :rtn = IOWND_ON_SETFONT             ;break;
 
     case WM_NCMOUSEMOVE         :rtn = IOWND_ON_DEFAULT             ;break;
     case WM_SETCURSOR           :rtn = IOWND_ON_DEFAULT             ;break;
@@ -432,7 +417,7 @@ ioOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     ioWndDataPtr = (S_IOWND_DATA *)malloc( sizeof(S_IOWND_DATA) );
     memset( ioWndDataPtr, 0, sizeof(S_IOWND_DATA) );
-    GetObject( GetStockObject(SYSTEM_FIXED_FONT), sizeof(LOGFONT), (PTSTR)&(logFont) );
+    GetObject( GetStockObject(SYSTEM_FIXED_FONT), sizeof(LOGFONT), (PTSTR)&(logFont) ); /* 本家エディットコントロールと異なる。固定幅のみなので */
     ioWndDataPtr->hFont = CreateFontIndirect(&logFont);
 
     ioWndDataPtr->hIoWndBuff = IoWndBuffCreate();
@@ -1531,6 +1516,36 @@ ioOnSetSel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         {
             nop();
         }
+    }
+    else
+    {
+        nop();
+    }
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : WM_SETFONT を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam フォントのハンドル
+ * 引数  : LPARAM lParam フォント設定後に再描画するかどうか。TRUE で再描画
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+ioOnSetFont( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+
+    ioWndDataPtr->hFont = (HFONT)wParam;
+
+    updateTextMetrics( hwnd );
+
+    if( lParam )
+    {
+        InvalidateRect( hwnd, NULL, TRUE );
     }
     else
     {

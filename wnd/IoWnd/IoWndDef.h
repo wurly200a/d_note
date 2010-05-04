@@ -31,6 +31,7 @@ typedef enum
     IOWND_ON_CLEAR               , /* WM_CLEAR                */
     IOWND_ON_UNDO                , /* WM_UNDO                 */
     IOWND_ON_SETSEL              , /* EM_SETSEL               */
+    IOWND_ON_SETFONT             , /* WM_SETFONT              */
     IOWND_ON_DEFAULT             , /* default                 */
     IOWND_MAX
 } IOWND_INDEX;

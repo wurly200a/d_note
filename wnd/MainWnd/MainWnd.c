@@ -257,6 +257,8 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     TEXTMETRIC tm;
     HFONT hFont,hOldFont;
 
+    memset( &mainWndData, 0, sizeof(mainWndData) );
+
     hdc = GetDC( hwnd );
     hFont = GetStockObject(DEFAULT_GUI_FONT);
     hOldFont = SelectObject(hdc, hFont);
@@ -285,6 +287,7 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                                          0, 0, 0, 0,
                                          hwnd, (HMENU)0, GetHinst(), NULL) ;
 #endif                  /*  エディットコントロール使用  or  通常  */
+    mainWndData.hFontIo = NULL;
 
 #if 0
     SomeCtrlCreate( hwnd ); /* コントロールを生成 */
@@ -441,6 +444,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     S_MODAL_DLG_DATA modalDlgData;
     static FINDREPLACE fr;
     static TCHAR strFind[80],strRep[80],strMsg[1024];
+    HFONT hFontOld;
 
     if( (HWND)lParam == mainWndData.hWndIo )
     {
@@ -619,17 +623,25 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break;
 
         case IDM_FORMAT_FONT:
-#ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
             if( FontChooseFont( hwnd, FONT_ID_IO ) )
             {
+                hFontOld = mainWndData.hFontIo;
                 mainWndData.hFontIo = CreateFontIndirect( FontGetLogFont(FONT_ID_IO) );
-                IoWndChangeFont( mainWndData.hWndIo, mainWndData.hFontIo );
+                SendMessage( mainWndData.hWndIo, WM_SETFONT, (WPARAM)mainWndData.hFontIo, (LPARAM)TRUE );
+
+                if( hFontOld != NULL )
+                {
+                    DeleteObject(hFontOld);
+                }
+                else
+                {
+                    nop();
+                }
             }
             else
             {
                 nop();
             }
-#endif                  /*  エディットコントロール使用  or  通常  */
             break;
 
         case IDM_VIEW_STS_BAR:
