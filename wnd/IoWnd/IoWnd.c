@@ -110,16 +110,15 @@ static LRESULT (*ioWndProcTbl[IOWND_MAX])( HWND hwnd, UINT message, WPARAM wPara
 WORD DebugIoWndRect;
 
 /********************************************************************************
- * 内容  : IOウィンドウクラスの登録、ウィンドウの生成
+ * 内容  : IOウィンドウクラスの登録
  * 引数  : HINSTANCE hInst
- * 引数  : HWND hWndParent 親ウィンドウのハンドル
- * 戻り値: HWND
+ * 戻り値: BOOL
  ***************************************/
-HWND
-IoWndCreate( HINSTANCE hInst, HWND hWndParent )
+BOOL
+IoWndRegisterClass( HINSTANCE hInst )
 {
+    BOOL rtn = TRUE;
     WNDCLASS wc = {0};
-    HWND hwnd;
 
     wc.lpfnWndProc      = (WNDPROC) IoWndProc;
     wc.hInstance        = hInst;
@@ -133,22 +132,14 @@ IoWndCreate( HINSTANCE hInst, HWND hWndParent )
     if( !RegisterClass(&wc) )
     {
         MessageBox( NULL, TEXT("RegisterClass Failed!"), TEXT("IoWnd"), MB_ICONERROR );
-        return (HWND)NULL;
+        rtn = FALSE;
     }
-
-    hwnd = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW /* | WS_EX_ACCEPTFILES*/,
-                             "ioWndClass", "IO Window",
-                             WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL,
-                             CW_USEDEFAULT, CW_USEDEFAULT,
-                             0, 0,
-                             hWndParent, 0, hInst, NULL );
-
-    if( hwnd != NULL )
+    else
     {
-        SetFocus(hwnd);
+        nop();
     }
 
-    return hwnd;
+    return rtn;
 }
 
 /********************************************************************************

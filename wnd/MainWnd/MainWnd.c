@@ -277,13 +277,17 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     FontInit();
 
 #ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-    mainWndData.hWndIo = IoWndCreate( GetHinst(), hwnd );
+    IoWndRegisterClass( GetHinst() );
+    mainWndData.hWndIo = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW,
+                                         TEXT("ioWndClass"), NULL,
+                                         WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL ,
+                                         CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
+                                         hwnd, (HMENU)0, GetHinst(), NULL );
 #else                   /* [エディットコントロール使用] or  通常  */
     mainWndData.hWndIo = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW,
                                          TEXT ("edit"), NULL,
                                          WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL |
-                                         WS_BORDER | ES_LEFT | ES_MULTILINE |
-                                         ES_NOHIDESEL | ES_AUTOHSCROLL | ES_AUTOVSCROLL,
+                                         ES_LEFT | ES_MULTILINE | ES_NOHIDESEL | ES_AUTOHSCROLL | ES_AUTOVSCROLL,
                                          0, 0, 0, 0,
                                          hwnd, (HMENU)0, GetHinst(), NULL) ;
 #endif                  /*  エディットコントロール使用  or  通常  */
