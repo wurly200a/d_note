@@ -64,7 +64,7 @@ typedef struct
     int    iDeltaPerLine;
     int    iHorzPos;     /* スクロールバーの横位置  */
     int    iVertPos;     /* スクロールバーの縦位置  */
-    LOGFONT logFont;
+    HFONT  hFont;
     BOOL   bShiftKeyOn;
     H_IOWND_BUFF hIoWndBuff;
 } S_IOWND_DATA;
@@ -152,15 +152,15 @@ IoWndCreate( HINSTANCE hInst, HWND hWndParent )
 /********************************************************************************
  * 内容  : IOウィンドウのフォント変更
  * 引数  : HWND hwnd
- * 引数  : LOGFONT *logFontPtr
+ * 引数  : HFONT hFont
  * 戻り値: なし
  ***************************************/
 void
-IoWndChangeFont( HWND hwnd, LOGFONT *logFontPtr )
+IoWndChangeFont( HWND hwnd, HFONT hFont )
 {
     S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
-    memcpy( &(ioWndDataPtr->logFont),logFontPtr, sizeof(LOGFONT));
+    ioWndDataPtr->hFont = hFont;
 
     updateTextMetrics( hwnd );
     SendMessage(hwnd,(UINT)WM_SIZE,(WPARAM)0,MAKELPARAM(ioWndDataPtr->cyClient,ioWndDataPtr->cxClient));
@@ -428,10 +428,13 @@ ioOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     int iDelta;          /* for MouseWheel */
     ULONG ulScrollLines; /* for MouseWheel */
     S_IOWND_DATA *ioWndDataPtr;
+    LOGFONT logFont;
 
     ioWndDataPtr = (S_IOWND_DATA *)malloc( sizeof(S_IOWND_DATA) );
     memset( ioWndDataPtr, 0, sizeof(S_IOWND_DATA) );
-    GetObject( GetStockObject(SYSTEM_FIXED_FONT), sizeof(LOGFONT), (PTSTR)&(ioWndDataPtr->logFont) );
+    GetObject( GetStockObject(SYSTEM_FIXED_FONT), sizeof(LOGFONT), (PTSTR)&(logFont) );
+    ioWndDataPtr->hFont = CreateFontIndirect(&logFont);
+
     ioWndDataPtr->hIoWndBuff = IoWndBuffCreate();
     SetWindowLongPtr(hwnd,0,(LONG_PTR)ioWndDataPtr);
 
@@ -476,7 +479,7 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
     hdc = BeginPaint( hwnd, &ps );
-    SelectObject( hdc, CreateFontIndirect(&(ioWndDataPtr->logFont)) );
+    SelectObject( hdc, ioWndDataPtr->hFont );
 
     getAllScrollInfo(hwnd);
     iHorzPos = ioWndDataPtr->iHorzPos;
@@ -537,7 +540,6 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         }
     }
 
-    DeleteObject( SelectObject(hdc, GetStockObject(SYSTEM_FONT)) );
     EndPaint( hwnd, &ps );
 
     SetCaretPos( (IoWndBuffGetCaretXpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iHorzPos)*ioWndDataPtr->cxChar, (IoWndBuffGetCaretYpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iVertPos)*ioWndDataPtr->cyChar);
@@ -1326,6 +1328,9 @@ ioOnImeStartComposition( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     HIMC hImc;
     COMPOSITIONFORM cf;
     S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    LOGFONT logFont;
+
+    GetObject( ioWndDataPtr->hFont, sizeof(LOGFONT), (PTSTR)&(logFont) );
 
     cf.dwStyle = CFS_POINT;
     cf.ptCurrentPos.x = IoWndBuffGetCaretXpos(ioWndDataPtr->hIoWndBuff) * ioWndDataPtr->cxChar;
@@ -1333,7 +1338,7 @@ ioOnImeStartComposition( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     hImc = ImmGetContext( hwnd );
     ImmSetCompositionWindow( hImc, &cf );
-    ImmSetCompositionFont( hImc,&(ioWndDataPtr->logFont) );
+    ImmSetCompositionFont( hImc,&logFont );
     ImmReleaseContext( hwnd, hImc );
 
     return DefWindowProc(hwnd,message, wParam, lParam);
@@ -1577,14 +1582,13 @@ updateTextMetrics( HWND hwnd )
     S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
     hdc = GetDC( hwnd );
-    SelectObject( hdc, CreateFontIndirect(&(ioWndDataPtr->logFont)) );
+    SelectObject( hdc, ioWndDataPtr->hFont );
 
     GetTextMetrics( hdc, &tm );
     ioWndDataPtr->cxChar = tm.tmAveCharWidth;
     ioWndDataPtr->cxCaps = (tm.tmPitchAndFamily & 1 ? 3 : 2) * ioWndDataPtr->cxChar / 2;
     ioWndDataPtr->cyChar = tm.tmHeight + tm.tmExternalLeading;
 
-    DeleteObject( SelectObject( hdc, GetStockObject(SYSTEM_FONT) ) );
     ReleaseDC( hwnd, hdc );
 }
 

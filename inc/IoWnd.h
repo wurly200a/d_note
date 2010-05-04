@@ -38,10 +38,10 @@ HWND IoWndCreate( HINSTANCE hInst, HWND hWndParent );
 /********************************************************************************
  * 内容  : IOウィンドウのフォント変更
  * 引数  : HWND hwnd
- * 引数  : LOGFONT *logFontPtr
+ * 引数  : HFONT hFont
  * 戻り値: なし
  ***************************************/
-void IoWndChangeFont( HWND hwnd, LOGFONT *logFontPtr );
+void IoWndChangeFont( HWND hwnd, HFONT hFont );
 
 /********************************************************************************
  * 内容  : IOウィンドウの初期化

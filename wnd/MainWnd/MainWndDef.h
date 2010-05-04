@@ -42,6 +42,7 @@ typedef struct
     int  cyChar;
     int  cxCaps;
     HWND hWndIo;
+    HFONT hFontIo;
     HACCEL hAccel;
     BOOL bNeedSave;
     UINT messageFindReplace;

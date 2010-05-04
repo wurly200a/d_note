@@ -49,7 +49,7 @@ WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nCmdS
         }
     }
 
-    return msg.wParam; /* PostQuitMessage()‚Ìˆø” */
+    return (int)msg.wParam; /* PostQuitMessage()‚Ìˆø” */
 }
 
 

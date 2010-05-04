@@ -622,7 +622,8 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 #ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
             if( FontChooseFont( hwnd, FONT_ID_IO ) )
             {
-                IoWndChangeFont( mainWndData.hWndIo, FontGetLogFont(FONT_ID_IO) );
+                mainWndData.hFontIo = CreateFontIndirect( FontGetLogFont(FONT_ID_IO) );
+                IoWndChangeFont( mainWndData.hWndIo, mainWndData.hFontIo );
             }
             else
             {
