@@ -68,6 +68,7 @@ typedef struct
     HFONT  hFont;
     BOOL   bShiftKeyOn;
     H_IOWND_BUFF hIoWndBuff;
+    LONG   csStyle;
 } S_IOWND_DATA;
 
 /* *INDENT-OFF* */
@@ -394,7 +395,7 @@ ioWndConvertMSGtoINDEX( UINT message )
  * 引数  : HWND hwnd
  * 引数  : UINT message
  * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
- * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (LPCREATESTRUCT)
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
@@ -405,9 +406,22 @@ ioOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     ULONG ulScrollLines; /* for MouseWheel */
     S_IOWND_DATA *ioWndDataPtr;
     LOGFONT logFont;
+    LPCREATESTRUCT csPtr = (LPCREATESTRUCT)lParam;
 
     ioWndDataPtr = (S_IOWND_DATA *)malloc( sizeof(S_IOWND_DATA) );
     memset( ioWndDataPtr, 0, sizeof(S_IOWND_DATA) );
+
+    ioWndDataPtr->csStyle = csPtr->style;
+
+    if( ioWndDataPtr->csStyle & ES_READONLY )
+    {
+        SetClassLong( hwnd, GCL_HBRBACKGROUND, (LONG)CreateSolidBrush(GetSysColor(COLOR_BTNFACE)) );
+    }
+    else
+    {
+        nop();
+    }
+
     GetObject( GetStockObject(SYSTEM_FIXED_FONT), sizeof(LOGFONT), (PTSTR)&(logFont) ); /* 本家エディットコントロールと異なる。固定幅のみなので */
     ioWndDataPtr->hFont = CreateFontIndirect(&logFont);
 
@@ -475,13 +489,20 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                 bkColor = GetBkColor(hdc);
                 textColor = GetTextColor(hdc);
 
-                if( buffDispData.type == TAB_CHAR )
+                if( ioWndDataPtr->csStyle & ES_READONLY )
                 {
-                    SetBkColor(hdc, TAB_BK_COLOR_RGB );
+                    SetBkColor(hdc, GetSysColor(COLOR_BTNFACE) );
                 }
                 else
                 {
-                    SetBkColor(hdc, BK_COLOR_RGB );
+                    if( buffDispData.type == TAB_CHAR )
+                    {
+                        SetBkColor(hdc, TAB_BK_COLOR_RGB );
+                    }
+                    else
+                    {
+                        SetBkColor(hdc, BK_COLOR_RGB );
+                    }
                 }
 
                 if( DebugIoWndRect )
@@ -811,27 +832,33 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     BOOL bRectSelect = FALSE;
     S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
-    IoWndBuffSelectOff(ioWndDataPtr->hIoWndBuff);
-
-    for( i=0; i<(int) LOWORD(lParam); i++ )
+    if( ioWndDataPtr->csStyle & ES_READONLY )
     {
-        size = 0;
+        nop();
+    }
+    else
+    {
+        IoWndBuffSelectOff(ioWndDataPtr->hIoWndBuff);
 
-        switch( wParam )
+        for( i=0; i<(int) LOWORD(lParam); i++ )
         {
-        case '\b':  /* backspace */
-            break;
-        case '\x1B':/* escape */
-            break;
-        case '\n':  /* line feed */
-            break;
-        case '\r':  /* carriage return */
-            size = IoWndBuffGetNewLineData(ioWndDataPtr->hIoWndBuff,data);
-            break;
-        case '\t':  /* tab */
-        default:
-            /* 文字入力 */
-            data[0] = (TCHAR)wParam;
+            size = 0;
+
+            switch( wParam )
+            {
+            case '\b':  /* backspace */
+                break;
+            case '\x1B':/* escape */
+                break;
+            case '\n':  /* line feed */
+                break;
+            case '\r':  /* carriage return */
+                size = IoWndBuffGetNewLineData(ioWndDataPtr->hIoWndBuff,data);
+                break;
+            case '\t':  /* tab */
+            default:
+                /* 文字入力 */
+                data[0] = (TCHAR)wParam;
             size = 1;
             rect.left   = (IoWndBuffGetCaretXpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iHorzPos)*ioWndDataPtr->cxChar;
             rect.top    = (IoWndBuffGetCaretYpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iVertPos)*ioWndDataPtr->cyChar;
@@ -839,34 +866,35 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             rect.bottom = rect.top + ioWndDataPtr->cyChar;
             bRectSelect = TRUE;
             break;
-        }
+            }
 
-        if( size )
-        {
-            IoWndBuffDataSet( ioWndDataPtr->hIoWndBuff, data,size,FALSE );
-            if( bRectSelect )
+            if( size )
             {
+                IoWndBuffDataSet( ioWndDataPtr->hIoWndBuff, data,size,FALSE );
+                if( bRectSelect )
+                {
 #if 0 /* デバッグ用 */
-                DebugIoWndRect = 1;
+                    DebugIoWndRect = 1;
 #endif
-                InvalidateRect( hwnd, &rect, TRUE );
+                    InvalidateRect( hwnd, &rect, TRUE );
+                }
+                else
+                {
+                    InvalidateRect( hwnd, NULL, TRUE );
+                }
+                SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_CHANGE), (LPARAM)hwnd);
             }
             else
             {
-                InvalidateRect( hwnd, NULL, TRUE );
+                nop();
             }
-            SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_CHANGE), (LPARAM)hwnd);
         }
-        else
-        {
-            nop();
-        }
+
+        ioOnImeStartComposition( hwnd, message, wParam, lParam );
+
+        SetCaretPos( (IoWndBuffGetCaretXpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iHorzPos)*ioWndDataPtr->cxChar, (IoWndBuffGetCaretYpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iVertPos)*ioWndDataPtr->cyChar);
+        setAllScrollInfo(hwnd);
     }
-
-    ioOnImeStartComposition( hwnd, message, wParam, lParam );
-
-    SetCaretPos( (IoWndBuffGetCaretXpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iHorzPos)*ioWndDataPtr->cxChar, (IoWndBuffGetCaretYpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iVertPos)*ioWndDataPtr->cyChar);
-    setAllScrollInfo(hwnd);
 
     return rtn;
 }
@@ -1244,6 +1272,7 @@ ioOnRbuttonUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     LRESULT rtn = 0;
     HMENU hMenu;
     POINT point;
+    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
     point.x = LOWORD(lParam);
     point.y = HIWORD(lParam);
@@ -1251,37 +1280,55 @@ ioOnRbuttonUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     ClientToScreen(hwnd,&point);
 
     hMenu = CreatePopupMenu();
-    AppendMenu( hMenu, MF_STRING   , IDM_EDIT_UNDO       , TEXT("元に戻す(&U)") );
-    AppendMenu( hMenu, MF_SEPARATOR, 0                   , NULL );
-    AppendMenu( hMenu, MF_STRING   , IDM_EDIT_CUT        , TEXT("切り取り(&T)") );
-    AppendMenu( hMenu, MF_STRING   , IDM_EDIT_COPY       , TEXT("コピー(&C)") );
-    AppendMenu( hMenu, MF_STRING   , IDM_EDIT_PASTE      , TEXT("貼り付け(&P)") );
-    AppendMenu( hMenu, MF_STRING   , IDM_EDIT_DELETE     , TEXT("削除(&D)") );
-    AppendMenu( hMenu, MF_SEPARATOR, 0                   , NULL );
-    AppendMenu( hMenu, MF_STRING   , IDM_EDIT_SELECT_ALL , TEXT("すべて選択(&A)") );
-
-    EnableMenuItem( hMenu, IDM_EDIT_UNDO, MF_GRAYED );
-
-    if( IoWndGetDataSize(hwnd,IOWND_SELECTED) )
+    if( ioWndDataPtr->csStyle & ES_READONLY )
     {
-        EnableMenuItem( hMenu, IDM_EDIT_CUT   , MF_ENABLED );
-        EnableMenuItem( hMenu, IDM_EDIT_COPY  , MF_ENABLED );
-        EnableMenuItem( hMenu, IDM_EDIT_DELETE, MF_ENABLED );
+        AppendMenu( hMenu, MF_STRING   , IDM_EDIT_COPY       , TEXT("コピー(&C)") );
+        AppendMenu( hMenu, MF_SEPARATOR, 0                   , NULL );
+        AppendMenu( hMenu, MF_STRING   , IDM_EDIT_SELECT_ALL , TEXT("すべて選択(&A)") );
+
+        if( IoWndGetDataSize(hwnd,IOWND_SELECTED) )
+        {
+            EnableMenuItem( hMenu, IDM_EDIT_COPY  , MF_ENABLED );
+        }
+        else
+        {
+            EnableMenuItem( hMenu, IDM_EDIT_COPY  , MF_GRAYED );
+        }
     }
     else
     {
-        EnableMenuItem( hMenu, IDM_EDIT_CUT   , MF_GRAYED );
-        EnableMenuItem( hMenu, IDM_EDIT_COPY  , MF_GRAYED );
-        EnableMenuItem( hMenu, IDM_EDIT_DELETE, MF_GRAYED );
-    }
+        AppendMenu( hMenu, MF_STRING   , IDM_EDIT_UNDO       , TEXT("元に戻す(&U)") );
+        AppendMenu( hMenu, MF_SEPARATOR, 0                   , NULL );
+        AppendMenu( hMenu, MF_STRING   , IDM_EDIT_CUT        , TEXT("切り取り(&T)") );
+        AppendMenu( hMenu, MF_STRING   , IDM_EDIT_COPY       , TEXT("コピー(&C)") );
+        AppendMenu( hMenu, MF_STRING   , IDM_EDIT_PASTE      , TEXT("貼り付け(&P)") );
+        AppendMenu( hMenu, MF_STRING   , IDM_EDIT_DELETE     , TEXT("削除(&D)") );
+        AppendMenu( hMenu, MF_SEPARATOR, 0                   , NULL );
+        AppendMenu( hMenu, MF_STRING   , IDM_EDIT_SELECT_ALL , TEXT("すべて選択(&A)") );
 
-    if( IsClipboardFormatAvailable(CF_TEXT) )
-    {
-        EnableMenuItem( hMenu, IDM_EDIT_PASTE, MF_ENABLED );
-    }
-    else
-    {
-        EnableMenuItem( hMenu, IDM_EDIT_PASTE, MF_GRAYED );
+        EnableMenuItem( hMenu, IDM_EDIT_UNDO, MF_GRAYED );
+
+        if( IoWndGetDataSize(hwnd,IOWND_SELECTED) )
+        {
+            EnableMenuItem( hMenu, IDM_EDIT_CUT   , MF_ENABLED );
+            EnableMenuItem( hMenu, IDM_EDIT_COPY  , MF_ENABLED );
+            EnableMenuItem( hMenu, IDM_EDIT_DELETE, MF_ENABLED );
+        }
+        else
+        {
+            EnableMenuItem( hMenu, IDM_EDIT_CUT   , MF_GRAYED );
+            EnableMenuItem( hMenu, IDM_EDIT_COPY  , MF_GRAYED );
+            EnableMenuItem( hMenu, IDM_EDIT_DELETE, MF_GRAYED );
+        }
+
+        if( IsClipboardFormatAvailable(CF_TEXT) )
+        {
+            EnableMenuItem( hMenu, IDM_EDIT_PASTE, MF_ENABLED );
+        }
+        else
+        {
+            EnableMenuItem( hMenu, IDM_EDIT_PASTE, MF_GRAYED );
+        }
     }
 
     TrackPopupMenu(hMenu,TPM_RIGHTBUTTON,point.x,point.y,0,hwnd,NULL);
