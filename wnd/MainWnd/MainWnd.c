@@ -7,7 +7,7 @@
 
 /* 外部関数定義 */
 #include "WinMain.h"
-#include "IoWnd.h"
+#include "EditWnd.h"
 #include "SomeCtrl.h"
 #include "File.h"
 #include "StsBar.h"
@@ -277,9 +277,9 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     FontInit();
 
 #ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-    IoWndRegisterClass( GetHinst() );
+    EditWndRegisterClass( GetHinst() );
     mainWndData.hWndIo = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW,
-                                         TEXT("ioWndClass"), NULL,
+                                         TEXT("editWnd"), NULL,
                                          WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL ,
                                          CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
                                          hwnd, (HMENU)0, GetHinst(), NULL );
@@ -456,8 +456,8 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         {
         case EN_UPDATE:
 #ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-            StsBarSetText( STS_BAR_0  ,"%d バイト、全 %d 行",IoWndGetDataSize(mainWndData.hWndIo, IOWND_ALL),IoWndGetLineMaxSize(mainWndData.hWndIo) );
-            StsBarSetText( STS_BAR_MAX,"   %d 行、%d 列",IoWndGetCaretYpos(mainWndData.hWndIo)+1,IoWndGetCaretXpos(mainWndData.hWndIo)+1);
+            StsBarSetText( STS_BAR_0  ,"%d バイト、全 %d 行",EditWndGetDataSize(mainWndData.hWndIo, EDITWND_ALL),EditWndGetLineMaxSize(mainWndData.hWndIo) );
+            StsBarSetText( STS_BAR_MAX,"   %d 行、%d 列",EditWndGetCaretYpos(mainWndData.hWndIo)+1,EditWndGetCaretXpos(mainWndData.hWndIo)+1);
 #endif                  /*  エディットコントロール使用  or  通常  */
             break;
         case EN_CHANGE:
@@ -488,7 +488,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             {
                 mainWndData.bNeedSave = FALSE;
 #ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-                IoWndDataInit(mainWndData.hWndIo);
+                EditWndDataInit(mainWndData.hWndIo);
 #endif                  /*  エディットコントロール使用  or  通常  */
                 doCaption( hwnd, "", FALSE);
             }
@@ -505,7 +505,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                     mainWndData.bNeedSave = FALSE;
                     dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
 #ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-                    IoWndDataSet( mainWndData.hWndIo, dataPtr,dwSize,TRUE );
+                    EditWndDataSet( mainWndData.hWndIo, dataPtr,dwSize,TRUE );
 #endif                  /*  エディットコントロール使用  or  通常  */
                     doCaption( hwnd, FileGetTitleName(FILE_ID_BIN), FALSE );
                 }
@@ -517,11 +517,11 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break;
         case IDM_FILE_SAVE:
 #ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-            dwSize = IoWndGetDataSize(mainWndData.hWndIo,IOWND_ALL);
+            dwSize = EditWndGetDataSize(mainWndData.hWndIo,EDITWND_ALL);
             dataPtr = malloc( dwSize * sizeof(TCHAR) );
             if( dataPtr != NULL )
             {
-                IoWndDataGet( mainWndData.hWndIo, dataPtr,dwSize,IOWND_ALL );
+                EditWndDataGet( mainWndData.hWndIo, dataPtr,dwSize,EDITWND_ALL );
                 if( (FileWrite( FILE_ID_BIN, dataPtr, dwSize )) == FILE_NAME_NOT_SET )
                 {
                     if( FileSaveDlg( hwnd,FILE_ID_BIN ) )
@@ -553,11 +553,11 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break;
         case IDM_FILE_SAVE_AS:
 #ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-            dwSize = IoWndGetDataSize(mainWndData.hWndIo,IOWND_ALL);
+            dwSize = EditWndGetDataSize(mainWndData.hWndIo,EDITWND_ALL);
             dataPtr = malloc( dwSize * sizeof(TCHAR) );
             if( dataPtr != NULL )
             {
-                IoWndDataGet( mainWndData.hWndIo, dataPtr,dwSize,IOWND_ALL );
+                EditWndDataGet( mainWndData.hWndIo, dataPtr,dwSize,EDITWND_ALL );
                 if( FileSaveDlg( hwnd,FILE_ID_BIN ) )
                 {
                     mainWndData.bNeedSave = FALSE;
@@ -622,7 +622,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         case IDM_EDIT_DATETIME:
             strPtr = DateTimeGetString();
 #ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-            IoWndDataSet( mainWndData.hWndIo, strPtr, strlen(strPtr), FALSE );
+            EditWndDataSet( mainWndData.hWndIo, strPtr, strlen(strPtr), FALSE );
 #endif                  /*  エディットコントロール使用  or  通常  */
             break;
 
@@ -664,7 +664,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
 #ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
         case IDM_EXTEND_NEWLINE_CRLF:
-            IoWndNewLineCodeSet(mainWndData.hWndIo,NEWLINECODE_CRLF);
+            EditWndNewLineCodeSet(mainWndData.hWndIo,NEWLINECODE_CRLF);
             MenuCheckItem  ( IDM_EXTEND_NEWLINE_CRLF );
             MenuUnCheckItem( IDM_EXTEND_NEWLINE_LF   );
             MenuUnCheckItem( IDM_EXTEND_NEWLINE_CR   );
@@ -672,7 +672,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break;
 
         case IDM_EXTEND_NEWLINE_LF  :
-            IoWndNewLineCodeSet(mainWndData.hWndIo,NEWLINECODE_LF);
+            EditWndNewLineCodeSet(mainWndData.hWndIo,NEWLINECODE_LF);
             MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_CRLF );
             MenuCheckItem    ( IDM_EXTEND_NEWLINE_LF   );
             MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_CR   );
@@ -680,7 +680,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break;
 
         case IDM_EXTEND_NEWLINE_CR  :
-            IoWndNewLineCodeSet(mainWndData.hWndIo,NEWLINECODE_CR);
+            EditWndNewLineCodeSet(mainWndData.hWndIo,NEWLINECODE_CR);
             MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_CRLF );
             MenuUnCheckItem  ( IDM_EXTEND_NEWLINE_LF   );
             MenuCheckItem    ( IDM_EXTEND_NEWLINE_CR   );
@@ -866,7 +866,7 @@ onDropFiles( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         FileSetName( FILE_ID_BIN, szFileName, FALSE );
         dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
 #ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-        IoWndDataSet( mainWndData.hWndIo,dataPtr,dwSize,TRUE );
+        EditWndDataSet( mainWndData.hWndIo,dataPtr,dwSize,TRUE );
 #endif                  /*  エディットコントロール使用  or  通常  */
         doCaption( hwnd, FileGetTitleName(FILE_ID_BIN),FALSE );
     }
@@ -890,7 +890,7 @@ onInitMenuPopup( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     if( LOWORD(lParam) == 1 )
     { /* 「編集」 */
 #ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-        if( IoWndGetDataSize(mainWndData.hWndIo,IOWND_SELECTED) )
+        if( EditWndGetDataSize(mainWndData.hWndIo,EDITWND_SELECTED) )
         {
             MenuEnableItem( IDM_EDIT_CUT    );
             MenuEnableItem( IDM_EDIT_COPY   );

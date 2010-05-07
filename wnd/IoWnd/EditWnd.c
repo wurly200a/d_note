@@ -1,50 +1,50 @@
 /* 共通インクルードファイル */
 #include "common.h"
 /* 個別インクルードファイル */
-#include "IoWndDef.h"
+#include "EditWndDef.h"
 
 /* 外部関数定義 */
-#include "IoWndBuffer.h"
+#include "EditWndBuffer.h"
 
 /* 外部変数定義 */
 
 /* 内部関数定義 */
-#include "IoWnd.h"
-LRESULT CALLBACK IoWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static IOWND_INDEX ioWndConvertMSGtoINDEX( UINT message );
-static LRESULT ioOnCreate             ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnPaint              ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnSize               ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnClose              ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnDestroy            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnCommand            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnKeyUp              ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnKeyDown            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnChar               ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnHscroll            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnVscroll            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnSetFocus           ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnKillFocus          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnMouseActivate      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnMouseWheel         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnMouseMove          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnLbuttonDown        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnMbuttonDown        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnRbuttonDown        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnLbuttonUp          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnMbuttonUp          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnRbuttonUp          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnImeStartComposition( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnCut                ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnCopy               ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnPaste              ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnClear              ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnUndo               ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnSetSel             ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnSetFont            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT ioOnDefault            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+#include "EditWnd.h"
+LRESULT CALLBACK EditWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static EDITWND_INDEX editWndConvertMSGtoINDEX( UINT message );
+static LRESULT editOnCreate             ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnPaint              ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnSize               ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnClose              ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnDestroy            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnCommand            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnKeyUp              ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnKeyDown            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnChar               ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnHscroll            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnVscroll            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnSetFocus           ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnKillFocus          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnMouseActivate      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnMouseWheel         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnMouseMove          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnLbuttonDown        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnMbuttonDown        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnRbuttonDown        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnLbuttonUp          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnMbuttonUp          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnRbuttonUp          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnImeStartComposition( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnCut                ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnCopy               ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnPaste              ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnClear              ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnUndo               ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnSetSel             ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnSetFont            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnDefault            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
-static void ioWndRemoveData( HWND hwnd, BOOL bBackSpace );
+static void editWndRemoveData( HWND hwnd, BOOL bBackSpace );
 static void updateTextMetrics( HWND hwnd );
 static void setAllScrollInfo( HWND hwnd );
 static void getAllScrollInfo( HWND hwnd );
@@ -67,72 +67,72 @@ typedef struct
     int    iVertPos;     /* スクロールバーの縦位置  */
     HFONT  hFont;
     BOOL   bShiftKeyOn;
-    H_IOWND_BUFF hIoWndBuff;
+    H_EDITWND_BUFF hEditWndBuff;
     LONG   csStyle;
-} S_IOWND_DATA;
+} S_EDITWND_DATA;
 
 /* *INDENT-OFF* */
-static LRESULT (*ioWndProcTbl[IOWND_MAX])( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam ) =
+static LRESULT (*editWndProcTbl[EDITWND_MAX])( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam ) =
 {
-    ioOnCreate             , /* WM_CREATE              */
-    ioOnPaint              , /* WM_PAINT               */
-    ioOnSize               , /* WM_SIZE                */
-    ioOnClose              , /* WM_CLOSE               */
-    ioOnDestroy            , /* WM_DESTROY             */
-    ioOnCommand            , /* WM_COMMAND             */
-    ioOnKeyUp              , /* WM_KEYUP               */
-    ioOnKeyDown            , /* WM_KEYDOWN             */
-    ioOnChar               , /* WM_CHAR                */
-    ioOnHscroll            , /* WM_HSCROLL             */
-    ioOnVscroll            , /* WM_VSCROLL             */
-    ioOnSetFocus           , /* WM_SETFOCUS            */
-    ioOnKillFocus          , /* WM_KILLFOCUS           */
-    ioOnMouseActivate      , /* WM_MOUSEACTIVATE       */
-    ioOnMouseWheel         , /* WM_MOUSEWHEEL          */
-    ioOnMouseMove          , /* WM_MOUSEMOVE           */
-    ioOnLbuttonDown        , /* WM_LBUTTONDOWN         */
-    ioOnMbuttonDown        , /* WM_MBUTTONDOWN         */
-    ioOnRbuttonDown        , /* WM_RBUTTONDOWN         */
-    ioOnLbuttonUp          , /* WM_LBUTTONUP           */
-    ioOnMbuttonUp          , /* WM_MBUTTONUP           */
-    ioOnRbuttonUp          , /* WM_RBUTTONUP           */
-    ioOnImeStartComposition, /* WM_IME_STARTCOMPOSITION*/
-    ioOnCut                , /* WM_CUT                 */
-    ioOnCopy               , /* WM_COPY                */
-    ioOnPaste              , /* WM_PASTE               */
-    ioOnClear              , /* WM_CLEAR               */
-    ioOnUndo               , /* WM_UNDO                */
-    ioOnSetSel             , /* EM_SETSEL              */
-    ioOnSetFont            , /* WM_SETFONT             */
-    ioOnDefault              /* default                */
+    editOnCreate             , /* WM_CREATE              */
+    editOnPaint              , /* WM_PAINT               */
+    editOnSize               , /* WM_SIZE                */
+    editOnClose              , /* WM_CLOSE               */
+    editOnDestroy            , /* WM_DESTROY             */
+    editOnCommand            , /* WM_COMMAND             */
+    editOnKeyUp              , /* WM_KEYUP               */
+    editOnKeyDown            , /* WM_KEYDOWN             */
+    editOnChar               , /* WM_CHAR                */
+    editOnHscroll            , /* WM_HSCROLL             */
+    editOnVscroll            , /* WM_VSCROLL             */
+    editOnSetFocus           , /* WM_SETFOCUS            */
+    editOnKillFocus          , /* WM_KILLFOCUS           */
+    editOnMouseActivate      , /* WM_MOUSEACTIVATE       */
+    editOnMouseWheel         , /* WM_MOUSEWHEEL          */
+    editOnMouseMove          , /* WM_MOUSEMOVE           */
+    editOnLbuttonDown        , /* WM_LBUTTONDOWN         */
+    editOnMbuttonDown        , /* WM_MBUTTONDOWN         */
+    editOnRbuttonDown        , /* WM_RBUTTONDOWN         */
+    editOnLbuttonUp          , /* WM_LBUTTONUP           */
+    editOnMbuttonUp          , /* WM_MBUTTONUP           */
+    editOnRbuttonUp          , /* WM_RBUTTONUP           */
+    editOnImeStartComposition, /* WM_IME_STARTCOMPOSITION*/
+    editOnCut                , /* WM_CUT                 */
+    editOnCopy               , /* WM_COPY                */
+    editOnPaste              , /* WM_PASTE               */
+    editOnClear              , /* WM_CLEAR               */
+    editOnUndo               , /* WM_UNDO                */
+    editOnSetSel             , /* EM_SETSEL              */
+    editOnSetFont            , /* WM_SETFONT             */
+    editOnDefault              /* default                */
 };
 /* *INDENT-ON* */
 
-WORD DebugIoWndRect;
+WORD DebugEditWndRect;
 
 /********************************************************************************
- * 内容  : IOウィンドウクラスの登録
+ * 内容  : EDITウィンドウクラスの登録
  * 引数  : HINSTANCE hInst
  * 戻り値: BOOL
  ***************************************/
 BOOL
-IoWndRegisterClass( HINSTANCE hInst )
+EditWndRegisterClass( HINSTANCE hInst )
 {
     BOOL rtn = TRUE;
     WNDCLASS wc = {0};
 
-    wc.lpfnWndProc      = (WNDPROC) IoWndProc;
+    wc.lpfnWndProc      = (WNDPROC) EditWndProc;
     wc.hInstance        = hInst;
     wc.hIcon            = (HICON)0;
     wc.hCursor          = LoadCursor(NULL, IDC_IBEAM);
     wc.hbrBackground    = (HBRUSH) CreateSolidBrush( BG_COLOR_RGB );
-    wc.lpszClassName    = "ioWndClass";
+    wc.lpszClassName    = "editWnd";
     wc.lpszMenuName     = NULL;
-    wc.cbWndExtra       = sizeof(S_IOWND_DATA);
+    wc.cbWndExtra       = sizeof(S_EDITWND_DATA);
 
     if( !RegisterClass(&wc) )
     {
-        MessageBox( NULL, TEXT("RegisterClass Failed!"), TEXT("IoWnd"), MB_ICONERROR );
+        MessageBox( NULL, TEXT("RegisterClass Failed!"), TEXT("EditWnd"), MB_ICONERROR );
         rtn = FALSE;
     }
     else
@@ -144,23 +144,23 @@ IoWndRegisterClass( HINSTANCE hInst )
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウの初期化
+ * 内容  : EDITウィンドウの初期化
  * 引数  : HWND hwnd
  * 戻り値: なし
  ***************************************/
 void
-IoWndDataInit( HWND hwnd )
+EditWndDataInit( HWND hwnd )
 {
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
-    IoWndBuffInit(ioWndDataPtr->hIoWndBuff);
+    EditWndBuffInit(editWndDataPtr->hEditWndBuff);
 
     setAllScrollInfo(hwnd);
     InvalidateRect( hwnd, NULL, TRUE );
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウのデータセット
+ * 内容  : EDITウィンドウのデータセット
  * 引数  : HWND hwnd
  * 引数  : TCHAR* dataPtr
  * 引数  : DWORD  length
@@ -168,11 +168,11 @@ IoWndDataInit( HWND hwnd )
  * 戻り値: なし
  ***************************************/
 void
-IoWndDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bInit )
+EditWndDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bInit )
 {
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
-    IoWndBuffDataSet( ioWndDataPtr->hIoWndBuff, dataPtr, length, bInit );
+    EditWndBuffDataSet( editWndDataPtr->hEditWndBuff, dataPtr, length, bInit );
 
     if( bInit )
     {
@@ -183,112 +183,112 @@ IoWndDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bInit )
         SendMessage(GetParent(hwnd), (UINT)WM_COMMAND, MAKEWPARAM(0,EN_CHANGE), (LPARAM)hwnd);
     }
 
-    IoWndBuffSelectOff(ioWndDataPtr->hIoWndBuff);
+    EditWndBuffSelectOff(editWndDataPtr->hEditWndBuff);
     setAllScrollInfo(hwnd);
     InvalidateRect( hwnd, NULL, TRUE );
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウのデータ取得
+ * 内容  : EDITウィンドウのデータ取得
  * 引数  : HWND hwnd
  * 引数  : TCHAR *dataPtr
  * 引数  : DWORD dataSize
- * 引数  : IOWND_REGION region
+ * 引数  : EDITWND_REGION region
  * 戻り値: BOOL
  ***************************************/
 BOOL
-IoWndDataGet( HWND hwnd, TCHAR *dataPtr, DWORD dataSize, IOWND_REGION region )
+EditWndDataGet( HWND hwnd, TCHAR *dataPtr, DWORD dataSize, EDITWND_REGION region )
 {
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
-    return IoWndBuffDataGet( ioWndDataPtr->hIoWndBuff, dataPtr, dataSize, region );
+    return EditWndBuffDataGet( editWndDataPtr->hEditWndBuff, dataPtr, dataSize, region );
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウのデータサイズ取得
+ * 内容  : EDITウィンドウのデータサイズ取得
  * 引数  : HWND hwnd
- * 引数  : IOWND_REGION region
+ * 引数  : EDITWND_REGION region
  * 戻り値: DWORD
  ***************************************/
 DWORD
-IoWndGetDataSize( HWND hwnd, IOWND_REGION region )
+EditWndGetDataSize( HWND hwnd, EDITWND_REGION region )
 {
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
-    return IoWndBuffGetDataSize( ioWndDataPtr->hIoWndBuff, region );
+    return EditWndBuffGetDataSize( editWndDataPtr->hEditWndBuff, region );
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファの最大行サイズ取得
- * 引数  : HWND hwnd
- * 戻り値: DWORD
- ***************************************/
-DWORD
-IoWndGetLineMaxSize( HWND hwnd )
-{
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
-    return IoWndBuffGetLineMaxSize( ioWndDataPtr->hIoWndBuff );
-}
-
-/********************************************************************************
- * 内容  : IOウィンドウバッファの最大文字サイズ取得
+ * 内容  : EDITウィンドウバッファの最大行サイズ取得
  * 引数  : HWND hwnd
  * 戻り値: DWORD
  ***************************************/
 DWORD
-IoWndGetColumnMaxSize( HWND hwnd )
+EditWndGetLineMaxSize( HWND hwnd )
 {
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
-
-    return IoWndBuffGetColumnMaxSize( ioWndDataPtr->hIoWndBuff );
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    return EditWndBuffGetLineMaxSize( editWndDataPtr->hEditWndBuff );
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのキャレットX位置取得
+ * 内容  : EDITウィンドウバッファの最大文字サイズ取得
  * 引数  : HWND hwnd
  * 戻り値: DWORD
  ***************************************/
 DWORD
-IoWndGetCaretXpos( HWND hwnd )
+EditWndGetColumnMaxSize( HWND hwnd )
 {
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
-    return IoWndBuffGetCaretXpos( ioWndDataPtr->hIoWndBuff );
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+
+    return EditWndBuffGetColumnMaxSize( editWndDataPtr->hEditWndBuff );
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのキャレットY位置取得
+ * 内容  : EDITウィンドウバッファのキャレットX位置取得
  * 引数  : HWND hwnd
  * 戻り値: DWORD
  ***************************************/
 DWORD
-IoWndGetCaretYpos( HWND hwnd )
+EditWndGetCaretXpos( HWND hwnd )
 {
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
-    return IoWndBuffGetCaretYpos( ioWndDataPtr->hIoWndBuff );
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    return EditWndBuffGetCaretXpos( editWndDataPtr->hEditWndBuff );
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウの改行コードセット
+ * 内容  : EDITウィンドウバッファのキャレットY位置取得
+ * 引数  : HWND hwnd
+ * 戻り値: DWORD
+ ***************************************/
+DWORD
+EditWndGetCaretYpos( HWND hwnd )
+{
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    return EditWndBuffGetCaretYpos( editWndDataPtr->hEditWndBuff );
+}
+
+/********************************************************************************
+ * 内容  : EDITウィンドウの改行コードセット
  * 引数  : HWND hwnd
  * 引数  : NEWLINECODE_TYPE newLineCodeType
  * 戻り値: BOOL (TRUE:表示書き換え必要)
  ***************************************/
 BOOL
-IoWndNewLineCodeSet( HWND hwnd, NEWLINECODE_TYPE newLineCodeType )
+EditWndNewLineCodeSet( HWND hwnd, NEWLINECODE_TYPE newLineCodeType )
 {
     DWORD allDataSize;
     TCHAR *dataTopPtr;
     BOOL bRtn = FALSE;
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
-    IoWndBuffSetNewLineCode( ioWndDataPtr->hIoWndBuff, newLineCodeType );
+    EditWndBuffSetNewLineCode( editWndDataPtr->hEditWndBuff, newLineCodeType );
 
-    allDataSize = IoWndBuffGetDataSize(ioWndDataPtr->hIoWndBuff, BUFF_ALL);
+    allDataSize = EditWndBuffGetDataSize(editWndDataPtr->hEditWndBuff, BUFF_ALL);
     dataTopPtr  = malloc( sizeof(TCHAR) * allDataSize );
     if( dataTopPtr != NULL )
     {
-        IoWndBuffDataGet( ioWndDataPtr->hIoWndBuff, dataTopPtr, allDataSize, BUFF_ALL );
-        IoWndBuffDataSet( ioWndDataPtr->hIoWndBuff, dataTopPtr, allDataSize, TRUE );
+        EditWndBuffDataGet( editWndDataPtr->hEditWndBuff, dataTopPtr, allDataSize, BUFF_ALL );
+        EditWndBuffDataSet( editWndDataPtr->hEditWndBuff, dataTopPtr, allDataSize, TRUE );
         setAllScrollInfo(hwnd);
         InvalidateRect( hwnd, NULL, TRUE );
 
@@ -309,7 +309,7 @@ IoWndNewLineCodeSet( HWND hwnd, NEWLINECODE_TYPE newLineCodeType )
  * 戻り値: BOOL
  ***************************************/
 BOOL
-IsIoWndMessage( MSG *msg )
+IsEditWndMessage( MSG *msg )
 {
     return FALSE;
 }
@@ -323,9 +323,9 @@ IsIoWndMessage( MSG *msg )
  * 戻り値: LRESULT
  ***************************************/
 LRESULT CALLBACK
-IoWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+EditWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
-    return ioWndProcTbl[ioWndConvertMSGtoINDEX(message)]( hwnd, message, wParam, lParam );
+    return editWndProcTbl[editWndConvertMSGtoINDEX(message)]( hwnd, message, wParam, lParam );
 }
 
 /********************************************************************************
@@ -333,57 +333,57 @@ IoWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 引数  : UINT message
  * 戻り値: MAIN_WNDPRC_INDEX
  ***************************************/
-static IOWND_INDEX
-ioWndConvertMSGtoINDEX( UINT message )
+static EDITWND_INDEX
+editWndConvertMSGtoINDEX( UINT message )
 {
-    IOWND_INDEX rtn;
+    EDITWND_INDEX rtn;
 
     /* *INDENT-OFF* */
     switch( message )
     {
-    case WM_CREATE              :rtn = IOWND_ON_CREATE              ;break;
-    case WM_PAINT               :rtn = IOWND_ON_PAINT               ;break;
-    case WM_SIZE                :rtn = IOWND_ON_SIZE                ;break;
-    case WM_CLOSE               :rtn = IOWND_ON_CLOSE               ;break;
-    case WM_DESTROY             :rtn = IOWND_ON_DESTROY             ;break;
-    case WM_COMMAND             :rtn = IOWND_ON_COMMAND             ;break;
-    case WM_KEYUP               :rtn = IOWND_ON_KEYUP               ;break;
-    case WM_KEYDOWN             :rtn = IOWND_ON_KEYDOWN             ;break;
-    case WM_CHAR                :rtn = IOWND_ON_CHAR                ;break;
-    case WM_HSCROLL             :rtn = IOWND_ON_HSCROLL             ;break;
-    case WM_VSCROLL             :rtn = IOWND_ON_VSCROLL             ;break;
-    case WM_SETFOCUS            :rtn = IOWND_ON_SETFOCUS            ;break;
-    case WM_KILLFOCUS           :rtn = IOWND_ON_KILLFOCUS           ;break;
-    case WM_MOUSEACTIVATE       :rtn = IOWND_ON_MOUSEACTIVATE       ;break;
-    case WM_MOUSEWHEEL          :rtn = IOWND_ON_MOUSEWHEEL          ;break;
-    case WM_MOUSEMOVE           :rtn = IOWND_ON_MOUSEMOVE           ;break;
-    case WM_LBUTTONDOWN         :rtn = IOWND_ON_LBUTTONDOWN         ;break;
-    case WM_MBUTTONDOWN         :rtn = IOWND_ON_MBUTTONDOWN         ;break;
-    case WM_RBUTTONDOWN         :rtn = IOWND_ON_RBUTTONDOWN         ;break;
-    case WM_LBUTTONUP           :rtn = IOWND_ON_LBUTTONUP           ;break;
-    case WM_MBUTTONUP           :rtn = IOWND_ON_MBUTTONUP           ;break;
-    case WM_RBUTTONUP           :rtn = IOWND_ON_RBUTTONUP           ;break;
-    case WM_IME_STARTCOMPOSITION:rtn = IOWND_ON_IME_STARTCOMPOSITION;break;
-    case WM_CUT                 :rtn = IOWND_ON_CUT                 ;break;
-    case WM_COPY                :rtn = IOWND_ON_COPY                ;break;
-    case WM_PASTE               :rtn = IOWND_ON_PASTE               ;break;
-    case WM_CLEAR               :rtn = IOWND_ON_CLEAR               ;break;
-    case WM_UNDO                :rtn = IOWND_ON_UNDO                ;break;
-    case EM_SETSEL              :rtn = IOWND_ON_SETSEL              ;break;
-    case WM_SETFONT             :rtn = IOWND_ON_SETFONT             ;break;
+    case WM_CREATE              :rtn = EDITWND_ON_CREATE              ;break;
+    case WM_PAINT               :rtn = EDITWND_ON_PAINT               ;break;
+    case WM_SIZE                :rtn = EDITWND_ON_SIZE                ;break;
+    case WM_CLOSE               :rtn = EDITWND_ON_CLOSE               ;break;
+    case WM_DESTROY             :rtn = EDITWND_ON_DESTROY             ;break;
+    case WM_COMMAND             :rtn = EDITWND_ON_COMMAND             ;break;
+    case WM_KEYUP               :rtn = EDITWND_ON_KEYUP               ;break;
+    case WM_KEYDOWN             :rtn = EDITWND_ON_KEYDOWN             ;break;
+    case WM_CHAR                :rtn = EDITWND_ON_CHAR                ;break;
+    case WM_HSCROLL             :rtn = EDITWND_ON_HSCROLL             ;break;
+    case WM_VSCROLL             :rtn = EDITWND_ON_VSCROLL             ;break;
+    case WM_SETFOCUS            :rtn = EDITWND_ON_SETFOCUS            ;break;
+    case WM_KILLFOCUS           :rtn = EDITWND_ON_KILLFOCUS           ;break;
+    case WM_MOUSEACTIVATE       :rtn = EDITWND_ON_MOUSEACTIVATE       ;break;
+    case WM_MOUSEWHEEL          :rtn = EDITWND_ON_MOUSEWHEEL          ;break;
+    case WM_MOUSEMOVE           :rtn = EDITWND_ON_MOUSEMOVE           ;break;
+    case WM_LBUTTONDOWN         :rtn = EDITWND_ON_LBUTTONDOWN         ;break;
+    case WM_MBUTTONDOWN         :rtn = EDITWND_ON_MBUTTONDOWN         ;break;
+    case WM_RBUTTONDOWN         :rtn = EDITWND_ON_RBUTTONDOWN         ;break;
+    case WM_LBUTTONUP           :rtn = EDITWND_ON_LBUTTONUP           ;break;
+    case WM_MBUTTONUP           :rtn = EDITWND_ON_MBUTTONUP           ;break;
+    case WM_RBUTTONUP           :rtn = EDITWND_ON_RBUTTONUP           ;break;
+    case WM_IME_STARTCOMPOSITION:rtn = EDITWND_ON_IME_STARTCOMPOSITION;break;
+    case WM_CUT                 :rtn = EDITWND_ON_CUT                 ;break;
+    case WM_COPY                :rtn = EDITWND_ON_COPY                ;break;
+    case WM_PASTE               :rtn = EDITWND_ON_PASTE               ;break;
+    case WM_CLEAR               :rtn = EDITWND_ON_CLEAR               ;break;
+    case WM_UNDO                :rtn = EDITWND_ON_UNDO                ;break;
+    case EM_SETSEL              :rtn = EDITWND_ON_SETSEL              ;break;
+    case WM_SETFONT             :rtn = EDITWND_ON_SETFONT             ;break;
 
-    case WM_NCMOUSEMOVE         :rtn = IOWND_ON_DEFAULT             ;break;
-    case WM_SETCURSOR           :rtn = IOWND_ON_DEFAULT             ;break;
-    case WM_NCPAINT             :rtn = IOWND_ON_DEFAULT             ;break;
-    case WM_NCHITTEST           :rtn = IOWND_ON_DEFAULT             ;break;
-    case WM_ERASEBKGND          :rtn = IOWND_ON_DEFAULT             ;break;
+    case WM_NCMOUSEMOVE         :rtn = EDITWND_ON_DEFAULT             ;break;
+    case WM_SETCURSOR           :rtn = EDITWND_ON_DEFAULT             ;break;
+    case WM_NCPAINT             :rtn = EDITWND_ON_DEFAULT             ;break;
+    case WM_NCHITTEST           :rtn = EDITWND_ON_DEFAULT             ;break;
+    case WM_ERASEBKGND          :rtn = EDITWND_ON_DEFAULT             ;break;
 
-    case WM_IME_COMPOSITION     :rtn = IOWND_ON_DEFAULT             ;break;
-    case WM_IME_NOTIFY          :rtn = IOWND_ON_DEFAULT             ;break;
-    case WM_IME_SETCONTEXT      :rtn = IOWND_ON_DEFAULT             ;break;
-    case WM_IME_COMPOSITIONFULL :rtn = IOWND_ON_DEFAULT             ;break;
+    case WM_IME_COMPOSITION     :rtn = EDITWND_ON_DEFAULT             ;break;
+    case WM_IME_NOTIFY          :rtn = EDITWND_ON_DEFAULT             ;break;
+    case WM_IME_SETCONTEXT      :rtn = EDITWND_ON_DEFAULT             ;break;
+    case WM_IME_COMPOSITIONFULL :rtn = EDITWND_ON_DEFAULT             ;break;
 
-    default                     :rtn = IOWND_ON_DEFAULT             ;break;
+    default                     :rtn = EDITWND_ON_DEFAULT             ;break;
     }
     /* *INDENT-ON* */
 
@@ -399,21 +399,21 @@ ioWndConvertMSGtoINDEX( UINT message )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
     int iDelta;          /* for MouseWheel */
     ULONG ulScrollLines; /* for MouseWheel */
-    S_IOWND_DATA *ioWndDataPtr;
+    S_EDITWND_DATA *editWndDataPtr;
     LOGFONT logFont;
     LPCREATESTRUCT csPtr = (LPCREATESTRUCT)lParam;
 
-    ioWndDataPtr = (S_IOWND_DATA *)malloc( sizeof(S_IOWND_DATA) );
-    memset( ioWndDataPtr, 0, sizeof(S_IOWND_DATA) );
+    editWndDataPtr = (S_EDITWND_DATA *)malloc( sizeof(S_EDITWND_DATA) );
+    memset( editWndDataPtr, 0, sizeof(S_EDITWND_DATA) );
 
-    ioWndDataPtr->csStyle = csPtr->style;
+    editWndDataPtr->csStyle = csPtr->style;
 
-    if( ioWndDataPtr->csStyle & ES_READONLY )
+    if( editWndDataPtr->csStyle & ES_READONLY )
     {
         SetClassLong( hwnd, GCL_HBRBACKGROUND, (LONG)CreateSolidBrush(GetSysColor(COLOR_BTNFACE)) );
     }
@@ -423,25 +423,25 @@ ioOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     }
 
     GetObject( GetStockObject(SYSTEM_FIXED_FONT), sizeof(LOGFONT), (PTSTR)&(logFont) ); /* 本家エディットコントロールと異なる。固定幅のみなので */
-    ioWndDataPtr->hFont = CreateFontIndirect(&logFont);
+    editWndDataPtr->hFont = CreateFontIndirect(&logFont);
 
-    ioWndDataPtr->hIoWndBuff = IoWndBuffCreate();
-    SetWindowLongPtr(hwnd,0,(LONG_PTR)ioWndDataPtr);
+    editWndDataPtr->hEditWndBuff = EditWndBuffCreate();
+    SetWindowLongPtr(hwnd,0,(LONG_PTR)editWndDataPtr);
 
     updateTextMetrics( hwnd );
 
-    IoWndBuffInit(ioWndDataPtr->hIoWndBuff);
+    EditWndBuffInit(editWndDataPtr->hEditWndBuff);
 
     /* for MouseWheel */
     SystemParametersInfo(SPI_GETWHEELSCROLLLINES,0, &ulScrollLines, 0);
     iDelta = HIWORD(wParam);
     if( ulScrollLines )
     {
-        ioWndDataPtr->iDeltaPerLine = WHEEL_DELTA / ulScrollLines;
+        editWndDataPtr->iDeltaPerLine = WHEEL_DELTA / ulScrollLines;
     }
     else
     {
-        ioWndDataPtr->iDeltaPerLine = 0;
+        editWndDataPtr->iDeltaPerLine = 0;
     }
 
     return rtn;
@@ -456,7 +456,7 @@ ioOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     PAINTSTRUCT ps;
     HDC         hdc;
@@ -465,31 +465,31 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     int         x;
     COLORREF    bkColor,textColor;
     S_BUFF_DISP_DATA buffDispData;
-    H_IOWND_BUFF_LINE hLineData;
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    H_EDITWND_BUFF_LINE hLineData;
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
     hdc = BeginPaint( hwnd, &ps );
-    SelectObject( hdc, ioWndDataPtr->hFont );
+    SelectObject( hdc, editWndDataPtr->hFont );
 
     getAllScrollInfo(hwnd);
-    iHorzPos = ioWndDataPtr->iHorzPos;
-    iVertPos = ioWndDataPtr->iVertPos;
+    iHorzPos = editWndDataPtr->iHorzPos;
+    iVertPos = editWndDataPtr->iVertPos;
 
-    iPaintBeg = max(0, iVertPos + ps.rcPaint.top / ioWndDataPtr->cyChar);
-    iPaintEnd = min(IoWndBuffGetLineMaxSize(ioWndDataPtr->hIoWndBuff),iVertPos + ps.rcPaint.bottom / ioWndDataPtr->cyChar);
+    iPaintBeg = max(0, iVertPos + ps.rcPaint.top / editWndDataPtr->cyChar);
+    iPaintEnd = min(EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff),iVertPos + ps.rcPaint.bottom / editWndDataPtr->cyChar);
 
-    for( y=iPaintBeg,hLineData=IoWndBuffGetLinePtr(ioWndDataPtr->hIoWndBuff,y); (y<=iPaintEnd)&&(hLineData != NULL); y++,hLineData = IoWndBuffGetLineNextPtr(hLineData) )
+    for( y=iPaintBeg,hLineData=EditWndBuffGetLinePtr(editWndDataPtr->hEditWndBuff,y); (y<=iPaintEnd)&&(hLineData != NULL); y++,hLineData = EditWndBuffGetLineNextPtr(hLineData) )
     { /* 再描画領域のみ1行ずつ処理 */
-        for( x=0; x<ioWndDataPtr->cxBuffer+1;x++ )
+        for( x=0; x<editWndDataPtr->cxBuffer+1;x++ )
         {
-            IoWndBuffGetDispData(ioWndDataPtr->hIoWndBuff,hLineData,x+iHorzPos,&buffDispData );
+            EditWndBuffGetDispData(editWndDataPtr->hEditWndBuff,hLineData,x+iHorzPos,&buffDispData );
 
             if( buffDispData.size )
             {
                 bkColor = GetBkColor(hdc);
                 textColor = GetTextColor(hdc);
 
-                if( ioWndDataPtr->csStyle & ES_READONLY )
+                if( editWndDataPtr->csStyle & ES_READONLY )
                 {
                     SetBkColor(hdc, GetSysColor(COLOR_BTNFACE) );
                 }
@@ -505,7 +505,7 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                     }
                 }
 
-                if( DebugIoWndRect )
+                if( DebugEditWndRect )
                 { /* デバッグ用 */
                     SetBkColor(hdc, RGB(0xFF,0x00,0x00) );
                 }
@@ -521,8 +521,8 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                 }
 
                 TextOut(hdc,
-                        (x*ioWndDataPtr->cxChar) - (buffDispData.offset*ioWndDataPtr->cxChar), /* x座標 */
-                        (y-iVertPos) * ioWndDataPtr->cyChar, /* y座標 */
+                        (x*editWndDataPtr->cxChar) - (buffDispData.offset*editWndDataPtr->cxChar), /* x座標 */
+                        (y-iVertPos) * editWndDataPtr->cyChar, /* y座標 */
                         buffDispData.data,               /* 文字列へのポインタ */
                         buffDispData.size                /* 文字数 */
                     );
@@ -539,10 +539,10 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     EndPaint( hwnd, &ps );
 
-    SetCaretPos( (IoWndBuffGetCaretXpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iHorzPos)*ioWndDataPtr->cxChar, (IoWndBuffGetCaretYpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iVertPos)*ioWndDataPtr->cyChar);
+    SetCaretPos( (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar, (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar);
     SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_UPDATE), (LPARAM)hwnd);
 
-    DebugIoWndRect = 0; /* デバッグ用 */
+    DebugEditWndRect = 0; /* デバッグ用 */
 
     return 0;
 }
@@ -556,21 +556,21 @@ ioOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
-    ioWndDataPtr->cxClient = LOWORD( lParam );
-    ioWndDataPtr->cyClient = HIWORD( lParam );
+    editWndDataPtr->cxClient = LOWORD( lParam );
+    editWndDataPtr->cyClient = HIWORD( lParam );
 
     setAllScrollInfo(hwnd);
 
-    ioWndDataPtr->cxBuffer = max( 1, ioWndDataPtr->cxClient / ioWndDataPtr->cxChar );
-    ioWndDataPtr->cyBuffer = max( 1, ioWndDataPtr->cyClient / ioWndDataPtr->cyChar );
+    editWndDataPtr->cxBuffer = max( 1, editWndDataPtr->cxClient / editWndDataPtr->cxChar );
+    editWndDataPtr->cyBuffer = max( 1, editWndDataPtr->cyClient / editWndDataPtr->cyChar );
 
     if( hwnd == GetFocus() )
     {
-        SetCaretPos( IoWndBuffGetCaretXpos(ioWndDataPtr->hIoWndBuff) * ioWndDataPtr->cxChar, IoWndBuffGetCaretYpos(ioWndDataPtr->hIoWndBuff) * ioWndDataPtr->cyChar );
+        SetCaretPos( EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) * editWndDataPtr->cxChar, EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) * editWndDataPtr->cyChar );
     }
     else
     {
@@ -589,7 +589,7 @@ ioOnSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     DestroyWindow( hwnd );
 
@@ -605,13 +605,13 @@ ioOnClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnDestroy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnDestroy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
-    IoWndBuffEnd(ioWndDataPtr->hIoWndBuff);
-    IoWndBuffDestroy(ioWndDataPtr->hIoWndBuff);
-    free( ioWndDataPtr );
+    EditWndBuffEnd(editWndDataPtr->hEditWndBuff);
+    EditWndBuffDestroy(editWndDataPtr->hEditWndBuff);
+    free( editWndDataPtr );
 
     PostQuitMessage(0); /* WM_QUITメッセージをポストする */
     return 0;
@@ -626,30 +626,30 @@ ioOnDestroy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
     switch( LOWORD(wParam) )
     {
     case IDM_EDIT_CUT:
-        rtn = ioOnCut( hwnd, message, wParam, lParam );
+        rtn = editOnCut( hwnd, message, wParam, lParam );
         break;
 
     case IDM_EDIT_COPY:
-        rtn = ioOnCopy( hwnd, message, wParam, lParam );
+        rtn = editOnCopy( hwnd, message, wParam, lParam );
         break;
 
     case IDM_EDIT_PASTE:
-        rtn = ioOnPaste( hwnd, message, wParam, lParam );
+        rtn = editOnPaste( hwnd, message, wParam, lParam );
         break;
 
     case IDM_EDIT_DELETE:
-        rtn = ioOnClear( hwnd, message, wParam, lParam );
+        rtn = editOnClear( hwnd, message, wParam, lParam );
         break;
 
     case IDM_EDIT_SELECT_ALL:
-        rtn = ioOnSetSel( hwnd, message, 0, -1 );
+        rtn = editOnSetSel( hwnd, message, 0, -1 );
         break;
     }
 
@@ -665,15 +665,15 @@ ioOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnKeyUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnKeyUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
     switch(wParam)
     {
     case VK_SHIFT:
-        ioWndDataPtr->bShiftKeyOn = FALSE;
+        editWndDataPtr->bShiftKeyOn = FALSE;
         break;
     default:
         break;
@@ -691,17 +691,17 @@ ioOnKeyUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
     BOOL bErase = TRUE;
     BOOL bProc = TRUE;
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
     if( wParam == VK_SHIFT )
     {
-        ioWndDataPtr->bShiftKeyOn = TRUE;
-        IoWndBuffSelectOn(ioWndDataPtr->hIoWndBuff);
+        editWndDataPtr->bShiftKeyOn = TRUE;
+        EditWndBuffSelectOn(editWndDataPtr->hEditWndBuff);
     }
     else if( wParam == VK_CONTROL )
     {
@@ -713,9 +713,9 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
         if( (wParam==VK_LEFT)||(wParam==VK_RIGHT)||(wParam==VK_UP)||(wParam==VK_DOWN) )
         {
-            if( ioWndDataPtr->bShiftKeyOn )
+            if( editWndDataPtr->bShiftKeyOn )
             {
-                IoWndBuffSelectOn(ioWndDataPtr->hIoWndBuff);
+                EditWndBuffSelectOn(editWndDataPtr->hEditWndBuff);
             }
             else
             {
@@ -731,25 +731,25 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         {
         case VK_LEFT:
             bErase = FALSE;
-            IoWndBuffDecCaretXpos(ioWndDataPtr->hIoWndBuff);
+            EditWndBuffDecCaretXpos(editWndDataPtr->hEditWndBuff);
             break;
         case VK_RIGHT:
             bErase = FALSE;
-            IoWndBuffIncCaretXpos(ioWndDataPtr->hIoWndBuff);
+            EditWndBuffIncCaretXpos(editWndDataPtr->hEditWndBuff);
             break;
         case VK_UP:
             bErase = FALSE;
-            IoWndBuffDecCaretYpos(ioWndDataPtr->hIoWndBuff);
+            EditWndBuffDecCaretYpos(editWndDataPtr->hEditWndBuff);
             break;
         case VK_DOWN:
             bErase = FALSE;
-            IoWndBuffIncCaretYpos(ioWndDataPtr->hIoWndBuff);
+            EditWndBuffIncCaretYpos(editWndDataPtr->hEditWndBuff);
             break;
         case VK_DELETE:
-            ioWndRemoveData( hwnd, FALSE );
+            editWndRemoveData( hwnd, FALSE );
             break;
         case VK_BACK:
-            ioWndRemoveData( hwnd, TRUE );
+            editWndRemoveData( hwnd, TRUE );
             break;
         default:
             bProc = FALSE;
@@ -758,24 +758,24 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
         if( bProc )
         {
-            if( ioWndDataPtr->bShiftKeyOn )
+            if( editWndDataPtr->bShiftKeyOn )
             {
                 nop();
             }
             else
             {
-                IoWndBuffSelectOff(ioWndDataPtr->hIoWndBuff);
+                EditWndBuffSelectOff(editWndDataPtr->hEditWndBuff);
             }
 
             /* キャレットが表示範囲外に有った場合の処理(横方向) */
-            if( IoWndBuffGetCaretXpos(ioWndDataPtr->hIoWndBuff) < ioWndDataPtr->iHorzPos )
+            if( EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) < editWndDataPtr->iHorzPos )
             {
-                setScrollPos( hwnd, SB_HORZ, IoWndBuffGetCaretXpos(ioWndDataPtr->hIoWndBuff) );
+                setScrollPos( hwnd, SB_HORZ, EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) );
                 bErase = TRUE;
             }
-            else if( (ioWndDataPtr->iHorzPos+ioWndDataPtr->cxBuffer-1) < IoWndBuffGetCaretXpos(ioWndDataPtr->hIoWndBuff) )
+            else if( (editWndDataPtr->iHorzPos+editWndDataPtr->cxBuffer-1) < EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) )
             {
-                setScrollPos( hwnd, SB_HORZ, (ioWndDataPtr->iHorzPos+ioWndDataPtr->cxBuffer-1) );
+                setScrollPos( hwnd, SB_HORZ, (editWndDataPtr->iHorzPos+editWndDataPtr->cxBuffer-1) );
                 bErase = TRUE;
             }
             else
@@ -784,14 +784,14 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             }
 
             /* キャレットが表示範囲外に有った場合の処理(縦方向) */
-            if( IoWndBuffGetCaretYpos(ioWndDataPtr->hIoWndBuff) < ioWndDataPtr->iVertPos )
+            if( EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) < editWndDataPtr->iVertPos )
             {
-                setScrollPos( hwnd, SB_VERT, IoWndBuffGetCaretYpos(ioWndDataPtr->hIoWndBuff) );
+                setScrollPos( hwnd, SB_VERT, EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) );
                 bErase = TRUE;
             }
-            else if( (ioWndDataPtr->iVertPos+ioWndDataPtr->cyBuffer-1) < IoWndBuffGetCaretYpos(ioWndDataPtr->hIoWndBuff) )
+            else if( (editWndDataPtr->iVertPos+editWndDataPtr->cyBuffer-1) < EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) )
             {
-                setScrollPos( hwnd, SB_VERT, IoWndBuffGetCaretYpos(ioWndDataPtr->hIoWndBuff) - (ioWndDataPtr->cyBuffer-1) );
+                setScrollPos( hwnd, SB_VERT, EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) - (editWndDataPtr->cyBuffer-1) );
                 bErase = TRUE;
             }
             else
@@ -801,7 +801,7 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
             HideCaret(hwnd);
             InvalidateRect( hwnd, NULL, bErase );
-            SetCaretPos( (IoWndBuffGetCaretXpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iHorzPos)*ioWndDataPtr->cxChar, (IoWndBuffGetCaretYpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iVertPos)*ioWndDataPtr->cyChar);
+            SetCaretPos( (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar, (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar);
             ShowCaret(hwnd);
         }
         else
@@ -822,7 +822,7 @@ ioOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
     TCHAR data[2];
@@ -830,15 +830,15 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     INT size;
     RECT rect;
     BOOL bRectSelect = FALSE;
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
-    if( ioWndDataPtr->csStyle & ES_READONLY )
+    if( editWndDataPtr->csStyle & ES_READONLY )
     {
         nop();
     }
     else
     {
-        IoWndBuffSelectOff(ioWndDataPtr->hIoWndBuff);
+        EditWndBuffSelectOff(editWndDataPtr->hEditWndBuff);
 
         for( i=0; i<(int) LOWORD(lParam); i++ )
         {
@@ -853,28 +853,28 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             case '\n':  /* line feed */
                 break;
             case '\r':  /* carriage return */
-                size = IoWndBuffGetNewLineData(ioWndDataPtr->hIoWndBuff,data);
+                size = EditWndBuffGetNewLineData(editWndDataPtr->hEditWndBuff,data);
                 break;
             case '\t':  /* tab */
             default:
                 /* 文字入力 */
                 data[0] = (TCHAR)wParam;
             size = 1;
-            rect.left   = (IoWndBuffGetCaretXpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iHorzPos)*ioWndDataPtr->cxChar;
-            rect.top    = (IoWndBuffGetCaretYpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iVertPos)*ioWndDataPtr->cyChar;
-            rect.right  = ioWndDataPtr->cxClient;
-            rect.bottom = rect.top + ioWndDataPtr->cyChar;
+            rect.left   = (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar;
+            rect.top    = (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar;
+            rect.right  = editWndDataPtr->cxClient;
+            rect.bottom = rect.top + editWndDataPtr->cyChar;
             bRectSelect = TRUE;
             break;
             }
 
             if( size )
             {
-                IoWndBuffDataSet( ioWndDataPtr->hIoWndBuff, data,size,FALSE );
+                EditWndBuffDataSet( editWndDataPtr->hEditWndBuff, data,size,FALSE );
                 if( bRectSelect )
                 {
 #if 0 /* デバッグ用 */
-                    DebugIoWndRect = 1;
+                    DebugEditWndRect = 1;
 #endif
                     InvalidateRect( hwnd, &rect, TRUE );
                 }
@@ -890,9 +890,9 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             }
         }
 
-        ioOnImeStartComposition( hwnd, message, wParam, lParam );
+        editOnImeStartComposition( hwnd, message, wParam, lParam );
 
-        SetCaretPos( (IoWndBuffGetCaretXpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iHorzPos)*ioWndDataPtr->cxChar, (IoWndBuffGetCaretYpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iVertPos)*ioWndDataPtr->cyChar);
+        SetCaretPos( (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar, (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar);
         setAllScrollInfo(hwnd);
     }
 
@@ -908,12 +908,12 @@ ioOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnHscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnHscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
     SCROLLINFO si;
     int iHorzPos;
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
     /* Get all the vertial scroll bar information */
     si.cbSize = sizeof(si);
@@ -953,12 +953,12 @@ ioOnHscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     /* If the position has changed, scroll the window */
     if( si.nPos != iHorzPos )
     {
-        ScrollWindow( hwnd, ioWndDataPtr->cxChar * (iHorzPos - si.nPos), 0, NULL, NULL );
+        ScrollWindow( hwnd, editWndDataPtr->cxChar * (iHorzPos - si.nPos), 0, NULL, NULL );
         InvalidateRect( hwnd, NULL, TRUE );
     }
 
     GetScrollInfo( hwnd, SB_HORZ, &si );
-    ioWndDataPtr->iHorzPos = si.nPos;
+    editWndDataPtr->iHorzPos = si.nPos;
 
     return rtn;
 }
@@ -972,12 +972,12 @@ ioOnHscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnVscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnVscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
     SCROLLINFO si;
     int iVertPos;
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
     si.cbSize = sizeof(si);
     si.fMask  = SIF_ALL;
@@ -1016,12 +1016,12 @@ ioOnVscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     if( si.nPos != iVertPos )
     {
-        ScrollWindow(hwnd, 0, ioWndDataPtr->cyChar * (iVertPos - si.nPos),NULL, NULL);
+        ScrollWindow(hwnd, 0, editWndDataPtr->cyChar * (iVertPos - si.nPos),NULL, NULL);
         UpdateWindow(hwnd);
     }
 
     GetScrollInfo(hwnd, SB_VERT, &si);
-    ioWndDataPtr->iVertPos = si.nPos;
+    editWndDataPtr->iVertPos = si.nPos;
 
     return rtn;
 }
@@ -1035,13 +1035,13 @@ ioOnVscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnSetFocus( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnSetFocus( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
-    CreateCaret( hwnd,NULL,1,ioWndDataPtr->cyChar ); /* 幅=1,高さ=文字サイズ */
-    SetCaretPos( IoWndBuffGetCaretXpos(ioWndDataPtr->hIoWndBuff) * ioWndDataPtr->cxChar, IoWndBuffGetCaretYpos(ioWndDataPtr->hIoWndBuff) * ioWndDataPtr->cyChar);
+    CreateCaret( hwnd,NULL,1,editWndDataPtr->cyChar ); /* 幅=1,高さ=文字サイズ */
+    SetCaretPos( EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) * editWndDataPtr->cxChar, EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) * editWndDataPtr->cyChar);
     ShowCaret( hwnd );
 
     return rtn;
@@ -1056,7 +1056,7 @@ ioOnSetFocus( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnKillFocus( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnKillFocus( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
@@ -1075,7 +1075,7 @@ ioOnKillFocus( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnMouseActivate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnMouseActivate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
@@ -1093,24 +1093,24 @@ ioOnMouseActivate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnMouseWheel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnMouseWheel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
-    if( ioWndDataPtr->iDeltaPerLine )
+    if( editWndDataPtr->iDeltaPerLine )
     {
-        ioWndDataPtr->iAccumDelta += (short)HIWORD(wParam);
+        editWndDataPtr->iAccumDelta += (short)HIWORD(wParam);
 
-        while( ioWndDataPtr->iAccumDelta >= ioWndDataPtr->iDeltaPerLine )
+        while( editWndDataPtr->iAccumDelta >= editWndDataPtr->iDeltaPerLine )
         {
             SendMessage(hwnd, WM_VSCROLL, SB_LINEUP, 0);
-            ioWndDataPtr->iAccumDelta -= ioWndDataPtr->iDeltaPerLine;
+            editWndDataPtr->iAccumDelta -= editWndDataPtr->iDeltaPerLine;
         }
-        while( ioWndDataPtr->iAccumDelta <= -ioWndDataPtr->iDeltaPerLine)
+        while( editWndDataPtr->iAccumDelta <= -editWndDataPtr->iDeltaPerLine)
         {
             SendMessage(hwnd, WM_VSCROLL, SB_LINEDOWN, 0);
-            ioWndDataPtr->iAccumDelta += ioWndDataPtr->iDeltaPerLine;
+            editWndDataPtr->iAccumDelta += editWndDataPtr->iDeltaPerLine;
         }
     }
     else
@@ -1130,19 +1130,19 @@ ioOnMouseWheel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnMouseMove( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnMouseMove( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
     SHORT x,y;
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
     x = max(0,(SHORT)LOWORD(lParam));
     y = max(0,(SHORT)HIWORD(lParam));
 
     if( (wParam & MK_LBUTTON) )
     {
-        IoWndBuffSetCaretPos( ioWndDataPtr->hIoWndBuff, ((x + (ioWndDataPtr->iHorzPos*ioWndDataPtr->cxChar))/ioWndDataPtr->cxChar), ((y + (ioWndDataPtr->iVertPos*ioWndDataPtr->cyChar))/ioWndDataPtr->cyChar) );
-        SetCaretPos( (IoWndBuffGetCaretXpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iHorzPos)*ioWndDataPtr->cxChar, (IoWndBuffGetCaretYpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iVertPos)*ioWndDataPtr->cyChar);
+        EditWndBuffSetCaretPos( editWndDataPtr->hEditWndBuff, ((x + (editWndDataPtr->iHorzPos*editWndDataPtr->cxChar))/editWndDataPtr->cxChar), ((y + (editWndDataPtr->iVertPos*editWndDataPtr->cyChar))/editWndDataPtr->cyChar) );
+        SetCaretPos( (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar, (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar);
         InvalidateRect( hwnd, NULL, FALSE );
     }
     else
@@ -1162,20 +1162,20 @@ ioOnMouseMove( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnLbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnLbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
     int x,y;
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
     getAllScrollInfo(hwnd);
 
     x = LOWORD(lParam);
     y = HIWORD(lParam);
 
-    IoWndBuffSetCaretPos( ioWndDataPtr->hIoWndBuff, ((x + (ioWndDataPtr->iHorzPos*ioWndDataPtr->cxChar))/ioWndDataPtr->cxChar), ((y + (ioWndDataPtr->iVertPos*ioWndDataPtr->cyChar))/ioWndDataPtr->cyChar) );
+    EditWndBuffSetCaretPos( editWndDataPtr->hEditWndBuff, ((x + (editWndDataPtr->iHorzPos*editWndDataPtr->cxChar))/editWndDataPtr->cxChar), ((y + (editWndDataPtr->iVertPos*editWndDataPtr->cyChar))/editWndDataPtr->cyChar) );
 
-    SetCaretPos( (IoWndBuffGetCaretXpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iHorzPos)*ioWndDataPtr->cxChar, (IoWndBuffGetCaretYpos(ioWndDataPtr->hIoWndBuff)-ioWndDataPtr->iVertPos)*ioWndDataPtr->cyChar);
+    SetCaretPos( (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar, (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar);
 
     if( wParam & MK_SHIFT )
     {
@@ -1184,8 +1184,8 @@ ioOnLbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     else
     {
         SetCapture(hwnd);
-        IoWndBuffSelectOff(ioWndDataPtr->hIoWndBuff);
-        IoWndBuffSelectOn(ioWndDataPtr->hIoWndBuff);
+        EditWndBuffSelectOff(editWndDataPtr->hEditWndBuff);
+        EditWndBuffSelectOn(editWndDataPtr->hEditWndBuff);
     }
     InvalidateRect( hwnd, NULL, TRUE );
 
@@ -1201,7 +1201,7 @@ ioOnLbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnMbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnMbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
@@ -1217,7 +1217,7 @@ ioOnMbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnRbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnRbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
@@ -1233,7 +1233,7 @@ ioOnRbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnLbuttonUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnLbuttonUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
@@ -1251,7 +1251,7 @@ ioOnLbuttonUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnMbuttonUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnMbuttonUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
@@ -1267,12 +1267,12 @@ ioOnMbuttonUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnRbuttonUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnRbuttonUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
     HMENU hMenu;
     POINT point;
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
     point.x = LOWORD(lParam);
     point.y = HIWORD(lParam);
@@ -1280,13 +1280,13 @@ ioOnRbuttonUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     ClientToScreen(hwnd,&point);
 
     hMenu = CreatePopupMenu();
-    if( ioWndDataPtr->csStyle & ES_READONLY )
+    if( editWndDataPtr->csStyle & ES_READONLY )
     {
         AppendMenu( hMenu, MF_STRING   , IDM_EDIT_COPY       , TEXT("コピー(&C)") );
         AppendMenu( hMenu, MF_SEPARATOR, 0                   , NULL );
         AppendMenu( hMenu, MF_STRING   , IDM_EDIT_SELECT_ALL , TEXT("すべて選択(&A)") );
 
-        if( IoWndGetDataSize(hwnd,IOWND_SELECTED) )
+        if( EditWndGetDataSize(hwnd,EDITWND_SELECTED) )
         {
             EnableMenuItem( hMenu, IDM_EDIT_COPY  , MF_ENABLED );
         }
@@ -1308,7 +1308,7 @@ ioOnRbuttonUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
         EnableMenuItem( hMenu, IDM_EDIT_UNDO, MF_GRAYED );
 
-        if( IoWndGetDataSize(hwnd,IOWND_SELECTED) )
+        if( EditWndGetDataSize(hwnd,EDITWND_SELECTED) )
         {
             EnableMenuItem( hMenu, IDM_EDIT_CUT   , MF_ENABLED );
             EnableMenuItem( hMenu, IDM_EDIT_COPY  , MF_ENABLED );
@@ -1346,18 +1346,18 @@ ioOnRbuttonUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnImeStartComposition( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnImeStartComposition( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     HIMC hImc;
     COMPOSITIONFORM cf;
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
     LOGFONT logFont;
 
-    GetObject( ioWndDataPtr->hFont, sizeof(LOGFONT), (PTSTR)&(logFont) );
+    GetObject( editWndDataPtr->hFont, sizeof(LOGFONT), (PTSTR)&(logFont) );
 
     cf.dwStyle = CFS_POINT;
-    cf.ptCurrentPos.x = IoWndBuffGetCaretXpos(ioWndDataPtr->hIoWndBuff) * ioWndDataPtr->cxChar;
-    cf.ptCurrentPos.y = IoWndBuffGetCaretYpos(ioWndDataPtr->hIoWndBuff) * ioWndDataPtr->cyChar;
+    cf.ptCurrentPos.x = EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) * editWndDataPtr->cxChar;
+    cf.ptCurrentPos.y = EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) * editWndDataPtr->cyChar;
 
     hImc = ImmGetContext( hwnd );
     ImmSetCompositionWindow( hImc, &cf );
@@ -1376,28 +1376,28 @@ ioOnImeStartComposition( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnCut( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnCut( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
     DWORD   dwSize;
     HGLOBAL hGlobal;
     PTSTR   pGlobal;
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
-    dwSize = IoWndGetDataSize(hwnd,IOWND_SELECTED);
+    dwSize = EditWndGetDataSize(hwnd,EDITWND_SELECTED);
     if( dwSize )
     {
         hGlobal = GlobalAlloc( GHND|GMEM_SHARE, dwSize+1 );
         pGlobal = GlobalLock( hGlobal );
         GlobalUnlock(hGlobal);
-        IoWndBuffDataGet( ioWndDataPtr->hIoWndBuff, pGlobal,dwSize,IOWND_SELECTED );
+        EditWndBuffDataGet( editWndDataPtr->hEditWndBuff, pGlobal,dwSize,EDITWND_SELECTED );
         OpenClipboard(hwnd);
         EmptyClipboard();
         SetClipboardData( CF_TEXT, hGlobal );
         CloseClipboard();
 
         /* CUTのみ */
-        ioWndRemoveData( hwnd,FALSE );
+        editWndRemoveData( hwnd,FALSE );
         InvalidateRect( hwnd, NULL, TRUE );
     }
     else
@@ -1417,21 +1417,21 @@ ioOnCut( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnCopy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnCopy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
     DWORD   dwSize;
     HGLOBAL hGlobal;
     PTSTR   pGlobal;
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
-    dwSize = IoWndGetDataSize(hwnd,IOWND_SELECTED);
+    dwSize = EditWndGetDataSize(hwnd,EDITWND_SELECTED);
     if( dwSize )
     {
         hGlobal = GlobalAlloc( GHND|GMEM_SHARE, dwSize+1 );
         pGlobal = GlobalLock( hGlobal );
         GlobalUnlock(hGlobal);
-        IoWndBuffDataGet( ioWndDataPtr->hIoWndBuff, pGlobal,dwSize,IOWND_SELECTED );
+        EditWndBuffDataGet( editWndDataPtr->hEditWndBuff, pGlobal,dwSize,EDITWND_SELECTED );
         OpenClipboard(hwnd);
         EmptyClipboard();
         SetClipboardData( CF_TEXT, hGlobal );
@@ -1454,7 +1454,7 @@ ioOnCopy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnPaste( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnPaste( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
     DWORD   dwSize,dwSize2;
@@ -1482,7 +1482,7 @@ ioOnPaste( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         {
             nop();
         }
-        IoWndDataSet( hwnd, dataPtr,dwSize,FALSE );
+        EditWndDataSet( hwnd, dataPtr,dwSize,FALSE );
         free( dataPtr );
     }
     else
@@ -1502,11 +1502,11 @@ ioOnPaste( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnClear( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnClear( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
-    ioWndRemoveData( hwnd,FALSE );
+    editWndRemoveData( hwnd,FALSE );
     InvalidateRect( hwnd, NULL, TRUE );
 
     return rtn;
@@ -1521,7 +1521,7 @@ ioOnClear( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnUndo( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnUndo( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
@@ -1537,17 +1537,17 @@ ioOnUndo( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnSetSel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnSetSel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
     if( (wParam == 0) && (lParam == -1) )
     { /* ”すべて選択”のみ対応 */
-        if( IoWndBuffSelectAll(ioWndDataPtr->hIoWndBuff) )
+        if( EditWndBuffSelectAll(editWndDataPtr->hEditWndBuff) )
         {
-            IoWndBuffSetCaretPos(ioWndDataPtr->hIoWndBuff, IoWndBuffGetCaretXpos(ioWndDataPtr->hIoWndBuff),IoWndBuffGetLineMaxSize(ioWndDataPtr->hIoWndBuff));
-            setScrollPos( hwnd, SB_VERT, IoWndBuffGetLineMaxSize(ioWndDataPtr->hIoWndBuff) );
+            EditWndBuffSetCaretPos(editWndDataPtr->hEditWndBuff, EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff),EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff));
+            setScrollPos( hwnd, SB_VERT, EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff) );
             InvalidateRect( hwnd, NULL, TRUE );
         }
         else
@@ -1572,12 +1572,12 @@ ioOnSetSel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnSetFont( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnSetFont( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
-    ioWndDataPtr->hFont = (HFONT)wParam;
+    editWndDataPtr->hFont = (HFONT)wParam;
 
     updateTextMetrics( hwnd );
 
@@ -1602,7 +1602,7 @@ ioOnSetFont( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: LRESULT
  ***************************************/
 static LRESULT
-ioOnDefault( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+editOnDefault( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     return DefWindowProc( hwnd, message, wParam, lParam );
 }
@@ -1614,11 +1614,11 @@ ioOnDefault( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 戻り値: なし
  ***************************************/
 static void
-ioWndRemoveData( HWND hwnd, BOOL bBackSpace )
+editWndRemoveData( HWND hwnd, BOOL bBackSpace )
 {
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
-    IoWndBuffRemoveData( ioWndDataPtr->hIoWndBuff, bBackSpace );
+    EditWndBuffRemoveData( editWndDataPtr->hEditWndBuff, bBackSpace );
     SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_CHANGE), (LPARAM)hwnd);
 }
 
@@ -1632,15 +1632,15 @@ updateTextMetrics( HWND hwnd )
 {
     HDC        hdc;
     TEXTMETRIC tm;
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
     hdc = GetDC( hwnd );
-    SelectObject( hdc, ioWndDataPtr->hFont );
+    SelectObject( hdc, editWndDataPtr->hFont );
 
     GetTextMetrics( hdc, &tm );
-    ioWndDataPtr->cxChar = tm.tmAveCharWidth;
-    ioWndDataPtr->cxCaps = (tm.tmPitchAndFamily & 1 ? 3 : 2) * ioWndDataPtr->cxChar / 2;
-    ioWndDataPtr->cyChar = tm.tmHeight + tm.tmExternalLeading;
+    editWndDataPtr->cxChar = tm.tmAveCharWidth;
+    editWndDataPtr->cxCaps = (tm.tmPitchAndFamily & 1 ? 3 : 2) * editWndDataPtr->cxChar / 2;
+    editWndDataPtr->cyChar = tm.tmHeight + tm.tmExternalLeading;
 
     ReleaseDC( hwnd, hdc );
 }
@@ -1654,22 +1654,22 @@ static void
 setAllScrollInfo( HWND hwnd )
 {
     SCROLLINFO si;
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
     /* Set vertical scroll bar range and page size */
     si.cbSize = sizeof(si);
     si.fMask  = SIF_RANGE | SIF_PAGE | SIF_DISABLENOSCROLL;
     si.nMin   = 0;                                                                /* 範囲の最小値 */
-    si.nMax   = max(IoWndBuffGetLineMaxSize(ioWndDataPtr->hIoWndBuff),(ioWndDataPtr->cyClient / ioWndDataPtr->cyChar))-1; /* 範囲の最大値 */
-    si.nPage  = (ioWndDataPtr->cyClient / ioWndDataPtr->cyChar); /* ページサイズ */
+    si.nMax   = max(EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff),(editWndDataPtr->cyClient / editWndDataPtr->cyChar))-1; /* 範囲の最大値 */
+    si.nPage  = (editWndDataPtr->cyClient / editWndDataPtr->cyChar); /* ページサイズ */
     SetScrollInfo( hwnd, SB_VERT, &si, TRUE );
 
     /* Set horizontal scroll bar range and page size*/
     si.cbSize = sizeof(si);
     si.fMask  = SIF_RANGE | SIF_PAGE | SIF_DISABLENOSCROLL;
     si.nMin   = 0;
-    si.nMax   = max( IoWndBuffGetColumnMaxSize(ioWndDataPtr->hIoWndBuff),(ioWndDataPtr->cxClient/ioWndDataPtr->cxChar))-1;
-    si.nPage  = (ioWndDataPtr->cxClient/ioWndDataPtr->cxChar);
+    si.nMax   = max( EditWndBuffGetColumnMaxSize(editWndDataPtr->hEditWndBuff),(editWndDataPtr->cxClient/editWndDataPtr->cxChar))-1;
+    si.nPage  = (editWndDataPtr->cxClient/editWndDataPtr->cxChar);
     SetScrollInfo( hwnd, SB_HORZ, &si, TRUE );
 }
 
@@ -1682,15 +1682,15 @@ static void
 getAllScrollInfo( HWND hwnd )
 {
     SCROLLINFO si;
-    S_IOWND_DATA *ioWndDataPtr = (S_IOWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
     si.cbSize = sizeof(si);
     si.fMask  = SIF_POS;
     GetScrollInfo( hwnd, SB_VERT, &si ); /* 縦スクロールバーの位置を取得 */
-    ioWndDataPtr->iVertPos = si.nPos;
+    editWndDataPtr->iVertPos = si.nPos;
 
     GetScrollInfo( hwnd, SB_HORZ, &si);   /* 横スクロールバーの位置を取得 */
-    ioWndDataPtr->iHorzPos = si.nPos;
+    editWndDataPtr->iHorzPos = si.nPos;
 }
 
 /********************************************************************************

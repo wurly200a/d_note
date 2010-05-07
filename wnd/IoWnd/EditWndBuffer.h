@@ -1,158 +1,158 @@
-#ifndef IOWND_BUFFER_H
+#ifndef EDITWND_BUFFER_H
 
-typedef struct tagS_IOWND_BUFF
+typedef struct tagS_EDITWND_BUFF
 {
     int unused;
-} S_IOWND_BUFF;
-typedef S_IOWND_BUFF * H_IOWND_BUFF;
+} S_EDITWND_BUFF;
+typedef S_EDITWND_BUFF * H_EDITWND_BUFF;
 
-typedef struct tagS_IOWND_BUFF_LINE
+typedef struct tagS_EDITWND_BUFF_LINE
 {
     int unused;
-} S_IOWND_BUFF_LINE;
-typedef S_IOWND_BUFF_LINE * H_IOWND_BUFF_LINE;
+} S_EDITWND_BUFF_LINE;
+typedef S_EDITWND_BUFF_LINE * H_EDITWND_BUFF_LINE;
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのオブジェクト生成
+ * 内容  : EDITウィンドウバッファのオブジェクト生成
  * 引数  : なし
- * 戻り値: H_IOWND_BUFF
+ * 戻り値: H_EDITWND_BUFF
  ***************************************/
-H_IOWND_BUFF IoWndBuffCreate( void );
+H_EDITWND_BUFF EditWndBuffCreate( void );
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのオブジェクト破棄
- * 引数  : H_IOWND_BUFF
+ * 内容  : EDITウィンドウバッファのオブジェクト破棄
+ * 引数  : H_EDITWND_BUFF
  * 戻り値: BOOL
  ***************************************/
-BOOL IoWndBuffDestroy( H_IOWND_BUFF hIoWndBuff );
+BOOL EditWndBuffDestroy( H_EDITWND_BUFF hEditWndBuff );
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファの初期化
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファの初期化
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: なし
  ***************************************/
-void IoWndBuffInit( H_IOWND_BUFF hIoWndBuff );
+void EditWndBuffInit( H_EDITWND_BUFF hEditWndBuff );
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファの終了
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファの終了
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: なし
  ***************************************/
-void IoWndBuffEnd( H_IOWND_BUFF hIoWndBuff );
+void EditWndBuffEnd( H_EDITWND_BUFF hEditWndBuff );
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのデータセット
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファのデータセット
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 引数  : TCHAR* dataPtr
  * 引数  : DWORD  length
  * 引数  : BOOL   bInit  (TRUE:既存データをクリア,FALSE:クリアしない)
  * 戻り値: なし
  ***************************************/
-void IoWndBuffDataSet( H_IOWND_BUFF hIoWndBuff, TCHAR* dataPtr, DWORD length, BOOL bInit );
+void EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, BOOL bInit );
 
 typedef enum
 {
     BUFF_ALL,
     BUFF_SELECTED
-} IOWND_BUFF_REGION;
+} EDITWND_BUFF_REGION;
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのデータ取得
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファのデータ取得
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 引数  : TCHAR *dataPtr
  * 引数  : DWORD dataSize
- * 引数  : IOWND_BUFF_REGION region
+ * 引数  : EDITWND_BUFF_REGION region
  * 戻り値: BOOL
  ***************************************/
-BOOL IoWndBuffDataGet( H_IOWND_BUFF hIoWndBuff, TCHAR *dataPtr, DWORD dataSize, IOWND_BUFF_REGION region );
+BOOL EditWndBuffDataGet( H_EDITWND_BUFF hEditWndBuff, TCHAR *dataPtr, DWORD dataSize, EDITWND_BUFF_REGION region );
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのデータサイズ取得
- * 引数  : H_IOWND_BUFF hIoWndBuff
- * 引数  : IOWND_BUFF_REGION region
+ * 内容  : EDITウィンドウバッファのデータサイズ取得
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
+ * 引数  : EDITWND_BUFF_REGION region
  * 戻り値: DWORD
  ***************************************/
-DWORD IoWndBuffGetDataSize( H_IOWND_BUFF hIoWndBuff, IOWND_BUFF_REGION region );
+DWORD EditWndBuffGetDataSize( H_EDITWND_BUFF hEditWndBuff, EDITWND_BUFF_REGION region );
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファの最大行サイズ取得
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファの最大行サイズ取得
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: DWORD
  ***************************************/
-DWORD IoWndBuffGetLineMaxSize( H_IOWND_BUFF hIoWndBuff );
+DWORD EditWndBuffGetLineMaxSize( H_EDITWND_BUFF hEditWndBuff );
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファの最大文字サイズ取得
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファの最大文字サイズ取得
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: DWORD
  ***************************************/
-DWORD IoWndBuffGetColumnMaxSize( H_IOWND_BUFF hIoWndBuff);
+DWORD EditWndBuffGetColumnMaxSize( H_EDITWND_BUFF hEditWndBuff);
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのキャレットX位置取得
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファのキャレットX位置取得
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: DWORD
  ***************************************/
-DWORD IoWndBuffGetCaretXpos( H_IOWND_BUFF hIoWndBuff );
+DWORD EditWndBuffGetCaretXpos( H_EDITWND_BUFF hEditWndBuff );
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのキャレットY位置取得
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファのキャレットY位置取得
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: DWORD
  ***************************************/
-DWORD IoWndBuffGetCaretYpos( H_IOWND_BUFF hIoWndBuff );
+DWORD EditWndBuffGetCaretYpos( H_EDITWND_BUFF hEditWndBuff );
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのキャレット位置セット
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファのキャレット位置セット
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 引数  : DWORD xPos
  * 引数  : DWORD lineNum
  * 戻り値: なし
  ***************************************/
-void IoWndBuffSetCaretPos( H_IOWND_BUFF hIoWndBuff, DWORD xPos, DWORD lineNum );
+void EditWndBuffSetCaretPos( H_EDITWND_BUFF hEditWndBuff, DWORD xPos, DWORD lineNum );
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのキャレットX位置加算
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファのキャレットX位置加算
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: なし
  ***************************************/
-void IoWndBuffIncCaretXpos( H_IOWND_BUFF hIoWndBuff );
+void EditWndBuffIncCaretXpos( H_EDITWND_BUFF hEditWndBuff );
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのキャレットX位置減算
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファのキャレットX位置減算
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: なし
  ***************************************/
-void IoWndBuffDecCaretXpos( H_IOWND_BUFF hIoWndBuff );
+void EditWndBuffDecCaretXpos( H_EDITWND_BUFF hEditWndBuff );
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのキャレットY位置加算
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファのキャレットY位置加算
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: なし
  ***************************************/
-void IoWndBuffIncCaretYpos( H_IOWND_BUFF hIoWndBuff );
+void EditWndBuffIncCaretYpos( H_EDITWND_BUFF hEditWndBuff );
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのキャレットY位置減算
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファのキャレットY位置減算
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: なし
  ***************************************/
-void IoWndBuffDecCaretYpos( H_IOWND_BUFF hIoWndBuff );
+void EditWndBuffDecCaretYpos( H_EDITWND_BUFF hEditWndBuff );
 
 /********************************************************************************
  * 内容  : 指定行データのハンドル取得
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 引数  : DWORD lineNum
- * 戻り値: H_IOWND_BUFF_LINE
+ * 戻り値: H_EDITWND_BUFF_LINE
  ***************************************/
-H_IOWND_BUFF_LINE IoWndBuffGetLinePtr( H_IOWND_BUFF hIoWndBuff, DWORD lineNum );
+H_EDITWND_BUFF_LINE EditWndBuffGetLinePtr( H_EDITWND_BUFF hEditWndBuff, DWORD lineNum );
 
 /********************************************************************************
  * 内容  : 次の行データのハンドル取得
- * 引数  : H_IOWND_BUFF_LINE hLineData
- * 戻り値: H_IOWND_BUFF_LINE
+ * 引数  : H_EDITWND_BUFF_LINE hLineData
+ * 戻り値: H_EDITWND_BUFF_LINE
  ***************************************/
-H_IOWND_BUFF_LINE IoWndBuffGetLineNextPtr( H_IOWND_BUFF_LINE hLineData );
+H_EDITWND_BUFF_LINE EditWndBuffGetLineNextPtr( H_EDITWND_BUFF_LINE hLineData );
 
 enum
 {
@@ -177,72 +177,72 @@ typedef struct
 
 /********************************************************************************
  * 内容  : 指定行、指定列のデータを取得
- * 引数  : H_IOWND_BUFF hIoWndBuff
- * 引数  : H_IOWND_BUFF_LINE hLineData
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
+ * 引数  : H_EDITWND_BUFF_LINE hLineData
  * 引数  : DWORD             dispPos     表示位置
  * 引数  : S_BUFF_DISP_DATA *dataPtr
  * 戻り値: BOOL
  ***************************************/
-BOOL IoWndBuffGetDispData( H_IOWND_BUFF hIoWndBuff, H_IOWND_BUFF_LINE hLineData, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
+BOOL EditWndBuffGetDispData( H_EDITWND_BUFF hEditWndBuff, H_EDITWND_BUFF_LINE hLineData, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
 
 enum
 {
-    IOWND_BUFF_NEWLINE_CRLF= 0,
-    IOWND_BUFF_NEWLINE_LF  ,
-    IOWND_BUFF_NEWLINE_CR  ,
-    IOWND_BUFF_NEWLINE_NONE,
+    EDITWND_BUFF_NEWLINE_CRLF= 0,
+    EDITWND_BUFF_NEWLINE_LF  ,
+    EDITWND_BUFF_NEWLINE_CR  ,
+    EDITWND_BUFF_NEWLINE_NONE,
 };
 /********************************************************************************
- * 内容  : IOウィンドウバッファの改行コードセット
+ * 内容  : EDITウィンドウバッファの改行コードセット
  * 引数  : UINT newLineType
  * 戻り値: なし
  ***************************************/
-void IoWndBuffSetNewLineCode( H_IOWND_BUFF hIoWndBuff, UINT newLineType );
+void EditWndBuffSetNewLineCode( H_EDITWND_BUFF hEditWndBuff, UINT newLineType );
 
 /********************************************************************************
  * 内容  : データ削除
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 引数  : BOOL bBackSpace
  * 戻り値: なし
  ***************************************/
-void IoWndBuffRemoveData( H_IOWND_BUFF hIoWndBuff, BOOL bBackSpace );
+void EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace );
 
 /********************************************************************************
  * 内容  : 改行データ取得
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 引数  : PTSTR dataPtr
  * 戻り値: INT
  ***************************************/
-INT IoWndBuffGetNewLineData( H_IOWND_BUFF hIoWndBuff, PTSTR dataPtr );
+INT EditWndBuffGetNewLineData( H_EDITWND_BUFF hEditWndBuff, PTSTR dataPtr );
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのタブサイズセット
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファのタブサイズセット
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 引数  : INT tabSize
  * 戻り値: BOOL (TRUE:変更された)
  ***************************************/
-BOOL IoWndBuffSetTabSize( H_IOWND_BUFF hIoWndBuff, INT tabSize );
+BOOL EditWndBuffSetTabSize( H_EDITWND_BUFF hEditWndBuff, INT tabSize );
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファの範囲選択ON
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファの範囲選択ON
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: なし
  ***************************************/
-void IoWndBuffSelectOn( H_IOWND_BUFF hIoWndBuff );
+void EditWndBuffSelectOn( H_EDITWND_BUFF hEditWndBuff );
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファの範囲選択OFF
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファの範囲選択OFF
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: なし
  ***************************************/
-void IoWndBuffSelectOff( H_IOWND_BUFF hIoWndBuff );
+void EditWndBuffSelectOff( H_EDITWND_BUFF hEditWndBuff );
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファの全範囲選択
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファの全範囲選択
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: BOOL
  ***************************************/
-BOOL IoWndBuffSelectAll( H_IOWND_BUFF hIoWndBuff );
+BOOL EditWndBuffSelectAll( H_EDITWND_BUFF hEditWndBuff );
 
-#define IOWND_BUFFER_H
-#endif /* IOWND_BUFFER_H */
+#define EDITWND_BUFFER_H
+#endif /* EDITWND_BUFFER_H */

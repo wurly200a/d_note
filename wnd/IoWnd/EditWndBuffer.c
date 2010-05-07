@@ -7,7 +7,7 @@
 /* 外部変数定義 */
 
 /* 内部関数定義 */
-#include "IoWndBuffer.h"
+#include "EditWndBuffer.h"
 
 typedef struct tagS_LIST
 {
@@ -25,7 +25,7 @@ typedef struct tag_buffer_line_data
     TCHAR         data[]         ;
 } S_BUFF_LINE_DATA;
 
-typedef struct tagS_IOWND_BUFF_LOCAL
+typedef struct tagS_EDITWND_BUFF_LOCAL
 {
     struct
     {
@@ -39,25 +39,25 @@ typedef struct tagS_IOWND_BUFF_LOCAL
     DWORD xCaret     ;
     DWORD yCaret     ;
     INT   tabSize    ;
-} S_IOWND_BUFF_LOCAL;
-typedef S_IOWND_BUFF_LOCAL * H_IOWND_BUFF_LOCAL;
+} S_EDITWND_BUFF_LOCAL;
+typedef S_EDITWND_BUFF_LOCAL * H_EDITWND_BUFF_LOCAL;
 
 static S_BUFF_LINE_DATA *createBuffLineData( DWORD size, INT newLineCodeSize, TCHAR *dataPtr, DWORD lineNum, DWORD caretPos );
 static void destroyBuffLineData( S_BUFF_LINE_DATA *dataPtr );
-static S_BUFF_LINE_DATA *getBuffLine( H_IOWND_BUFF_LOCAL h, TCHAR *dataPtr, DWORD maxLength );
+static S_BUFF_LINE_DATA *getBuffLine( H_EDITWND_BUFF_LOCAL h, TCHAR *dataPtr, DWORD maxLength );
 static S_BUFF_LINE_DATA *joinData( S_BUFF_LINE_DATA *data1Ptr, S_BUFF_LINE_DATA *data2Ptr );
 static void divideData( S_BUFF_LINE_DATA *dataPtr, S_BUFF_LINE_DATA **new1Ptr, S_BUFF_LINE_DATA **new2Ptr );
 static S_BUFF_LINE_DATA *shortenData( S_BUFF_LINE_DATA *dataPtr, DWORD size );
 static CHARSET_TYPE detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset );
-static DWORD getCaretDispXpos( H_IOWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dataPos );
-static BOOL getDispCharData( H_IOWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
+static DWORD getCaretDispXpos( H_EDITWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dataPos );
+static BOOL getDispCharData( H_EDITWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
 static void updateLineNum( S_BUFF_LINE_DATA *dataPtr );
 
 static void addLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *dataPtr );
 static void removeLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *dataPtr );
 static void insertLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA **insertTopPtr, S_BUFF_LINE_DATA **insertEndPtr );
 static S_BUFF_LINE_DATA *replaceLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA *dataPtr );
-static void clearBuffLineData( H_IOWND_BUFF_LOCAL h );
+static void clearBuffLineData( H_EDITWND_BUFF_LOCAL h );
 
 static void addLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr, S_LIST_HEADER *dataPtr );
 static S_LIST_HEADER *replaceLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr, S_LIST_HEADER *nowPtr, S_LIST_HEADER *dataPtr );
@@ -67,16 +67,16 @@ static void insertLinkedList( S_LIST_HEADER **topPtr, S_LIST_HEADER **endPtr, S_
 /* 内部変数定義 */
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのオブジェクト生成
+ * 内容  : EDITウィンドウバッファのオブジェクト生成
  * 引数  : なし
- * 戻り値: H_IOWND_BUFF
+ * 戻り値: H_EDITWND_BUFF
  ***************************************/
-H_IOWND_BUFF
-IoWndBuffCreate( void )
+H_EDITWND_BUFF
+EditWndBuffCreate( void )
 {
-    H_IOWND_BUFF_LOCAL h;
+    H_EDITWND_BUFF_LOCAL h;
 
-    h = (H_IOWND_BUFF_LOCAL)malloc( sizeof(S_IOWND_BUFF_LOCAL) );
+    h = (H_EDITWND_BUFF_LOCAL)malloc( sizeof(S_EDITWND_BUFF_LOCAL) );
     if( h != NULL )
     {
         h->lineData.topPtr         = NULL;
@@ -84,7 +84,7 @@ IoWndBuffCreate( void )
         h->lineData.nowPtr         = NULL;
         h->lineData.selectPtr      = NULL;
         h->lineData.selectCaretPos = 0;
-        h->NewLineType = IOWND_BUFF_NEWLINE_CRLF;
+        h->NewLineType = EDITWND_BUFF_NEWLINE_CRLF;
         h->xCaret      = 0;
         h->yCaret      = 0;
         h->tabSize     = 8;
@@ -94,18 +94,18 @@ IoWndBuffCreate( void )
         nop();
     }
 
-    return (H_IOWND_BUFF)h;
+    return (H_EDITWND_BUFF)h;
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのオブジェクト破棄
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファのオブジェクト破棄
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: BOOL
  ***************************************/
 BOOL
-IoWndBuffDestroy( H_IOWND_BUFF hIoWndBuff )
+EditWndBuffDestroy( H_EDITWND_BUFF hEditWndBuff )
 {
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     if( (h != NULL) )
     {
@@ -120,14 +120,14 @@ IoWndBuffDestroy( H_IOWND_BUFF hIoWndBuff )
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファの初期化
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファの初期化
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: なし
  ***************************************/
 void
-IoWndBuffInit( H_IOWND_BUFF hIoWndBuff )
+EditWndBuffInit( H_EDITWND_BUFF hEditWndBuff )
 {
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
     S_BUFF_LINE_DATA *lineDataPtr;
 
     clearBuffLineData(h);
@@ -149,28 +149,28 @@ IoWndBuffInit( H_IOWND_BUFF hIoWndBuff )
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファの終了
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファの終了
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: なし
  ***************************************/
 void
-IoWndBuffEnd( H_IOWND_BUFF hIoWndBuff )
+EditWndBuffEnd( H_EDITWND_BUFF hEditWndBuff )
 {
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     clearBuffLineData(h);
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのデータセット
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファのデータセット
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 引数  : TCHAR* dataPtr
  * 引数  : DWORD  length
  * 引数  : BOOL   bInit  (TRUE:既存データをクリア,FALSE:クリアしない)
  * 戻り値: なし
  ***************************************/
 void
-IoWndBuffDataSet( H_IOWND_BUFF hIoWndBuff, TCHAR* dataPtr, DWORD length, BOOL bInit )
+EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, BOOL bInit )
 {
     S_BUFF_LINE_DATA *lineDataPtr;
     S_BUFF_LINE_DATA *tempTopPtr = NULL;
@@ -179,11 +179,11 @@ IoWndBuffDataSet( H_IOWND_BUFF hIoWndBuff, TCHAR* dataPtr, DWORD length, BOOL bI
     S_BUFF_LINE_DATA *dividePrePtr,*dividePostPtr;
     DWORD lineLengthSum = 0;
     DWORD caretPos = 0;
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     if( bInit )
     {
-        IoWndBuffInit(hIoWndBuff);
+        EditWndBuffInit(hEditWndBuff);
     }
     else
     {
@@ -376,20 +376,20 @@ IoWndBuffDataSet( H_IOWND_BUFF hIoWndBuff, TCHAR* dataPtr, DWORD length, BOOL bI
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのデータ取得
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファのデータ取得
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 引数  : TCHAR *dataPtr
  * 引数  : DWORD dataSize
- * 引数  : IOWND_BUFF_REGION region
+ * 引数  : EDITWND_BUFF_REGION region
  * 戻り値: BOOL
  ***************************************/
 BOOL
-IoWndBuffDataGet( H_IOWND_BUFF hIoWndBuff, TCHAR *dataPtr, DWORD dataSize, IOWND_BUFF_REGION region )
+EditWndBuffDataGet( H_EDITWND_BUFF hEditWndBuff, TCHAR *dataPtr, DWORD dataSize, EDITWND_BUFF_REGION region )
 {
     BOOL rtn = FALSE;
     S_BUFF_LINE_DATA *nowPtr,*prevPtr;
     DWORD size;
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     if( region == BUFF_ALL )
     {
@@ -512,17 +512,17 @@ IoWndBuffDataGet( H_IOWND_BUFF hIoWndBuff, TCHAR *dataPtr, DWORD dataSize, IOWND
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのデータサイズ取得
- * 引数  : H_IOWND_BUFF hIoWndBuff
- * 引数  : IOWND_BUFF_REGION region
+ * 内容  : EDITウィンドウバッファのデータサイズ取得
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
+ * 引数  : EDITWND_BUFF_REGION region
  * 戻り値: DWORD
  ***************************************/
 DWORD
-IoWndBuffGetDataSize( H_IOWND_BUFF hIoWndBuff, IOWND_BUFF_REGION region )
+EditWndBuffGetDataSize( H_EDITWND_BUFF hEditWndBuff, EDITWND_BUFF_REGION region )
 {
     DWORD dataSize = 0;
     S_BUFF_LINE_DATA *nowPtr,*prevPtr;
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     if( region == BUFF_ALL )
     {
@@ -606,29 +606,29 @@ IoWndBuffGetDataSize( H_IOWND_BUFF hIoWndBuff, IOWND_BUFF_REGION region )
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファの最大行サイズ取得
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファの最大行サイズ取得
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: DWORD
  ***************************************/
 DWORD
-IoWndBuffGetLineMaxSize( H_IOWND_BUFF hIoWndBuff )
+EditWndBuffGetLineMaxSize( H_EDITWND_BUFF hEditWndBuff )
 {
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     return (h->lineData.endPtr)->lineNum;
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファの最大文字サイズ取得
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファの最大文字サイズ取得
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: DWORD
  ***************************************/
 DWORD
-IoWndBuffGetColumnMaxSize( H_IOWND_BUFF hIoWndBuff)
+EditWndBuffGetColumnMaxSize( H_EDITWND_BUFF hEditWndBuff)
 {
     DWORD columnMaxSize = 0;
     S_BUFF_LINE_DATA *nowPtr;
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     for( nowPtr = (h->lineData.topPtr); nowPtr != NULL; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr )
     {
@@ -639,46 +639,46 @@ IoWndBuffGetColumnMaxSize( H_IOWND_BUFF hIoWndBuff)
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのキャレットX位置取得
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファのキャレットX位置取得
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: DWORD
  ***************************************/
 DWORD
-IoWndBuffGetCaretXpos( H_IOWND_BUFF hIoWndBuff )
+EditWndBuffGetCaretXpos( H_EDITWND_BUFF hEditWndBuff )
 {
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     return getCaretDispXpos(h,(h->lineData.nowPtr),(h->lineData.nowPtr)->caretDataPos);
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのキャレットY位置取得
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファのキャレットY位置取得
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: DWORD
  ***************************************/
 DWORD
-IoWndBuffGetCaretYpos( H_IOWND_BUFF hIoWndBuff )
+EditWndBuffGetCaretYpos( H_EDITWND_BUFF hEditWndBuff )
 {
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     return (h->lineData.nowPtr)->lineNum;
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのキャレット位置セット
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファのキャレット位置セット
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 引数  : DWORD xPos
  * 引数  : DWORD lineNum
  * 戻り値: なし
  ***************************************/
 void
-IoWndBuffSetCaretPos( H_IOWND_BUFF hIoWndBuff, DWORD xPos, DWORD lineNum )
+EditWndBuffSetCaretPos( H_EDITWND_BUFF hEditWndBuff, DWORD xPos, DWORD lineNum )
 {
     S_BUFF_LINE_DATA *nowPtr = NULL;
     S_BUFF_DISP_DATA dispData;
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
-    nowPtr = (S_BUFF_LINE_DATA *)IoWndBuffGetLinePtr( hIoWndBuff, lineNum );
+    nowPtr = (S_BUFF_LINE_DATA *)EditWndBuffGetLinePtr( hEditWndBuff, lineNum );
 
     if( nowPtr != NULL )
     {
@@ -694,15 +694,15 @@ IoWndBuffSetCaretPos( H_IOWND_BUFF hIoWndBuff, DWORD xPos, DWORD lineNum )
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのキャレットX位置加算
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファのキャレットX位置加算
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: なし
  ***************************************/
 void
-IoWndBuffIncCaretXpos( H_IOWND_BUFF hIoWndBuff )
+EditWndBuffIncCaretXpos( H_EDITWND_BUFF hEditWndBuff )
 {
     int moveAmount = 0;
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     if( (h->lineData.nowPtr) != NULL )
     {
@@ -739,15 +739,15 @@ IoWndBuffIncCaretXpos( H_IOWND_BUFF hIoWndBuff )
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのキャレットX位置減算
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファのキャレットX位置減算
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: なし
  ***************************************/
 void
-IoWndBuffDecCaretXpos( H_IOWND_BUFF hIoWndBuff )
+EditWndBuffDecCaretXpos( H_EDITWND_BUFF hEditWndBuff )
 {
     int moveAmount = 0;
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     if( (h->lineData.nowPtr) != NULL )
     {
@@ -785,17 +785,17 @@ IoWndBuffDecCaretXpos( H_IOWND_BUFF hIoWndBuff )
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのキャレットY位置加算
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファのキャレットY位置加算
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: なし
  ***************************************/
 void
-IoWndBuffIncCaretYpos( H_IOWND_BUFF hIoWndBuff )
+EditWndBuffIncCaretYpos( H_EDITWND_BUFF hEditWndBuff )
 {
     DWORD preDispPos = 0;
     S_BUFF_LINE_DATA *nextPtr;
     S_BUFF_DISP_DATA dispData;
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     nextPtr = (S_BUFF_LINE_DATA *)((h->lineData.nowPtr)->header.nextPtr);
 
@@ -813,17 +813,17 @@ IoWndBuffIncCaretYpos( H_IOWND_BUFF hIoWndBuff )
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのキャレットY位置減算
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファのキャレットY位置減算
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: なし
  ***************************************/
 void
-IoWndBuffDecCaretYpos( H_IOWND_BUFF hIoWndBuff )
+EditWndBuffDecCaretYpos( H_EDITWND_BUFF hEditWndBuff )
 {
     DWORD preDispPos = 0;
     S_BUFF_LINE_DATA *prevPtr;
     S_BUFF_DISP_DATA dispData;
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     prevPtr = (S_BUFF_LINE_DATA *)(h->lineData.nowPtr)->header.prevPtr;
 
@@ -842,16 +842,16 @@ IoWndBuffDecCaretYpos( H_IOWND_BUFF hIoWndBuff )
 
 /********************************************************************************
  * 内容  : 指定行データのハンドル取得
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 引数  : DWORD lineNum
- * 戻り値: H_IOWND_BUFF_LINE
+ * 戻り値: H_EDITWND_BUFF_LINE
  ***************************************/
-H_IOWND_BUFF_LINE
-IoWndBuffGetLinePtr( H_IOWND_BUFF hIoWndBuff, DWORD lineNum )
+H_EDITWND_BUFF_LINE
+EditWndBuffGetLinePtr( H_EDITWND_BUFF hEditWndBuff, DWORD lineNum )
 {
     S_BUFF_LINE_DATA *nowPtr,*nextPtr,*rtnPtr = NULL;
     DWORD i;
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     if( (h->lineData.topPtr) == NULL )
     {
@@ -875,32 +875,32 @@ IoWndBuffGetLinePtr( H_IOWND_BUFF hIoWndBuff, DWORD lineNum )
         }
     }
 
-    return (H_IOWND_BUFF_LINE)rtnPtr;
+    return (H_EDITWND_BUFF_LINE)rtnPtr;
 }
 
 /********************************************************************************
  * 内容  : 次の行データのハンドル取得
- * 引数  : H_IOWND_BUFF_LINE hLineData
- * 戻り値: H_IOWND_BUFF_LINE
+ * 引数  : H_EDITWND_BUFF_LINE hLineData
+ * 戻り値: H_EDITWND_BUFF_LINE
  ***************************************/
-H_IOWND_BUFF_LINE
-IoWndBuffGetLineNextPtr( H_IOWND_BUFF_LINE hLineData )
+H_EDITWND_BUFF_LINE
+EditWndBuffGetLineNextPtr( H_EDITWND_BUFF_LINE hLineData )
 {
-    return (H_IOWND_BUFF_LINE)(((S_BUFF_LINE_DATA *)hLineData)->header.nextPtr);
+    return (H_EDITWND_BUFF_LINE)(((S_BUFF_LINE_DATA *)hLineData)->header.nextPtr);
 }
 
 /********************************************************************************
  * 内容  : 指定行、指定列のデータを取得
- * 引数  : H_IOWND_BUFF hIoWndBuff
- * 引数  : H_IOWND_BUFF_LINE hLineData
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
+ * 引数  : H_EDITWND_BUFF_LINE hLineData
  * 引数  : DWORD             dispPos     表示位置
  * 引数  : S_BUFF_DISP_DATA *dataPtr
  * 戻り値: BOOL
  ***************************************/
 BOOL
-IoWndBuffGetDispData( H_IOWND_BUFF hIoWndBuff, H_IOWND_BUFF_LINE hLineData, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr )
+EditWndBuffGetDispData( H_EDITWND_BUFF hEditWndBuff, H_EDITWND_BUFF_LINE hLineData, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr )
 {
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     getDispCharData( h, (S_BUFF_LINE_DATA *)hLineData, dispPos, dataPtr );
 
@@ -908,32 +908,32 @@ IoWndBuffGetDispData( H_IOWND_BUFF hIoWndBuff, H_IOWND_BUFF_LINE hLineData, DWOR
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファの改行コードセット
+ * 内容  : EDITウィンドウバッファの改行コードセット
  * 引数  : UINT newLineType
  * 戻り値: なし
  ***************************************/
 void
-IoWndBuffSetNewLineCode( H_IOWND_BUFF hIoWndBuff, UINT newLineType )
+EditWndBuffSetNewLineCode( H_EDITWND_BUFF hEditWndBuff, UINT newLineType )
 {
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     h->NewLineType = newLineType;
 }
 
 /********************************************************************************
  * 内容  : データ削除
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 引数  : BOOL bBackSpace
  * 戻り値: なし
  ***************************************/
 void
-IoWndBuffRemoveData( H_IOWND_BUFF hIoWndBuff, BOOL bBackSpace )
+EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
 {
     DWORD removeSize = 0,saveCaretPos;
     S_BUFF_LINE_DATA *newPtr = NULL,*prevPtr = NULL,*nextPtr = NULL,*nowPtr = NULL,*savePtr;
     S_BUFF_LINE_DATA *dividePrePtr,*dividePostPtr;
     BOOL bValid = FALSE;
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     if( (h->lineData.nowPtr) != NULL )
     {
@@ -1160,32 +1160,32 @@ IoWndBuffRemoveData( H_IOWND_BUFF hIoWndBuff, BOOL bBackSpace )
 
 /********************************************************************************
  * 内容  : 改行データ取得
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 引数  : PTSTR dataPtr
  * 戻り値: INT
  ***************************************/
 INT
-IoWndBuffGetNewLineData( H_IOWND_BUFF hIoWndBuff, PTSTR dataPtr )
+EditWndBuffGetNewLineData( H_EDITWND_BUFF hEditWndBuff, PTSTR dataPtr )
 {
     INT size = 0;
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     switch( h->NewLineType )
     {
-    case IOWND_BUFF_NEWLINE_CRLF:
+    case EDITWND_BUFF_NEWLINE_CRLF:
         *dataPtr     = '\r';
         *(dataPtr+1) = '\n';
         size = 2;
         break;
-    case IOWND_BUFF_NEWLINE_LF  :
+    case EDITWND_BUFF_NEWLINE_LF  :
         *dataPtr = '\n';
         size = 1;
         break;
-    case IOWND_BUFF_NEWLINE_CR  :
+    case EDITWND_BUFF_NEWLINE_CR  :
         *dataPtr = '\r';
         size = 1;
         break;
-    case IOWND_BUFF_NEWLINE_NONE:
+    case EDITWND_BUFF_NEWLINE_NONE:
     default:
         break;
     }
@@ -1194,16 +1194,16 @@ IoWndBuffGetNewLineData( H_IOWND_BUFF hIoWndBuff, PTSTR dataPtr )
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファのタブサイズセット
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファのタブサイズセット
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 引数  : INT tabSize
  * 戻り値: BOOL (TRUE:変更された)
  ***************************************/
 BOOL
-IoWndBuffSetTabSize( H_IOWND_BUFF hIoWndBuff, INT tabSize )
+EditWndBuffSetTabSize( H_EDITWND_BUFF hEditWndBuff, INT tabSize )
 {
     BOOL bRtn = FALSE;
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     if( tabSize != h->tabSize )
     {
@@ -1219,14 +1219,14 @@ IoWndBuffSetTabSize( H_IOWND_BUFF hIoWndBuff, INT tabSize )
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファの範囲選択ON
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファの範囲選択ON
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: なし
  ***************************************/
 void
-IoWndBuffSelectOn( H_IOWND_BUFF hIoWndBuff )
+EditWndBuffSelectOn( H_EDITWND_BUFF hEditWndBuff )
 {
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     if( (h->lineData.selectPtr) )
     { /* 既に選択済みの場合 */
@@ -1240,29 +1240,29 @@ IoWndBuffSelectOn( H_IOWND_BUFF hIoWndBuff )
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファの範囲選択OFF
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファの範囲選択OFF
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: なし
  ***************************************/
 void
-IoWndBuffSelectOff( H_IOWND_BUFF hIoWndBuff )
+EditWndBuffSelectOff( H_EDITWND_BUFF hEditWndBuff )
 {
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     (h->lineData.selectPtr) = NULL;
     (h->lineData.selectCaretPos) = 0;
 }
 
 /********************************************************************************
- * 内容  : IOウィンドウバッファの全範囲選択
- * 引数  : H_IOWND_BUFF hIoWndBuff
+ * 内容  : EDITウィンドウバッファの全範囲選択
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: BOOL
  ***************************************/
 BOOL
-IoWndBuffSelectAll( H_IOWND_BUFF hIoWndBuff )
+EditWndBuffSelectAll( H_EDITWND_BUFF hEditWndBuff )
 {
     BOOL bRtn = FALSE;
-    H_IOWND_BUFF_LOCAL h = (H_IOWND_BUFF_LOCAL)hIoWndBuff;
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     if( (h->lineData.topPtr) != NULL )
     {
@@ -1344,13 +1344,13 @@ destroyBuffLineData( S_BUFF_LINE_DATA *dataPtr )
 
 /********************************************************************************
  * 内容  : バッファ行データを取得
- * 引数  : H_IOWND_BUFF_LOCAL h
+ * 引数  : H_EDITWND_BUFF_LOCAL h
  * 引数  : TCHAR *dataPtr  データの先頭
  * 引数  : DWORD maxLength 最大長さ
  * 戻り値: S_BUFF_LINE_DATA *
  ***************************************/
 static S_BUFF_LINE_DATA *
-getBuffLine( H_IOWND_BUFF_LOCAL h, TCHAR *dataPtr, DWORD maxLength )
+getBuffLine( H_EDITWND_BUFF_LOCAL h, TCHAR *dataPtr, DWORD maxLength )
 {
     S_BUFF_LINE_DATA *lineDataPtr = NULL;
     DWORD i;
@@ -1358,7 +1358,7 @@ getBuffLine( H_IOWND_BUFF_LOCAL h, TCHAR *dataPtr, DWORD maxLength )
 
     for( i=0; i<maxLength; i++ )
     {
-        if( h->NewLineType == IOWND_BUFF_NEWLINE_CRLF )
+        if( h->NewLineType == EDITWND_BUFF_NEWLINE_CRLF )
         {
             if( (i>0) &&
                 (*(dataPtr+i-1) == '\r') &&
@@ -1373,7 +1373,7 @@ getBuffLine( H_IOWND_BUFF_LOCAL h, TCHAR *dataPtr, DWORD maxLength )
                 nop();
             }
         }
-        else if( h->NewLineType == IOWND_BUFF_NEWLINE_LF )
+        else if( h->NewLineType == EDITWND_BUFF_NEWLINE_LF )
         {
             if( (*(dataPtr+i) == '\n') )
             {
@@ -1386,7 +1386,7 @@ getBuffLine( H_IOWND_BUFF_LOCAL h, TCHAR *dataPtr, DWORD maxLength )
                 nop();
             }
         }
-        else if( h->NewLineType == IOWND_BUFF_NEWLINE_CR )
+        else if( h->NewLineType == EDITWND_BUFF_NEWLINE_CR )
         {
             if( (*(dataPtr+i) == '\r') )
             {
@@ -1400,7 +1400,7 @@ getBuffLine( H_IOWND_BUFF_LOCAL h, TCHAR *dataPtr, DWORD maxLength )
             }
         }
         else
-        { /* IOWND_BUFF_NEWLINE_NONE */
+        { /* EDITWND_BUFF_NEWLINE_NONE */
             nop();
         }
     }
@@ -1556,13 +1556,13 @@ detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset )
 
 /********************************************************************************
  * 内容  : キャレットX表示位置取得
- * 引数  : H_IOWND_BUFF_LOCAL h
+ * 引数  : H_EDITWND_BUFF_LOCAL h
  * 引数  : S_BUFF_LINE_DATA *linePtr   行データ
  * 引数  : DWORD             dataPos   列位置(データ上の)
  * 戻り値: DWORD
  ***************************************/
 static DWORD
-getCaretDispXpos( H_IOWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dataPos )
+getCaretDispXpos( H_EDITWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dataPos )
 {
     DWORD i,j=0;
     DWORD literalMaxSize;
@@ -1620,14 +1620,14 @@ getCaretDispXpos( H_IOWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dataPos
 
 /********************************************************************************
  * 内容  : 指定位置の表示データを取得する
- * 引数  : H_IOWND_BUFF_LOCAL h
+ * 引数  : H_EDITWND_BUFF_LOCAL h
  * 引数  : S_BUFF_LINE_DATA *linePtr   行データ
  * 引数  : DWORD             dispPos   列位置(表示上の)
  * 引数  : S_BUFF_DISP_DATA *dataPtr
  * 戻り値: BOOL
  ***************************************/
 static BOOL
-getDispCharData( H_IOWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr )
+getDispCharData( H_EDITWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr )
 {
     DWORD dataPos,j,k;
     DWORD literalMaxSize;
@@ -1982,11 +1982,11 @@ replaceLineData( S_BUFF_LINE_DATA **topPtr, S_BUFF_LINE_DATA **endPtr, S_BUFF_LI
 
 /********************************************************************************
  * 内容  : バッファデータのクリア
- * 引数  : H_IOWND_BUFF_LOCAL h
+ * 引数  : H_EDITWND_BUFF_LOCAL h
  * 戻り値: なし
  ***************************************/
 static void
-clearBuffLineData( H_IOWND_BUFF_LOCAL h )
+clearBuffLineData( H_EDITWND_BUFF_LOCAL h )
 {
     S_BUFF_LINE_DATA *lineDataPtr,*nextPtr;
 

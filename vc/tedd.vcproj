@@ -117,16 +117,16 @@
 			RelativePath="..\sys\DateTime\DateTime.c">
 		</File>
 		<File
+			RelativePath="..\wnd\IoWnd\EditWnd.c">
+		</File>
+		<File
+			RelativePath="..\wnd\IoWnd\EditWndBuffer.c">
+		</File>
+		<File
 			RelativePath="..\sys\File\File.c">
 		</File>
 		<File
 			RelativePath="..\sys\Font\Font.c">
-		</File>
-		<File
-			RelativePath="..\wnd\IoWnd\IoWnd.c">
-		</File>
-		<File
-			RelativePath="..\wnd\IoWnd\IoWndBuffer.c">
 		</File>
 		<File
 			RelativePath="..\wnd\MainWnd\MainWnd.c">
