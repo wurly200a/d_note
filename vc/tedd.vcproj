@@ -117,10 +117,10 @@
 			RelativePath="..\sys\DateTime\DateTime.c">
 		</File>
 		<File
-			RelativePath="..\wnd\IoWnd\EditWnd.c">
+			RelativePath="..\wnd\EditWnd\EditWnd.c">
 		</File>
 		<File
-			RelativePath="..\wnd\IoWnd\EditWndBuffer.c">
+			RelativePath="..\wnd\EditWnd\EditWndBuffer.c">
 		</File>
 		<File
 			RelativePath="..\sys\File\File.c">
