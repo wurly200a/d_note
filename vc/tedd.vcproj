@@ -68,6 +68,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="../inc"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
 				RuntimeLibrary="4"
 				UsePrecompiledHeader="0"
@@ -78,6 +79,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="comctl32.lib imm32.lib"
 				OutputFile="$(OutDir)/tedd.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="TRUE"
@@ -115,12 +117,6 @@
 		</File>
 		<File
 			RelativePath="..\sys\DateTime\DateTime.c">
-		</File>
-		<File
-			RelativePath="..\wnd\EditWnd\EditWnd.c">
-		</File>
-		<File
-			RelativePath="..\wnd\EditWnd\EditWndBuffer.c">
 		</File>
 		<File
 			RelativePath="..\sys\File\File.c">
