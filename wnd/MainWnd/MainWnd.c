@@ -279,7 +279,7 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 #ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
     EditWndRegisterClass( GetHinst() );
     mainWndData.hWndIo = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW,
-                                         TEXT("editWnd"), NULL,
+                                         TEXT("teddedit"), NULL,
                                          WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL ,
                                          CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
                                          hwnd, (HMENU)0, GetHinst(), NULL );
@@ -456,8 +456,11 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         {
         case EN_UPDATE:
 #ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-            StsBarSetText( STS_BAR_0  ,"%d バイト、全 %d 行",EditWndGetDataSize(mainWndData.hWndIo, EDITWND_ALL),EditWndGetLineMaxSize(mainWndData.hWndIo) );
-            StsBarSetText( STS_BAR_MAX,"   %d 行、%d 列",EditWndGetCaretYpos(mainWndData.hWndIo)+1,EditWndGetCaretXpos(mainWndData.hWndIo)+1);
+            StsBarSetText( STS_BAR_0  ,"%d バイト、全 %d 行",EditWndGetDataSize(mainWndData.hWndIo, EDITWND_ALL),(DWORD)SendMessage(mainWndData.hWndIo,EM_GETLINECOUNT,0,0) );
+            StsBarSetText( STS_BAR_MAX,"   %d 行、%d 列",(DWORD)(SendMessage(mainWndData.hWndIo,EM_LINEFROMCHAR,-1,0))+1,EditWndGetCaretXpos(mainWndData.hWndIo)+1);
+#else                   /* [エディットコントロール使用] or  通常  */
+            StsBarSetText( STS_BAR_0  ,"%d バイト、全 %d 行",GetWindowTextLength(mainWndData.hWndIo),(DWORD)SendMessage(mainWndData.hWndIo,EM_GETLINECOUNT,0,0) );
+            StsBarSetText( STS_BAR_MAX,"   %d 行、%d 列",(DWORD)(SendMessage(mainWndData.hWndIo,EM_LINEFROMCHAR,-1,0))+1,0);
 #endif                  /*  エディットコントロール使用  or  通常  */
             break;
         case EN_CHANGE:

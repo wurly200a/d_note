@@ -1,30 +1,54 @@
 #ifndef EDITWND_H
 
-/* [ëŒâûÉÅÉbÉZÅ[ÉW] */
+/* [ÉÅÉbÉZÅ[ÉW]                                                                 */
+/* WM_CUT                        Åõ                                             */
+/* WM_COPY                       Åõ                                             */
+/* WM_PASTE                      Åõ                                             */
+/* WM_CLEAR                      Åõ                                             */
+/* WM_SETFONT                    Åõ                                             */
+/* EM_GETSEL                     Å~                                             */
+/* EM_SETSEL                     Å¢(wParam==0,lParam=-1ÇÃéûÇÃÇ›)                */
+/* EM_GETRECT                    Å~                                             */
+/* EM_SETRECT                    Å~                                             */
+/* EM_SETRECTNP                  Å~                                             */
+/* EM_SCROLL                     Å~                                             */
+/* EM_LINESCROLL                 Å~                                             */
+/* EM_SCROLLCARET                Å~                                             */
+/* EM_GETMODIFY                  Å~                                             */
+/* EM_SETMODIFY                  Å~                                             */
+/* EM_GETLINECOUNT               Åõ                                             */
+/* EM_LINEINDEX                  Å~                                             */
+/* EM_SETHANDLE                  Å~                                             */
+/* EM_GETHANDLE                  Å~                                             */
+/* EM_GETTHUMB                   Å~                                             */
+/* EM_LINELENGTH                 Å~                                             */
+/* EM_REPLACESEL                 Å~                                             */
+/* EM_GETLINE                    Å~                                             */
+/* EM_CANUNDO                    Å~                                             */
+/* EM_UNDO                       Å~                                             */
+/* EM_FMTLINES                   Å~                                             */
+/* EM_LINEFROMCHAR               Å¢(wParam==-1ÇÃéûÇÃÇ›)                         */
+/* EM_SETTABSTOPS                Å~                                             */
+/* EM_SETPASSWORDCHAR            Å~                                             */
+/* EM_EMPTYUNDOBUFFER            Å~                                             */
+/* EM_GETFIRSTVISIBLELINE        Å~                                             */
+/* EM_SETREADONLY                Å~                                             */
+/* EM_SETWORDBREAKPROC           Å~                                             */
+/* EM_GETWORDBREAKPROC           Å~                                             */
+/* EM_GETPASSWORDCHAR            Å~                                             */
+/* EM_SETMARGINS                 Å~                                             */
+/* EM_GETMARGINS                 Å~                                             */
+/* EM_SETLIMITTEXT (EM_LIMITTEXT)Å~                                             */
+/* EM_GETLIMITTEXT               Å~                                             */
+/* EM_POSFROMCHAR                Å~                                             */
+/* EM_CHARFROMPOS                Å~                                             */
+/* EM_SETIMESTATUS               Å~                                             */
+/* EM_GETIMESTATUS               Å~                                             */
 /*                                                                              */
-/*                                                                              */
-/*                                                                              */
-/*                                                                              */
-/* WM_CUT                                                                       */
-/* WM_COPY                                                                      */
-/* WM_PASTE                                                                     */
-/* WM_CLEAR                                                                     */
-/*                                                                              */
-/* EM_SETSEL                                                                    */
-/* WM_SETFONT                                                                   */
-/*                                                                              */
-/*                                                                              */
-/* [ñ¢ëŒâû]                                                                     */
-/*                                                                              */
-/*                                                                              */
-/* [å›ä∑ê´ÇÃñ≥Ç¢Ç‡ÇÃ]                                                           */
-/*                                                                              */
-/* GetWindowTextLength(HWND hWnd)                                               */
-/* GetWindowText(HWND hWnd,LPTSTR lpString,int nMaxCount)                       */
-/* SetWindowText(HWND hWnd,LPCTSTR lpString)                                    */
-/*                                                                              */
-/*                                                                              */
-/*                                                                              */
+/* [ä÷êî]                                                                       */
+/* GetWindowTextLength(HWND hWnd)                           Å~                  */
+/* GetWindowText(HWND hWnd,LPTSTR lpString,int nMaxCount)   Å~                  */
+/* SetWindowText(HWND hWnd,LPCTSTR lpString)                Å~                  */
 /*                                                                              */
 
 /********************************************************************************
@@ -76,13 +100,6 @@ BOOL EditWndDataGet( HWND hwnd, TCHAR *dataPtr, DWORD dataSize, EDITWND_REGION r
 DWORD EditWndGetDataSize( HWND hwnd, EDITWND_REGION region );
 
 /********************************************************************************
- * ì‡óe  : EDITÉEÉBÉìÉhÉEÉoÉbÉtÉ@ÇÃç≈ëÂçsÉTÉCÉYéÊìæ
- * à¯êî  : HWND hwnd
- * ñﬂÇËíl: DWORD
- ***************************************/
-DWORD EditWndGetLineMaxSize( HWND hwnd );
-
-/********************************************************************************
  * ì‡óe  : EDITÉEÉBÉìÉhÉEÉoÉbÉtÉ@ÇÃç≈ëÂï∂éöÉTÉCÉYéÊìæ
  * à¯êî  : HWND hwnd
  * ñﬂÇËíl: DWORD
@@ -95,13 +112,6 @@ DWORD EditWndGetColumnMaxSize( HWND hwnd );
  * ñﬂÇËíl: DWORD
  ***************************************/
 DWORD EditWndGetCaretXpos( HWND hwnd );
-
-/********************************************************************************
- * ì‡óe  : EDITÉEÉBÉìÉhÉEÉoÉbÉtÉ@ÇÃÉLÉÉÉåÉbÉgYà íuéÊìæ
- * à¯êî  : HWND hwnd
- * ñﬂÇËíl: DWORD
- ***************************************/
-DWORD EditWndGetCaretYpos( HWND hwnd );
 
 enum
 {

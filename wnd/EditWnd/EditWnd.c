@@ -42,6 +42,8 @@ static LRESULT editOnClear              ( HWND hwnd, UINT message, WPARAM wParam
 static LRESULT editOnUndo               ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT editOnSetSel             ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT editOnSetFont            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnGetLineCount       ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnLineFromChar       ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT editOnDefault            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
 static void editWndRemoveData( HWND hwnd, BOOL bBackSpace );
@@ -104,6 +106,8 @@ static LRESULT (*editWndProcTbl[EDITWND_MAX])( HWND hwnd, UINT message, WPARAM w
     editOnUndo               , /* WM_UNDO                */
     editOnSetSel             , /* EM_SETSEL              */
     editOnSetFont            , /* WM_SETFONT             */
+    editOnGetLineCount       , /* EM_GETLINECOUNT        */
+    editOnLineFromChar       , /* EM_LINEFROMCHAR        */
     editOnDefault              /* default                */
 };
 /* *INDENT-ON* */
@@ -126,13 +130,13 @@ EditWndRegisterClass( HINSTANCE hInst )
     wc.hIcon            = (HICON)0;
     wc.hCursor          = LoadCursor(NULL, IDC_IBEAM);
     wc.hbrBackground    = (HBRUSH) CreateSolidBrush( BG_COLOR_RGB );
-    wc.lpszClassName    = "editWnd";
+    wc.lpszClassName    = "teddedit";
     wc.lpszMenuName     = NULL;
     wc.cbWndExtra       = sizeof(S_EDITWND_DATA);
 
     if( !RegisterClass(&wc) )
     {
-        MessageBox( NULL, TEXT("RegisterClass Failed!"), TEXT("EditWnd"), MB_ICONERROR );
+        MessageBox( NULL, TEXT("RegisterClass Failed!"), TEXT("teddedit"), MB_ICONERROR );
         rtn = FALSE;
     }
     else
@@ -219,18 +223,6 @@ EditWndGetDataSize( HWND hwnd, EDITWND_REGION region )
 }
 
 /********************************************************************************
- * 内容  : EDITウィンドウバッファの最大行サイズ取得
- * 引数  : HWND hwnd
- * 戻り値: DWORD
- ***************************************/
-DWORD
-EditWndGetLineMaxSize( HWND hwnd )
-{
-    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
-    return EditWndBuffGetLineMaxSize( editWndDataPtr->hEditWndBuff );
-}
-
-/********************************************************************************
  * 内容  : EDITウィンドウバッファの最大文字サイズ取得
  * 引数  : HWND hwnd
  * 戻り値: DWORD
@@ -253,18 +245,6 @@ EditWndGetCaretXpos( HWND hwnd )
 {
     S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
     return EditWndBuffGetCaretXpos( editWndDataPtr->hEditWndBuff );
-}
-
-/********************************************************************************
- * 内容  : EDITウィンドウバッファのキャレットY位置取得
- * 引数  : HWND hwnd
- * 戻り値: DWORD
- ***************************************/
-DWORD
-EditWndGetCaretYpos( HWND hwnd )
-{
-    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
-    return EditWndBuffGetCaretYpos( editWndDataPtr->hEditWndBuff );
 }
 
 /********************************************************************************
@@ -371,6 +351,8 @@ editWndConvertMSGtoINDEX( UINT message )
     case WM_UNDO                :rtn = EDITWND_ON_UNDO                ;break;
     case EM_SETSEL              :rtn = EDITWND_ON_SETSEL              ;break;
     case WM_SETFONT             :rtn = EDITWND_ON_SETFONT             ;break;
+    case EM_GETLINECOUNT        :rtn = EDITWND_ON_GETLINECOUNT        ;break;
+    case EM_LINEFROMCHAR        :rtn = EDITWND_ON_LINEFROMCHAR        ;break;
 
     case WM_NCMOUSEMOVE         :rtn = EDITWND_ON_DEFAULT             ;break;
     case WM_SETCURSOR           :rtn = EDITWND_ON_DEFAULT             ;break;
@@ -1591,6 +1573,48 @@ editOnSetFont( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     }
 
     return rtn;
+}
+
+/********************************************************************************
+ * 内容  : EM_GETLINECOUNT を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam
+ * 引数  : LPARAM lParam
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+editOnGetLineCount( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+
+    return (LRESULT)((EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff)) + 1);
+}
+
+/********************************************************************************
+ * 内容  : EM_LINEFROMCHAR を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam
+ * 引数  : LPARAM lParam
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+editOnLineFromChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    DWORD result = (DWORD)0;
+
+    if( (wParam == -1) )
+    {
+        result = EditWndBuffGetCaretYpos( editWndDataPtr->hEditWndBuff );
+    }
+    else
+    {
+        nop();
+    }
+
+    return (LRESULT)result;
 }
 
 /********************************************************************************

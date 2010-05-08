@@ -32,6 +32,8 @@ typedef enum
     EDITWND_ON_UNDO                , /* WM_UNDO                 */
     EDITWND_ON_SETSEL              , /* EM_SETSEL               */
     EDITWND_ON_SETFONT             , /* WM_SETFONT              */
+    EDITWND_ON_GETLINECOUNT        , /* EM_GETLINECOUNT         */
+    EDITWND_ON_LINEFROMCHAR        , /* EM_LINEFROMCHAR         */
     EDITWND_ON_DEFAULT             , /* default                 */
     EDITWND_MAX
 } EDITWND_INDEX;
