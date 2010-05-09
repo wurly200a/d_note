@@ -448,10 +448,10 @@ editOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     iHorzPos = editWndDataPtr->iHorzPos;
     iVertPos = editWndDataPtr->iVertPos;
 
-    iPaintBeg = max(0, iVertPos + ps.rcPaint.top / editWndDataPtr->cyChar);
-    iPaintEnd = iVertPos + (ps.rcPaint.bottom / editWndDataPtr->cyChar);
+    iPaintBeg = max(0, ps.rcPaint.top / editWndDataPtr->cyChar);
+    iPaintEnd = ps.rcPaint.bottom / editWndDataPtr->cyChar;
 
-    for( y=iPaintBeg,hLineData=EditWndBuffGetLinePtr(editWndDataPtr->hEditWndBuff,y); y<=iPaintEnd; y++ )
+    for( y=iPaintBeg,hLineData=EditWndBuffGetLinePtr(editWndDataPtr->hEditWndBuff,y+iVertPos); y<=iPaintEnd; y++ )
     { /* 再描画領域のみ1行ずつ処理 */
         for( x=0; x<editWndDataPtr->cxBuffer+1;x++ )
         {
@@ -502,7 +502,7 @@ editOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
                 TextOut(hdc,
                         (x*editWndDataPtr->cxChar) - (buffDispData.offset*editWndDataPtr->cxChar), /* x座標 */
-                        (y-iVertPos) * editWndDataPtr->cyChar, /* y座標 */
+                        y * editWndDataPtr->cyChar, /* y座標 */
                         buffDispData.data,               /* 文字列へのポインタ */
                         buffDispData.size                /* 文字数 */
                     );
@@ -527,7 +527,7 @@ editOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
                 TextOut(hdc,
                         (x*editWndDataPtr->cxChar), /* x座標 */
-                        (y-iVertPos) * editWndDataPtr->cyChar, /* y座標 */
+                        y * editWndDataPtr->cyChar, /* y座標 */
                         " ",               /* 文字列へのポインタ */
                         1                  /* 文字数 */
                     );
