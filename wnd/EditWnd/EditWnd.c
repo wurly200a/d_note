@@ -129,7 +129,7 @@ EditWndRegisterClass( HINSTANCE hInst )
     wc.hInstance        = hInst;
     wc.hIcon            = (HICON)0;
     wc.hCursor          = LoadCursor(NULL, IDC_IBEAM);
-    wc.hbrBackground    = (HBRUSH) CreateSolidBrush( BG_COLOR_RGB );
+    wc.hbrBackground    = (HBRUSH) CreateSolidBrush( BG_COLOR_RGB ); /* 上書きされるので何でもいい */
     wc.lpszClassName    = "teddedit";
     wc.lpszMenuName     = NULL;
     wc.cbWndExtra       = sizeof(S_EDITWND_DATA);
@@ -395,15 +395,6 @@ editOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     editWndDataPtr->csStyle = csPtr->style;
 
-    if( editWndDataPtr->csStyle & ES_READONLY )
-    {
-        SetClassLong( hwnd, GCL_HBRBACKGROUND, (LONG)CreateSolidBrush(GetSysColor(COLOR_BTNFACE)) );
-    }
-    else
-    {
-        nop();
-    }
-
     GetObject( GetStockObject(SYSTEM_FIXED_FONT), sizeof(LOGFONT), (PTSTR)&(logFont) ); /* 本家エディットコントロールと異なる。固定幅のみなので */
     editWndDataPtr->hFont = CreateFontIndirect(&logFont);
 
@@ -458,13 +449,20 @@ editOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     iVertPos = editWndDataPtr->iVertPos;
 
     iPaintBeg = max(0, iVertPos + ps.rcPaint.top / editWndDataPtr->cyChar);
-    iPaintEnd = min(EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff),iVertPos + ps.rcPaint.bottom / editWndDataPtr->cyChar);
+    iPaintEnd = iVertPos + (ps.rcPaint.bottom / editWndDataPtr->cyChar);
 
-    for( y=iPaintBeg,hLineData=EditWndBuffGetLinePtr(editWndDataPtr->hEditWndBuff,y); (y<=iPaintEnd)&&(hLineData != NULL); y++,hLineData = EditWndBuffGetLineNextPtr(hLineData) )
+    for( y=iPaintBeg,hLineData=EditWndBuffGetLinePtr(editWndDataPtr->hEditWndBuff,y); y<=iPaintEnd; y++ )
     { /* 再描画領域のみ1行ずつ処理 */
         for( x=0; x<editWndDataPtr->cxBuffer+1;x++ )
         {
-            EditWndBuffGetDispData(editWndDataPtr->hEditWndBuff,hLineData,x+iHorzPos,&buffDispData );
+            if( hLineData != NULL )
+            {
+                EditWndBuffGetDispData(editWndDataPtr->hEditWndBuff,hLineData,x+iHorzPos,&buffDispData );
+            }
+            else
+            {
+                buffDispData.size = 0;
+            }
 
             if( buffDispData.size )
             {
@@ -514,8 +512,38 @@ editOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             }
             else
             {
-                break;
+                bkColor = GetBkColor(hdc);
+                textColor = GetTextColor(hdc);
+
+                if( editWndDataPtr->csStyle & ES_READONLY )
+                {
+                    SetBkColor(hdc, GetSysColor(COLOR_BTNFACE) );
+                }
+                else
+                {
+                    SetBkColor(hdc, BK_COLOR_RGB );
+                }
+                SetTextColor(hdc, TEXT_COLOR_RGB );
+
+                TextOut(hdc,
+                        (x*editWndDataPtr->cxChar), /* x座標 */
+                        (y-iVertPos) * editWndDataPtr->cyChar, /* y座標 */
+                        " ",               /* 文字列へのポインタ */
+                        1                  /* 文字数 */
+                    );
+
+                SetTextColor(hdc,textColor);
+                SetBkColor(hdc,bkColor);
             }
+        }
+
+        if( hLineData != NULL )
+        {
+            hLineData = EditWndBuffGetLineNextPtr(hLineData);
+        }
+        else
+        {
+            nop();
         }
     }
 
