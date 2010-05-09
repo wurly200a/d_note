@@ -107,9 +107,9 @@ DWORD EditWndBuffGetCaretYpos( H_EDITWND_BUFF hEditWndBuff );
  * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 引数  : DWORD xPos
  * 引数  : DWORD lineNum
- * 戻り値: なし
+ * 戻り値: BOOL (TRUE:キャレット位置が変わった,FALSE:変わらない)
  ***************************************/
-void EditWndBuffSetCaretPos( H_EDITWND_BUFF hEditWndBuff, DWORD xPos, DWORD lineNum );
+BOOL EditWndBuffSetCaretPos( H_EDITWND_BUFF hEditWndBuff, DWORD xPos, DWORD lineNum );
 
 /********************************************************************************
  * 内容  : EDITウィンドウバッファのキャレットX位置加算
@@ -233,9 +233,9 @@ void EditWndBuffSelectOn( H_EDITWND_BUFF hEditWndBuff );
 /********************************************************************************
  * 内容  : EDITウィンドウバッファの範囲選択OFF
  * 引数  : H_EDITWND_BUFF hEditWndBuff
- * 戻り値: なし
+ * 戻り値: BOOL (TRUE: 選択範囲が解除された,FALSE: 選択範囲無し)
  ***************************************/
-void EditWndBuffSelectOff( H_EDITWND_BUFF hEditWndBuff );
+BOOL EditWndBuffSelectOff( H_EDITWND_BUFF hEditWndBuff );
 
 /********************************************************************************
  * 内容  : EDITウィンドウバッファの全範囲選択

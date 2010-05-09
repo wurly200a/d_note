@@ -453,7 +453,7 @@ editOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     for( y=iPaintBeg,hLineData=EditWndBuffGetLinePtr(editWndDataPtr->hEditWndBuff,y+iVertPos); y<=iPaintEnd; y++ )
     { /* Ä•`‰æ—Ìˆæ‚Ì‚Ý1s‚¸‚Âˆ— */
-        for( x=0; x<editWndDataPtr->cxBuffer+1;x++ )
+        for( x=0; x<(ps.rcPaint.right/editWndDataPtr->cxChar)+1;x++ )
         {
             if( hLineData != NULL )
             {
@@ -964,7 +964,7 @@ editOnHscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     if( si.nPos != iHorzPos )
     {
         ScrollWindow( hwnd, editWndDataPtr->cxChar * (iHorzPos - si.nPos), 0, NULL, NULL );
-        InvalidateRect( hwnd, NULL, TRUE );
+        UpdateWindow(hwnd);
     }
 
     GetScrollInfo( hwnd, SB_HORZ, &si );
@@ -1145,15 +1145,23 @@ editOnMouseMove( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     LRESULT rtn = 0;
     SHORT x,y;
     S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    BOOL bCaretPosChange;
 
     x = max(0,(SHORT)LOWORD(lParam));
     y = max(0,(SHORT)HIWORD(lParam));
 
     if( (wParam & MK_LBUTTON) )
     {
-        EditWndBuffSetCaretPos( editWndDataPtr->hEditWndBuff, ((x + (editWndDataPtr->iHorzPos*editWndDataPtr->cxChar))/editWndDataPtr->cxChar), ((y + (editWndDataPtr->iVertPos*editWndDataPtr->cyChar))/editWndDataPtr->cyChar) );
-        SetCaretPos( (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar, (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar);
-        InvalidateRect( hwnd, NULL, FALSE );
+        bCaretPosChange = EditWndBuffSetCaretPos( editWndDataPtr->hEditWndBuff, ((x + (editWndDataPtr->iHorzPos*editWndDataPtr->cxChar))/editWndDataPtr->cxChar), ((y + (editWndDataPtr->iVertPos*editWndDataPtr->cyChar))/editWndDataPtr->cyChar) );
+        if( bCaretPosChange )
+        {
+            SetCaretPos( (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar, (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar);
+            InvalidateRect( hwnd, NULL, FALSE );
+        }
+        else
+        {
+            nop();
+        }
     }
     else
     {
@@ -1177,11 +1185,21 @@ editOnLbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     LRESULT rtn = 0;
     int x,y;
     S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    BOOL bSelectOff = FALSE;
 
     getAllScrollInfo(hwnd);
 
     x = LOWORD(lParam);
     y = HIWORD(lParam);
+
+    if( wParam & MK_SHIFT )
+    {
+        nop();
+    }
+    else
+    {
+        bSelectOff = EditWndBuffSelectOff(editWndDataPtr->hEditWndBuff);
+    }
 
     EditWndBuffSetCaretPos( editWndDataPtr->hEditWndBuff, ((x + (editWndDataPtr->iHorzPos*editWndDataPtr->cxChar))/editWndDataPtr->cxChar), ((y + (editWndDataPtr->iVertPos*editWndDataPtr->cyChar))/editWndDataPtr->cyChar) );
 
@@ -1194,10 +1212,17 @@ editOnLbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     else
     {
         SetCapture(hwnd);
-        EditWndBuffSelectOff(editWndDataPtr->hEditWndBuff);
         EditWndBuffSelectOn(editWndDataPtr->hEditWndBuff);
     }
-    InvalidateRect( hwnd, NULL, TRUE );
+
+    if( bSelectOff )
+    {
+        InvalidateRect( hwnd, NULL, TRUE );
+    }
+    else
+    {
+        nop();
+    }
 
     return rtn;
 }

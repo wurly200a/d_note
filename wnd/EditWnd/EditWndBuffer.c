@@ -669,28 +669,48 @@ EditWndBuffGetCaretYpos( H_EDITWND_BUFF hEditWndBuff )
  * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 引数  : DWORD xPos
  * 引数  : DWORD lineNum
- * 戻り値: なし
+ * 戻り値: BOOL (TRUE:キャレット位置が変わった,FALSE:変わらない)
  ***************************************/
-void
+BOOL
 EditWndBuffSetCaretPos( H_EDITWND_BUFF hEditWndBuff, DWORD xPos, DWORD lineNum )
 {
     S_BUFF_LINE_DATA *nowPtr = NULL;
     S_BUFF_DISP_DATA dispData;
     H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
+    BOOL bCaretPosChange = FALSE;
 
     nowPtr = (S_BUFF_LINE_DATA *)EditWndBuffGetLinePtr( hEditWndBuff, lineNum );
 
     if( nowPtr != NULL )
     {
-        (h->lineData.nowPtr) = nowPtr;
+        if( (h->lineData.nowPtr) != nowPtr )
+        {
+            (h->lineData.nowPtr) = nowPtr;
+            bCaretPosChange = TRUE;
+        }
+        else
+        {
+            nop();
+        }
 
         getDispCharData( h,(h->lineData.nowPtr), xPos, &dispData );
-        (h->lineData.nowPtr)->caretDataPos = dispData.caretPos;
+
+        if( (h->lineData.nowPtr)->caretDataPos != dispData.caretPos )
+        {
+            (h->lineData.nowPtr)->caretDataPos = dispData.caretPos;
+            bCaretPosChange = TRUE;
+        }
+        else
+        {
+            nop();
+        }
     }
     else
     {
         nop();
     }
+
+    return bCaretPosChange;
 }
 
 /********************************************************************************
@@ -1242,15 +1262,32 @@ EditWndBuffSelectOn( H_EDITWND_BUFF hEditWndBuff )
 /********************************************************************************
  * 内容  : EDITウィンドウバッファの範囲選択OFF
  * 引数  : H_EDITWND_BUFF hEditWndBuff
- * 戻り値: なし
+ * 戻り値: BOOL (TRUE: 選択範囲が解除された,FALSE: 選択範囲無し)
  ***************************************/
-void
+BOOL
 EditWndBuffSelectOff( H_EDITWND_BUFF hEditWndBuff )
 {
+    BOOL bRtn = FALSE;
     H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
+
+    if( !(h->lineData.selectPtr) && !(h->lineData.selectCaretPos) )
+    { /* 選択されていなかった */
+        nop();
+    }
+    else if( (h->lineData.selectPtr == h->lineData.nowPtr) &&
+        (h->lineData.selectCaretPos == (h->lineData.nowPtr)->caretDataPos) )
+    { /* 選択されていなかった */
+        nop();
+    }
+    else
+    {
+        bRtn = TRUE;
+    }
 
     (h->lineData.selectPtr) = NULL;
     (h->lineData.selectCaretPos) = 0;
+
+    return bRtn;
 }
 
 /********************************************************************************
