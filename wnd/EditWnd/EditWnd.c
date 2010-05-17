@@ -756,10 +756,24 @@ editOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             EditWndBuffIncCaretYpos(editWndDataPtr->hEditWndBuff);
             break;
         case VK_DELETE:
-            editWndRemoveData( hwnd, FALSE );
+            if( editWndDataPtr->csStyle & ES_READONLY )
+            {
+                bProc = FALSE;
+            }
+            else
+            {
+                editWndRemoveData( hwnd, FALSE );
+            }
             break;
         case VK_BACK:
-            editWndRemoveData( hwnd, TRUE );
+            if( editWndDataPtr->csStyle & ES_READONLY )
+            {
+                bProc = FALSE;
+            }
+            else
+            {
+                editWndRemoveData( hwnd, TRUE );
+            }
             break;
         default:
             bProc = FALSE;
@@ -1419,25 +1433,32 @@ editOnCut( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     PTSTR   pGlobal;
     S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
-    dwSize = EditWndGetDataSize(hwnd,EDITWND_SELECTED);
-    if( dwSize )
+    if( editWndDataPtr->csStyle & ES_READONLY )
     {
-        hGlobal = GlobalAlloc( GHND|GMEM_SHARE, dwSize+1 );
-        pGlobal = GlobalLock( hGlobal );
-        GlobalUnlock(hGlobal);
-        EditWndBuffDataGet( editWndDataPtr->hEditWndBuff, pGlobal,dwSize,EDITWND_SELECTED );
-        OpenClipboard(hwnd);
-        EmptyClipboard();
-        SetClipboardData( CF_TEXT, hGlobal );
-        CloseClipboard();
-
-        /* CUTのみ */
-        editWndRemoveData( hwnd,FALSE );
-        InvalidateRect( hwnd, NULL, TRUE );
+        nop();
     }
     else
     {
-        nop();
+        dwSize = EditWndGetDataSize(hwnd,EDITWND_SELECTED);
+        if( dwSize )
+        {
+            hGlobal = GlobalAlloc( GHND|GMEM_SHARE, dwSize+1 );
+            pGlobal = GlobalLock( hGlobal );
+            GlobalUnlock(hGlobal);
+            EditWndBuffDataGet( editWndDataPtr->hEditWndBuff, pGlobal,dwSize,EDITWND_SELECTED );
+            OpenClipboard(hwnd);
+            EmptyClipboard();
+            SetClipboardData( CF_TEXT, hGlobal );
+            CloseClipboard();
+
+            /* CUTのみ */
+            editWndRemoveData( hwnd,FALSE );
+            InvalidateRect( hwnd, NULL, TRUE );
+        }
+        else
+        {
+            nop();
+        }
     }
 
     return rtn;
@@ -1496,33 +1517,41 @@ editOnPaste( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     HGLOBAL hGlobal;
     PTSTR   pGlobal;
     PBYTE   dataPtr;
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
-    if( IsClipboardFormatAvailable(CF_TEXT) )
+    if( editWndDataPtr->csStyle & ES_READONLY )
     {
-        OpenClipboard(hwnd);
+        nop();
+    }
+    else
+    {
+        if( IsClipboardFormatAvailable(CF_TEXT) )
+        {
+            OpenClipboard(hwnd);
 
-        hGlobal = GetClipboardData(CF_TEXT);
-        dwSize = GlobalSize(hGlobal) - 1;
-        dataPtr = (PBYTE)malloc(dwSize);
-        pGlobal = GlobalLock( hGlobal );
-        strncpy( dataPtr, pGlobal, dwSize );
-        GlobalUnlock(hGlobal);
-        CloseClipboard();
-        dwSize2 = strlen( dataPtr );
-        if( dwSize2 < dwSize )
-        { /* クリップボードの最大サイズに達する前にNULLがあれば */
-            dwSize = dwSize2; /* NULLまでのデータを有効とする (アプリケーションによっては 余分なNULLが大量に入っていることがある) */
+            hGlobal = GetClipboardData(CF_TEXT);
+            dwSize = GlobalSize(hGlobal) - 1;
+            dataPtr = (PBYTE)malloc(dwSize);
+            pGlobal = GlobalLock( hGlobal );
+            strncpy( dataPtr, pGlobal, dwSize );
+            GlobalUnlock(hGlobal);
+            CloseClipboard();
+            dwSize2 = strlen( dataPtr );
+            if( dwSize2 < dwSize )
+            { /* クリップボードの最大サイズに達する前にNULLがあれば */
+                dwSize = dwSize2; /* NULLまでのデータを有効とする (アプリケーションによっては 余分なNULLが大量に入っていることがある) */
+            }
+            else
+            {
+                nop();
+            }
+            EditWndDataSet( hwnd, dataPtr,dwSize,FALSE );
+            free( dataPtr );
         }
         else
         {
             nop();
         }
-        EditWndDataSet( hwnd, dataPtr,dwSize,FALSE );
-        free( dataPtr );
-    }
-    else
-    {
-        nop();
     }
 
     return rtn;
@@ -1540,9 +1569,17 @@ static LRESULT
 editOnClear( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
-    editWndRemoveData( hwnd,FALSE );
-    InvalidateRect( hwnd, NULL, TRUE );
+    if( editWndDataPtr->csStyle & ES_READONLY )
+    {
+        nop();
+    }
+    else
+    {
+        editWndRemoveData( hwnd,FALSE );
+        InvalidateRect( hwnd, NULL, TRUE );
+    }
 
     return rtn;
 }
