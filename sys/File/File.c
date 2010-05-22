@@ -352,7 +352,7 @@ FileWrite( FILE_ID id, TCHAR *dataPtr, DWORD dataSize )
 
     if( (id < FILE_ID_MAX) && (fileList[id].init == TRUE) )
     {
-        if( fileList[id].pFileName != NULL )
+        if( fileList[id].pFileName[0] != '\0' )
         {
             hFile = CreateFile( fileList[id].pFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL );
             if( hFile == INVALID_HANDLE_VALUE )
