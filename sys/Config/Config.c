@@ -10,7 +10,7 @@
 #include "Config.h"
 /* ì‡ïîïœêîíËã` */
 static BOOL bInitConfig;
-static TCHAR szIniFileName[64];
+static TCHAR szIniFileName[512];
 
 typedef struct
 {
@@ -34,8 +34,13 @@ static S_CONFIG_INFO configInfoTbl[CONFIG_ID_MAX] =
 void
 ConfigInit( void )
 {
+    DWORD length;
+
     bInitConfig = TRUE;
-    wsprintf( szIniFileName, ".\\%s.ini",GetAppName() );
+    length = GetModuleFileName(NULL,szIniFileName,512);
+    szIniFileName[length-1] = 'i';
+    szIniFileName[length-2] = 'n';
+    szIniFileName[length-3] = 'i';
 }
 
 /********************************************************************************
