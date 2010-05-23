@@ -1629,7 +1629,8 @@ editOnSetSel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     }
     else
     {
-        nop();
+        /* 未対応。暫定で、最終位置を選択するようにしておく */
+        EditWndBuffSetCaretPos(editWndDataPtr->hEditWndBuff,0xffffffff,EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff));
     }
 
     return rtn;
@@ -1774,7 +1775,7 @@ setAllScrollInfo( HWND hwnd )
     si.cbSize = sizeof(si);
     si.fMask  = SIF_RANGE | SIF_PAGE | SIF_DISABLENOSCROLL;
     si.nMin   = 0;                                                                /* 範囲の最小値 */
-    si.nMax   = max(EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff),(editWndDataPtr->cyClient / editWndDataPtr->cyChar))-1; /* 範囲の最大値 */
+    si.nMax   = EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff);
     si.nPage  = (editWndDataPtr->cyClient / editWndDataPtr->cyChar); /* ページサイズ */
     SetScrollInfo( hwnd, SB_VERT, &si, TRUE );
 
