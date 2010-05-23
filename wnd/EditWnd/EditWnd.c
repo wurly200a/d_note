@@ -1630,7 +1630,12 @@ editOnSetSel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     else
     {
         /* 未対応。暫定で、最終位置を選択するようにしておく */
+        HideCaret(hwnd);
         EditWndBuffSetCaretPos(editWndDataPtr->hEditWndBuff,0xffffffff,EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff));
+        setScrollPos( hwnd, SB_VERT, EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff) );
+        InvalidateRect( hwnd, NULL, TRUE );
+        SetCaretPos( (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar, (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar);
+        ShowCaret(hwnd);
     }
 
     return rtn;

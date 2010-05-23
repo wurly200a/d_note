@@ -1756,7 +1756,7 @@ getDispCharData( H_EDITWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dispPo
 
         if( dataPos >= literalMaxSize )
         {
-            nop();
+            dataPtr->dataPos = literalMaxSize;
         }
         else
         {
