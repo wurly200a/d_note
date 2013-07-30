@@ -72,8 +72,8 @@ MenuCreate( void )
     AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_DATETIME   , TEXT("ì˙ïtÇ∆éûçè(&D)\tF5") );
     AppendMenu( hMenu     , MF_POPUP    , (UINT_PTR)hMenuPopup, TEXT("ï“èW(&E)") );
 
-    EnableMenuItem( hMenu, IDM_EDIT_UNDO       , MF_GRAYED );
 #if 0
+    EnableMenuItem( hMenu, IDM_EDIT_UNDO       , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_EDIT_FIND       , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_EDIT_FIND_NEXT  , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_EDIT_REPLACE    , MF_GRAYED );
