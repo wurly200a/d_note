@@ -38,7 +38,7 @@ typedef enum
     EDITWND_MAX
 } EDITWND_INDEX;
 
-#if 1
+#if 0
 #define BG_COLOR_RGB          RGB(0xFF,0xFF,0xFF)
 #define TAB_BK_COLOR_RGB      RGB(0xE0,0xFF,0xFF) /* êÖêF */
 #define BK_COLOR_RGB          RGB(0xFF,0xFF,0xFF)

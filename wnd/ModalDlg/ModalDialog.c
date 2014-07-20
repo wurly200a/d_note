@@ -166,9 +166,11 @@ AboutDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         hCtrl = CreateWindow( TEXT("static"), GetAppName(), WS_CHILD|WS_VISIBLE, x, y, 400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
 
+#if 0
         /* アプリケーション名(補足) */
         hCtrl = CreateWindow( TEXT("static"), TEXT("(Text EDitor for Developers)"), WS_CHILD|WS_VISIBLE, x+35, y, 400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
+#endif
 
         /* バージョン */
         y += 15;

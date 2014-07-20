@@ -1,4 +1,4 @@
-TARGET = tedd.exe
+TARGET = dnote.exe
 CC = gcc
 RC = windres
 
@@ -11,7 +11,7 @@ CPPFLAGS = -c
 
 LDFLAGS = -Wl,--subsystem,windows -mwindows
 LDLIBS = -lcomctl32 -lcomdlg32 -luser32 -lgdi32 -lkernel32 -limm32
-OBJECTS = Config.o DateTime.o File.o Font.o LinkedList.o Version.o WinMain.o EditWnd.o EditWndBuffer.o MainWnd.o MainWndMenu.o ModalDialog.o SomeCtrl.o StsBar.o
+OBJECTS = Config.o DateTime.o File.o Font.o LinkedList.o Version.o WinMain.o EditWnd.o EditWndBuffer.o MainWnd.o MainWndMenu.o ModalDialog.o SomeCtrl.o StsBar.o resource.o
 
 $(TARGET): $(OBJECTS)
 		$(CC) $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS) -o $@
@@ -19,9 +19,6 @@ $(TARGET): $(OBJECTS)
 clean:
 		$(RM) $(OBJECTS)
 		$(RM) $(TARGET)
-
-#icon.o: ../rc/icon.rc
-#		$(RC) $< -o $@
 
 Config.o: ../sys/Config/Config.c
 		$(CC) $(CFLAGS) $(CPPFLAGS) $< -o $@
@@ -64,3 +61,6 @@ SomeCtrl.o: ../wnd/SomeCtrl/SomeCtrl.c
 
 StsBar.o: ../wnd/StsBar/StsBar.c
 		$(CC) $(CFLAGS) $(CPPFLAGS) $< -o $@
+
+resource.o: ../resources/resource.rc
+		$(RC) $< -o $@
