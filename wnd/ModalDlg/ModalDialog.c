@@ -138,8 +138,9 @@ AboutDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     TCHAR szTemp3[256];
     INT x,y;
 #if 0
-    static HBITMAP hBitmap = 0;
+    static HBITMAP hBitmap;
 #endif
+    static HICON hIcon;
 
     NUMBERFMT numberFormat = {0};
     numberFormat.NumDigits = 0;
@@ -153,12 +154,19 @@ AboutDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     {
     case WM_CREATE:
 #if 0
-        hCtrl = CreateWindow( TEXT("Static"), TEXT(""), WS_VISIBLE|WS_CHILD|SS_BITMAP,0,0,481,90, hwnd, (HMENU)3, GetHinst(), NULL);
-        hBitmap = (HBITMAP)LoadImage(0, TEXT("bar.bmp"), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION|LR_DEFAULTSIZE|LR_LOADFROMFILE);
-        SendMessage(hCtrl, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBitmap);
-#endif
         /* 白矩形 */
         CreateWindow(TEXT("static"),TEXT(""),WS_CHILD|WS_VISIBLE|SS_WHITERECT,0,0,481,90,hwnd,(HMENU)-1,GetHinst(),NULL);
+#endif
+#if 0
+        /* bar画像 */
+        hCtrl = CreateWindow( TEXT("Static"), TEXT(""), WS_CHILD|WS_VISIBLE|SS_BITMAP,0,0,481,90, hwnd, (HMENU)-1, GetHinst(), NULL);
+        hBitmap = (HBITMAP)LoadImage(GetHinst(), TEXT("BAR"), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR );
+        SendMessage(hCtrl, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBitmap);
+#endif
+        /* アイコン画像 */
+        hCtrl = CreateWindow( TEXT("Static"), TEXT(""), WS_CHILD|WS_VISIBLE|SS_ICON,55,60,0,0, hwnd, (HMENU)-1, GetHinst(), NULL);
+        hIcon = (HICON)LoadImage(GetHinst(), GetAppName(), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR );
+        SendMessage(hCtrl, STM_SETIMAGE, IMAGE_ICON, (LPARAM)hIcon);
 
         x = 60;
         y = 100;
@@ -207,6 +215,10 @@ AboutDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         SetFocus( hCtrl );
         break;
     case WM_DESTROY:
+#if 0
+        DeleteObject( hBitmap );
+#endif
+        DeleteObject( hIcon );
         PostQuitMessage(0); /* WM_QUITメッセージをポストする */
         break;
     case WM_COMMAND:
