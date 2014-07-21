@@ -50,6 +50,7 @@ short AskAboutSave( HWND hwnd, TCHAR * szTitleName );
 /* 内部変数定義 */
 static HWND hwndMain; /* メインウィンドウのハンドラ */
 static S_MAINWND_DATA mainWndData;
+static TCHAR szCmdLineLocal[1024];
 
 /* *INDENT-OFF* */
 static LRESULT (*wndProcTbl[MAINWND_MAX])( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam ) =
@@ -84,12 +85,13 @@ static LRESULT (*wndProcTbl[MAINWND_MAX])( HWND hwnd, UINT message, WPARAM wPara
 
 /********************************************************************************
  * 内容  : メインウィンドウクラスの登録、ウィンドウの生成
+ * 引数  : LPSTR szCmdLine
  * 引数  : int nCmdShow
  * 引数  : HACCEL *hAccelPtr
  * 戻り値: HWND
  ***************************************/
 HWND
-MainWndCreate( int nCmdShow, HACCEL *hAccelPtr )
+MainWndCreate( LPSTR szCmdLine, int nCmdShow, HACCEL *hAccelPtr )
 {
     WNDCLASS wc = {0};
     HINSTANCE hInst = GetHinst();
@@ -131,6 +133,8 @@ MainWndCreate( int nCmdShow, HACCEL *hAccelPtr )
         {
             nop();
         }
+
+        strncpy(szCmdLineLocal,szCmdLine,1024);
 
         /* メインウィンドウを作成 */
         InitCommonControls(); /* commctrl.hのインクルード、comctl32.libのプロジェクトへの参加が必要 */
@@ -301,7 +305,22 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     MenuCheckItem( IDM_VIEW_STS_BAR );
     MenuCheckItem( IDM_EXTEND_NEWLINE_CRLF );
 
-    doCaption( hwnd, "" , FALSE );
+    if( (szCmdLineLocal[0] != '\0') &&
+        (FileSetName(FILE_ID_BIN,szCmdLineLocal,FALSE)) )
+    {
+        DWORD dwSize;
+        PBYTE dataPtr;
+
+        dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
+#ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
+        EditWndDataSet( mainWndData.hWndIo,dataPtr,dwSize,TRUE );
+#endif                  /*  エディットコントロール使用  or  通常  */
+        doCaption( hwnd, FileGetTitleName(FILE_ID_BIN),FALSE );
+    }
+    else
+    {
+        doCaption( hwnd, "" , FALSE );
+    }
 
     return rtn;
 }
