@@ -235,7 +235,14 @@ FileSetName( FILE_ID id, PTSTR ptstrFileName, BOOL bCat )
         }
         else
         {
-            lstrcpy( fileList[id].pFileName, ptstrFileName );
+            if( *((TCHAR *)ptstrFileName) == '"' )
+            {
+                strncpy( fileList[id].pFileName, (ptstrFileName)+1, lstrlen(ptstrFileName)-2 );
+            }
+            else
+            {
+                lstrcpy( fileList[id].pFileName, ptstrFileName );
+            }
         }
 
         if( ((strrchr(fileList[id].pFileName,'\\')) != NULL) ) /* ファイル名に ￥が付いていることを確認 */
