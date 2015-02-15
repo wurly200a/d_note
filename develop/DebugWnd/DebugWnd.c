@@ -256,7 +256,7 @@ debugOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     debugWndData.hWndEdit = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW,
                                          TEXT ("edit"), NULL,
                                          WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL |
-                                         ES_LEFT | ES_MULTILINE | ES_NOHIDESEL | ES_AUTOHSCROLL | ES_AUTOVSCROLL,
+                                         ES_LEFT | ES_MULTILINE | ES_NOHIDESEL | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY,
                                          0, 0, 0, 0,
                                          hwnd, (HMENU)0, GetHinst(), NULL) ;
     debugWndData.hFontIo = NULL;
