@@ -8,9 +8,8 @@
 /* 外部関数定義 */
 #include "WinMain.h"
 #include "File.h"
-#include "Font.h"
+#include "DebugWndFont.h"
 #include "Config.h"
-#include "ModalDlg.h"
 
 /* 外部変数定義 */
 
@@ -253,8 +252,7 @@ debugOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     DeleteObject(hFont);
     ReleaseDC( hwnd,hdc );
 
-    ModalDlgInit();
-    FontInit();
+    DebugFontInit();
 
     debugWndData.hWndIo = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW,
                                          TEXT ("edit"), NULL,
@@ -392,7 +390,6 @@ debugOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     DWORD dwSize;
     PBYTE dataPtr;
     PTSTR strPtr;
-    S_MODAL_DLG_DATA modalDlgData;
     static FINDREPLACE fr;
     static TCHAR strFind[80],strRep[80],strMsg[1024];
     HFONT hFontOld;
@@ -459,10 +456,10 @@ debugOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break;
 
         case IDM_DEBUG_FORMAT_FONT:
-            if( FontChooseFont( hwnd, FONT_ID_IO ) )
+            if( DebugFontChooseFont( hwnd ) )
             {
                 hFontOld = debugWndData.hFontIo;
-                debugWndData.hFontIo = CreateFontIndirect( FontGetLogFont(FONT_ID_IO) );
+                debugWndData.hFontIo = CreateFontIndirect( DebugFontGetLogFont() );
                 SendMessage( debugWndData.hWndIo, WM_SETFONT, (WPARAM)debugWndData.hFontIo, (LPARAM)TRUE );
 
                 if( hFontOld != NULL )
