@@ -7,7 +7,6 @@
 
 /* 外部関数定義 */
 #include "WinMain.h"
-#include "EditWnd.h"
 #include "SomeCtrl.h"
 #include "File.h"
 #include "StsBar.h"
@@ -78,8 +77,6 @@ static LRESULT (*wndProcTbl[DEBUGWND_MAX])( HWND hwnd, UINT message, WPARAM wPar
 /* *INDENT-ON* */
 
 static TCHAR szModuleName[] = TEXT("Debug"); /* アプリケーションの名称 */
-
-#define USE_EDITCONTROL
 
 /********************************************************************************
  * 内容  : デバッグウィンドウクラスの登録、ウィンドウの生成
@@ -262,21 +259,12 @@ debugOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     ModalDlgInit();
     FontInit();
 
-#ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-    EditWndRegisterClass( GetHinst() );
-    debugWndData.hWndIo = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW,
-                                         TEXT("teddedit"), NULL,
-                                         WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL ,
-                                         CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
-                                         hwnd, (HMENU)0, GetHinst(), NULL );
-#else                   /* [エディットコントロール使用] or  通常  */
     debugWndData.hWndIo = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW,
                                          TEXT ("edit"), NULL,
                                          WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL |
                                          ES_LEFT | ES_MULTILINE | ES_NOHIDESEL | ES_AUTOHSCROLL | ES_AUTOVSCROLL,
                                          0, 0, 0, 0,
                                          hwnd, (HMENU)0, GetHinst(), NULL) ;
-#endif                  /*  エディットコントロール使用  or  通常  */
     debugWndData.hFontIo = NULL;
 
 #if 0
@@ -430,13 +418,8 @@ debugOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         switch( HIWORD(wParam) )
         {
         case EN_UPDATE:
-#ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-            StsBarSetText( STS_BAR_0  ,"%d バイト、全 %d 行",EditWndGetDataSize(debugWndData.hWndIo, EDITWND_ALL),(DWORD)SendMessage(debugWndData.hWndIo,EM_GETLINECOUNT,0,0) );
-            StsBarSetText( STS_BAR_MAX,"   %d 行、%d 列",(DWORD)(SendMessage(debugWndData.hWndIo,EM_LINEFROMCHAR,-1,0))+1,EditWndGetCaretXpos(debugWndData.hWndIo)+1);
-#else                   /* [エディットコントロール使用] or  通常  */
             StsBarSetText( STS_BAR_0  ,"%d バイト、全 %d 行",GetWindowTextLength(debugWndData.hWndIo),(DWORD)SendMessage(debugWndData.hWndIo,EM_GETLINECOUNT,0,0) );
             StsBarSetText( STS_BAR_MAX,"   %d 行、%d 列",(DWORD)(SendMessage(debugWndData.hWndIo,EM_LINEFROMCHAR,-1,0))+1,0);
-#endif                  /*  エディットコントロール使用  or  通常  */
             break;
         case EN_CHANGE:
             if( debugWndData.bNeedSave )
@@ -465,9 +448,6 @@ debugOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             else
             {
                 debugWndData.bNeedSave = FALSE;
-#ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-                EditWndDataInit(debugWndData.hWndIo);
-#endif                  /*  エディットコントロール使用  or  通常  */
                 debugDoCaption( hwnd, "", FALSE);
             }
             break;
@@ -482,9 +462,6 @@ debugOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                 {
                     debugWndData.bNeedSave = FALSE;
                     dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
-#ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-                    EditWndDataSet( debugWndData.hWndIo, dataPtr,dwSize,TRUE );
-#endif                  /*  エディットコントロール使用  or  通常  */
                     debugDoCaption( hwnd, FileGetTitleName(FILE_ID_BIN), FALSE );
                 }
                 else
@@ -494,73 +471,12 @@ debugOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             }
             break;
         case IDM_DEBUG_FILE_SAVE:
-#ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-            dwSize = EditWndGetDataSize(debugWndData.hWndIo,EDITWND_ALL);
-            dataPtr = malloc( dwSize * sizeof(TCHAR) );
-            if( dataPtr != NULL )
-            {
-                EditWndDataGet( debugWndData.hWndIo, dataPtr,dwSize,EDITWND_ALL );
-                if( (FileWrite( FILE_ID_BIN, dataPtr, dwSize )) == FILE_NAME_NOT_SET )
-                {
-                    if( FileSaveDlg( hwnd,FILE_ID_BIN ) )
-                    {
-                        debugWndData.bNeedSave = FALSE;
-                        debugDoCaption( hwnd, FileGetTitleName(FILE_ID_BIN),FALSE );
-                        FileWrite( FILE_ID_BIN, dataPtr, dwSize );
-                        rtn = 1;
-                    }
-                    else
-                    { /* キャンセル */
-                        nop();
-                    }
-                }
-                else
-                {
-                    debugWndData.bNeedSave = FALSE;
-                    debugDoCaption( hwnd, FileGetTitleName(FILE_ID_BIN),FALSE );
-                    FileWrite( FILE_ID_BIN, dataPtr, dwSize );
-                    rtn = 1;
-                }
-                free( dataPtr );
-            }
-            else
-            {
-                nop();
-            }
-#endif                  /*  エディットコントロール使用  or  通常  */
             break;
         case IDM_DEBUG_FILE_SAVE_AS:
-#ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-            dwSize = EditWndGetDataSize(debugWndData.hWndIo,EDITWND_ALL);
-            dataPtr = malloc( dwSize * sizeof(TCHAR) );
-            if( dataPtr != NULL )
-            {
-                EditWndDataGet( debugWndData.hWndIo, dataPtr,dwSize,EDITWND_ALL );
-                if( FileSaveDlg( hwnd,FILE_ID_BIN ) )
-                {
-                    debugWndData.bNeedSave = FALSE;
-                    debugDoCaption( hwnd, FileGetTitleName(FILE_ID_BIN),FALSE );
-                    FileWrite( FILE_ID_BIN, dataPtr, dwSize );
-                }
-                else
-                {
-                    nop();
-                }
-                free( dataPtr );
-            }
-            else
-            {
-                nop();
-            }
-#endif                  /*  エディットコントロール使用  or  通常  */
             break;
 
         case IDM_DEBUG_EDIT_UNDO:
-#ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-            SendMessage( debugWndData.hWndIo, WM_UNDO, 0, 0 );
-#else                   /* [エディットコントロール使用] or  通常  */
             SendMessage( debugWndData.hWndIo, EM_UNDO, 0, 0 );
-#endif                  /*  エディットコントロール使用  or  通常  */
             break;
 
         case IDM_DEBUG_EDIT_CUT:
@@ -607,9 +523,6 @@ debugOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
         case IDM_DEBUG_EDIT_DATETIME:
             strPtr = DateTimeGetString();
-#ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-            EditWndDataSet( debugWndData.hWndIo, strPtr, strlen(strPtr), FALSE );
-#endif                  /*  エディットコントロール使用  or  通常  */
             break;
 
         case IDM_DEBUG_FORMAT_FONT:
@@ -647,32 +560,6 @@ debugOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             }
             SendMessage(hwnd,WM_SIZE,0,MAKELONG(debugWndData.cxClient,debugWndData.cyClient));
             break;
-
-#ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-        case IDM_DEBUG_EXTEND_NEWLINE_CRLF:
-            EditWndNewLineCodeSet(debugWndData.hWndIo,NEWLINECODE_CRLF);
-            DebugMenuCheckItem  ( IDM_DEBUG_EXTEND_NEWLINE_CRLF );
-            DebugMenuUnCheckItem( IDM_DEBUG_EXTEND_NEWLINE_LF   );
-            DebugMenuUnCheckItem( IDM_DEBUG_EXTEND_NEWLINE_CR   );
-            StsBarSetText( STS_BAR_1,"CR+LF");
-            break;
-
-        case IDM_DEBUG_EXTEND_NEWLINE_LF  :
-            EditWndNewLineCodeSet(debugWndData.hWndIo,NEWLINECODE_LF);
-            DebugMenuUnCheckItem  ( IDM_DEBUG_EXTEND_NEWLINE_CRLF );
-            DebugMenuCheckItem    ( IDM_DEBUG_EXTEND_NEWLINE_LF   );
-            DebugMenuUnCheckItem  ( IDM_DEBUG_EXTEND_NEWLINE_CR   );
-            StsBarSetText( STS_BAR_1,"LF");
-            break;
-
-        case IDM_DEBUG_EXTEND_NEWLINE_CR  :
-            EditWndNewLineCodeSet(debugWndData.hWndIo,NEWLINECODE_CR);
-            DebugMenuUnCheckItem  ( IDM_DEBUG_EXTEND_NEWLINE_CRLF );
-            DebugMenuUnCheckItem  ( IDM_DEBUG_EXTEND_NEWLINE_LF   );
-            DebugMenuCheckItem    ( IDM_DEBUG_EXTEND_NEWLINE_CR   );
-            StsBarSetText( STS_BAR_1,"CR");
-            break;
-#endif                  /*  エディットコントロール使用  or  通常  */
 
         case IDM_DEBUG_FILE_EXIT:
             SendMessage( hwnd, WM_CLOSE, 0, 0 );
@@ -839,8 +726,7 @@ debugOnInitMenuPopup( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     if( LOWORD(lParam) == 1 )
     { /* 「編集」 */
-#ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-        if( EditWndGetDataSize(debugWndData.hWndIo,EDITWND_SELECTED) )
+        if( 1 )
         {
             DebugMenuEnableItem( IDM_DEBUG_EDIT_CUT    );
             DebugMenuEnableItem( IDM_DEBUG_EDIT_COPY   );
@@ -852,7 +738,6 @@ debugOnInitMenuPopup( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             DebugMenuUnEnableItem( IDM_DEBUG_EDIT_COPY   );
             DebugMenuUnEnableItem( IDM_DEBUG_EDIT_DELETE );
         }
-#endif                  /*  エディットコントロール使用  or  通常  */
 
         if( IsClipboardFormatAvailable(CF_TEXT) )
         {
