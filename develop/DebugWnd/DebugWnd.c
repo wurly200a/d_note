@@ -10,7 +10,6 @@
 #include "File.h"
 #include "Font.h"
 #include "Config.h"
-#include "DateTime.h"
 #include "ModalDlg.h"
 
 /* 外部変数定義 */
@@ -265,9 +264,6 @@ debugOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                                          hwnd, (HMENU)0, GetHinst(), NULL) ;
     debugWndData.hFontIo = NULL;
 
-    DebugMenuCheckItem( IDM_DEBUG_VIEW_STS_BAR );
-    DebugMenuCheckItem( IDM_DEBUG_EXTEND_NEWLINE_CRLF );
-
     debugDoCaption( hwnd, "" , FALSE );
 
     return rtn;
@@ -437,48 +433,13 @@ debugOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                 debugDoCaption( hwnd, "", FALSE);
             }
             break;
-        case IDM_DEBUG_FILE_OPEN:
-            if( debugWndData.bNeedSave && ((debugAskAboutSave( hwnd, FileGetTitleName(FILE_ID_BIN))) == IDCANCEL) )
-            {
-                nop();
-            }
-            else
-            {
-                if( FileOpenDlg( hwnd,FILE_ID_BIN ) )
-                {
-                    debugWndData.bNeedSave = FALSE;
-                    dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
-                    debugDoCaption( hwnd, FileGetTitleName(FILE_ID_BIN), FALSE );
-                }
-                else
-                {
-                    /* キャンセルされた。又はエラー */
-                }
-            }
-            break;
         case IDM_DEBUG_FILE_SAVE:
             break;
         case IDM_DEBUG_FILE_SAVE_AS:
             break;
 
-        case IDM_DEBUG_EDIT_UNDO:
-            SendMessage( debugWndData.hWndIo, EM_UNDO, 0, 0 );
-            break;
-
-        case IDM_DEBUG_EDIT_CUT:
-            SendMessage( debugWndData.hWndIo, WM_CUT, 0, 0 );
-            break;
-
         case IDM_DEBUG_EDIT_COPY:
             SendMessage( debugWndData.hWndIo, WM_COPY, 0, 0 );
-            break;
-
-        case IDM_DEBUG_EDIT_PASTE:
-            SendMessage( debugWndData.hWndIo, WM_PASTE, 0, 0 );
-            break;
-
-        case IDM_DEBUG_EDIT_DELETE:
-            SendMessage( debugWndData.hWndIo, WM_CLEAR, 0, 0 );
             break;
 
         case IDM_DEBUG_EDIT_FIND:
@@ -490,25 +451,11 @@ debugOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             debugWndData.hDlgModeless = FindText(&fr);
             break;
 
-        case IDM_DEBUG_EDIT_REPLACE:
-            fr.lStructSize      = sizeof(FINDREPLACE);
-            fr.hwndOwner        = hwnd;
-            fr.Flags            = FR_MATCHCASE|FR_HIDEWHOLEWORD;
-            fr.lpstrFindWhat    = strFind;
-            fr.lpstrReplaceWith = strRep;
-            fr.wReplaceWithLen  = fr.wFindWhatLen = 80;
-            debugWndData.hDlgModeless = ReplaceText(&fr);
-            break;
-
         case IDM_DEBUG_EDIT_FIND_NEXT:
             break;
 
         case IDM_DEBUG_EDIT_SELECT_ALL:
             SendMessage( debugWndData.hWndIo, EM_SETSEL, 0, -1 );
-            break;
-
-        case IDM_DEBUG_EDIT_DATETIME:
-            strPtr = DateTimeGetString();
             break;
 
         case IDM_DEBUG_FORMAT_FONT:
@@ -533,24 +480,8 @@ debugOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             }
             break;
 
-        case IDM_DEBUG_VIEW_STS_BAR:
-            if( DebugMenuInqItemChecked(IDM_DEBUG_VIEW_STS_BAR) )
-            {
-                DebugMenuUnCheckItem( IDM_DEBUG_VIEW_STS_BAR );
-            }
-            else
-            {
-                DebugMenuCheckItem( IDM_DEBUG_VIEW_STS_BAR );
-            }
-            SendMessage(hwnd,WM_SIZE,0,MAKELONG(debugWndData.cxClient,debugWndData.cyClient));
-            break;
-
         case IDM_DEBUG_FILE_EXIT:
             SendMessage( hwnd, WM_CLOSE, 0, 0 );
-            break;
-
-        case IDM_DEBUG_HELP_ABOUT:
-            ModalDlg( MODAL_DLG_ID_ABOUT, &modalDlgData, hwnd, debugWndData.xPos, debugWndData.yPos );
             break;
 
         default:
@@ -712,24 +643,11 @@ debugOnInitMenuPopup( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     { /* 「編集」 */
         if( 1 )
         {
-            DebugMenuEnableItem( IDM_DEBUG_EDIT_CUT    );
             DebugMenuEnableItem( IDM_DEBUG_EDIT_COPY   );
-            DebugMenuEnableItem( IDM_DEBUG_EDIT_DELETE );
         }
         else
         {
-            DebugMenuUnEnableItem( IDM_DEBUG_EDIT_CUT    );
             DebugMenuUnEnableItem( IDM_DEBUG_EDIT_COPY   );
-            DebugMenuUnEnableItem( IDM_DEBUG_EDIT_DELETE );
-        }
-
-        if( IsClipboardFormatAvailable(CF_TEXT) )
-        {
-            DebugMenuEnableItem( IDM_DEBUG_EDIT_PASTE );
-        }
-        else
-        {
-            DebugMenuUnEnableItem( IDM_DEBUG_EDIT_PASTE );
         }
     }
     else
