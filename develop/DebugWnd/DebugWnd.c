@@ -38,7 +38,6 @@ static LRESULT debugOnVscroll         ( HWND hwnd, UINT message, WPARAM wParam, 
 static LRESULT debugOnMouseWheel      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT debugOnSetFocus        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT debugOnKillFocus       ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT debugOnDropFiles       ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT debugOnInitMenuPopup   ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT debugOnFindMsgString   ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT debugOnApp             ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
@@ -51,7 +50,6 @@ short debugAskAboutSave( HWND hwnd, TCHAR * szTitleName );
 /* 内部変数定義 */
 static HWND hDebugWnd; /* デバッグウィンドウのハンドラ */
 static S_DEBUGWND_DATA debugWndData;
-static TCHAR szCmdLineLocal[1024];
 
 /* *INDENT-OFF* */
 static LRESULT (*wndProcTbl[DEBUGWND_MAX])( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam ) =
@@ -72,7 +70,6 @@ static LRESULT (*wndProcTbl[DEBUGWND_MAX])( HWND hwnd, UINT message, WPARAM wPar
     debugOnMouseWheel      , /* WM_MOUSEWHEEL                 */
     debugOnSetFocus        , /* WM_SETFOCUS                   */
     debugOnKillFocus       , /* WM_KILLFOCUS                  */
-    debugOnDropFiles       , /* WM_DROPFILES                  */
     debugOnInitMenuPopup   , /* WM_INITMENUPOPUP              */
     debugOnFindMsgString   , /* FINDMSGSTRINGの登録メッセージ */
     debugOnApp             , /* WM_APP                        */
@@ -86,13 +83,11 @@ static TCHAR szModuleName[] = TEXT("Debug"); /* アプリケーションの名称 */
 
 /********************************************************************************
  * 内容  : デバッグウィンドウクラスの登録、ウィンドウの生成
- * 引数  : LPSTR szCmdLine
  * 引数  : int nCmdShow
- * 引数  : HACCEL *hAccelPtr
  * 戻り値: HWND
  ***************************************/
 HWND
-DebugWndCreate( LPSTR szCmdLine, int nCmdShow, HACCEL *hAccelPtr )
+DebugWndCreate( int nCmdShow )
 {
     WNDCLASS wc = {0};
     HINSTANCE hInst = GetHinst();
@@ -125,21 +120,9 @@ DebugWndCreate( LPSTR szCmdLine, int nCmdShow, HACCEL *hAccelPtr )
         /* メニューの生成 */
         hMenu = DebugMenuCreate();
 
-        /* アクセラレータの生成 */
-        if( hAccelPtr != NULL )
-        {
-            *(hAccelPtr) = DebugAccelCreate();
-        }
-        else
-        {
-            nop();
-        }
-
-        strncpy(szCmdLineLocal,szCmdLine,1024);
-
         /* デバッグウィンドウを作成 */
         InitCommonControls(); /* commctrl.hのインクルード、comctl32.libのプロジェクトへの参加が必要 */
-        hDebugWnd = CreateWindowEx( /* WS_EX_OVERLAPPEDWINDOW | */ WS_EX_ACCEPTFILES,
+        hDebugWnd = CreateWindowEx(0,
                                    pAppName, pAppName,
                                    WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS /* | WS_VSCROLL | WS_HSCROLL*/,
                                    ConfigLoadDword(CONFIG_ID_WINDOW_POS_X) , ConfigLoadDword(CONFIG_ID_WINDOW_POS_Y) ,
@@ -228,7 +211,6 @@ debugConvertMSGtoINDEX( UINT message )
     case WM_MOUSEWHEEL      :rtn = DEBUGWND_ON_MOUSEWHEEL      ;break;
     case WM_SETFOCUS        :rtn = DEBUGWND_ON_SETFOCUS        ;break;
     case WM_KILLFOCUS       :rtn = DEBUGWND_ON_KILLFOCUS       ;break;
-    case WM_DROPFILES       :rtn = DEBUGWND_ON_DROPFILES       ;break;
     case WM_INITMENUPOPUP   :rtn = DEBUGWND_ON_INITMENUPOPUP   ;break;
     default                 :
         if( message == debugWndData.messageFindReplace )
@@ -278,7 +260,6 @@ debugOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     ReleaseDC( hwnd,hdc );
 
     ModalDlgInit();
-    FileInitialize( hwnd ); /* ファイル初期化     */
     FontInit();
 
 #ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
@@ -306,22 +287,7 @@ debugOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     DebugMenuCheckItem( IDM_DEBUG_VIEW_STS_BAR );
     DebugMenuCheckItem( IDM_DEBUG_EXTEND_NEWLINE_CRLF );
 
-    if( (szCmdLineLocal[0] != '\0') &&
-        (FileSetName(FILE_ID_BIN,szCmdLineLocal,FALSE)) )
-    {
-        DWORD dwSize;
-        PBYTE dataPtr;
-
-        dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
-#ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-        EditWndDataSet( debugWndData.hWndIo,dataPtr,dwSize,TRUE );
-#endif                  /*  エディットコントロール使用  or  通常  */
-        debugDoCaption( hwnd, FileGetTitleName(FILE_ID_BIN),FALSE );
-    }
-    else
-    {
-        debugDoCaption( hwnd, "" , FALSE );
-    }
+    debugDoCaption( hwnd, "" , FALSE );
 
     return rtn;
 }
@@ -413,19 +379,12 @@ debugOnWindowPosChanged( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 static LRESULT
 debugOnClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
-    if( debugWndData.bNeedSave && ((debugAskAboutSave( hwnd, FileGetTitleName(FILE_ID_BIN))) == IDCANCEL) )
-    {
-        nop();
-    }
-    else
-    {
-        ConfigSaveDword( CONFIG_ID_WINDOW_POS_X , debugWndData.xWindowPos );
-        ConfigSaveDword( CONFIG_ID_WINDOW_POS_Y , debugWndData.yWindowPos );
-        ConfigSaveDword( CONFIG_ID_WINDOW_POS_DX, debugWndData.cxWindow   );
-        ConfigSaveDword( CONFIG_ID_WINDOW_POS_DY, debugWndData.cyWindow   );
+    ConfigSaveDword( CONFIG_ID_WINDOW_POS_X , debugWndData.xWindowPos );
+    ConfigSaveDword( CONFIG_ID_WINDOW_POS_Y , debugWndData.yWindowPos );
+    ConfigSaveDword( CONFIG_ID_WINDOW_POS_DX, debugWndData.cxWindow   );
+    ConfigSaveDword( CONFIG_ID_WINDOW_POS_DY, debugWndData.cyWindow   );
 
-        DestroyWindow( hwnd );
-    }
+    DestroyWindow( hwnd );
 
     return 0;
 }
@@ -441,12 +400,8 @@ debugOnClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 static LRESULT
 debugOnDestroy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
-    DestroyAcceleratorTable( debugWndData.hAccel );
-
     DestroyWindow( debugWndData.hWndIo );
-    FileEnd();
 
-    PostQuitMessage(0); /* WM_QUITメッセージをポストする */
     return 0;
 }
 
@@ -865,42 +820,6 @@ debugOnKillFocus( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     LRESULT rtn = 0;
 
     SendMessage(debugWndData.hWndIo,message,wParam,lParam);
-
-    return rtn;
-}
-
-/********************************************************************************
- * 内容  : WM_DROPFILES を処理する
- * 引数  : HWND hwnd
- * 引数  : UINT message
- * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
- * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
- * 戻り値: LRESULT
- ***************************************/
-static LRESULT
-debugOnDropFiles( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
-{
-    LRESULT rtn = 0;
-    static TCHAR szFileName[1024];
-    DWORD dwSize;
-    PBYTE dataPtr;
-
-    if( debugWndData.bNeedSave && ((debugAskAboutSave( hwnd, FileGetTitleName(FILE_ID_BIN))) == IDCANCEL) )
-    {
-        nop();
-    }
-    else
-    {
-        debugWndData.bNeedSave = FALSE;
-        DragQueryFile( (HDROP)wParam, (UINT)0, (LPSTR)szFileName, (UINT)sizeof(szFileName) );
-
-        FileSetName( FILE_ID_BIN, szFileName, FALSE );
-        dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
-#ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-        EditWndDataSet( debugWndData.hWndIo,dataPtr,dwSize,TRUE );
-#endif                  /*  エディットコントロール使用  or  通常  */
-        debugDoCaption( hwnd, FileGetTitleName(FILE_ID_BIN),FALSE );
-    }
 
     return rtn;
 }

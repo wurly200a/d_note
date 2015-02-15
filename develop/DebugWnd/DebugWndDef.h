@@ -18,7 +18,6 @@ typedef enum
     DEBUGWND_ON_MOUSEWHEEL      , /* WM_MOUSEWHEEL                 */
     DEBUGWND_ON_SETFOCUS        , /* WM_SETFOCUS                   */
     DEBUGWND_ON_KILLFOCUS       , /* WM_KILLFOCUS                  */
-    DEBUGWND_ON_DROPFILES       , /* WM_DROPFILES                  */
     DEBUGWND_ON_INITMENUPOPUP   , /* WM_INITMENUPOPUP              */
     DEBUGWND_ON_FINDMSGSTRING   , /* FINDMSGSTRINGの登録メッセージ */
     DEBUGWND_ON_APP             , /* WM_APP                        */

@@ -47,6 +47,7 @@ typedef struct
     BOOL bNeedSave;
     UINT messageFindReplace;
     HWND hDlgModeless;
+    HWND hWndDebug;
 } S_MAINWND_DATA;
 
 #define MAINWND_DEF_H

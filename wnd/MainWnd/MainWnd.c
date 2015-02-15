@@ -16,6 +16,8 @@
 #include "DateTime.h"
 #include "ModalDlg.h"
 
+#include "DebugWnd.h"
+
 /* 外部変数定義 */
 
 /* 内部関数定義 */
@@ -276,6 +278,10 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     DeleteObject(hFont);
     ReleaseDC( hwnd,hdc );
 
+#ifdef USE_DEBUG_WINDOW
+    mainWndData.hWndDebug = DebugWndCreate(TRUE);
+#endif
+
     ModalDlgInit();
     FileInitialize( hwnd ); /* ファイル初期化     */
     FontInit();
@@ -444,6 +450,10 @@ onDestroy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     DestroyWindow( mainWndData.hWndIo );
     FileEnd();
+
+#ifdef USE_DEBUG_WINDOW
+    DestroyWindow( mainWndData.hWndDebug );
+#endif
 
     PostQuitMessage(0); /* WM_QUITメッセージをポストする */
     return 0;
