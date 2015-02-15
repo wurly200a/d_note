@@ -43,7 +43,6 @@ typedef struct
     HWND hWndIo;
     HFONT hFontIo;
     HACCEL hAccel;
-    BOOL bNeedSave;
     UINT messageFindReplace;
     HWND hDlgModeless;
 } S_DEBUGWND_DATA;

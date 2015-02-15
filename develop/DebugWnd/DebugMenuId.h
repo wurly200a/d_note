@@ -1,7 +1,6 @@
 #ifndef DEBUG_MENU_ID_H
 
 #define IDM_DEBUG_FILE_NEW                    40001
-#define IDM_DEBUG_FILE_SAVE                   40003
 #define IDM_DEBUG_FILE_SAVE_AS                40004
 #define IDM_DEBUG_FILE_PAGE                   40005
 #define IDM_DEBUG_FILE_PRINT                  40006

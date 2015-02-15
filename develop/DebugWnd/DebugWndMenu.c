@@ -13,7 +13,7 @@ HMENU hDebugMenu;
 static const ACCEL debugAccelTbl[] =
 {
     { (FVIRTKEY|FNOINVERT|FCONTROL),'N'       ,IDM_DEBUG_FILE_NEW        },
-    { (FVIRTKEY|FNOINVERT|FCONTROL),'S'       ,IDM_DEBUG_FILE_SAVE       },
+    { (FVIRTKEY|FNOINVERT|FCONTROL),'S'       ,IDM_DEBUG_FILE_SAVE_AS    },
     { (FVIRTKEY|FNOINVERT|FCONTROL),'P'       ,IDM_DEBUG_FILE_PRINT      },
     { (FVIRTKEY|FNOINVERT|FCONTROL),'C'       ,IDM_DEBUG_EDIT_COPY       },
     { (FVIRTKEY|FNOINVERT|FCONTROL),'F'       ,IDM_DEBUG_EDIT_FIND       },
@@ -35,7 +35,6 @@ DebugMenuCreate( void )
 
     hMenuPopup = CreateMenu();
     AppendMenu( hMenuPopup, MF_STRING   , IDM_DEBUG_FILE_NEW        , TEXT("新規(&N)\tCtrl+N") );
-    AppendMenu( hMenuPopup, MF_STRING   , IDM_DEBUG_FILE_SAVE       , TEXT("上書き保存(&S)\tCtrl+S") );
     AppendMenu( hMenuPopup, MF_STRING   , IDM_DEBUG_FILE_SAVE_AS    , TEXT("名前を付けて保存(&A)...") );
     AppendMenu( hMenuPopup, MF_SEPARATOR, 0                   , NULL );
     AppendMenu( hMenuPopup, MF_STRING   , IDM_DEBUG_FILE_PAGE       , TEXT("ページ設定(&U)...") );

@@ -39,8 +39,7 @@ static LRESULT debugOnApp             ( HWND hwnd, UINT message, WPARAM wParam, 
 static LRESULT debugOnDefault         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
 static PTSTR getModuleString( void );
-void debugDoCaption( HWND hwnd, TCHAR* szTitleName, BOOL bNeedSave );
-short debugAskAboutSave( HWND hwnd, TCHAR * szTitleName );
+void debugDoCaption( HWND hwnd, TCHAR* szTitleName );
 
 /* 内部変数定義 */
 static HWND hDebugWnd; /* デバッグウィンドウのハンドラ */
@@ -262,7 +261,7 @@ debugOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                                          hwnd, (HMENU)0, GetHinst(), NULL) ;
     debugWndData.hFontIo = NULL;
 
-    debugDoCaption( hwnd, "" , FALSE );
+    debugDoCaption( hwnd, "applicationName" );
 
     return rtn;
 }
@@ -401,15 +400,6 @@ debugOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         case EN_UPDATE:
             break;
         case EN_CHANGE:
-            if( debugWndData.bNeedSave )
-            {
-                nop();
-            }
-            else
-            {
-                debugDoCaption( hwnd, FileGetTitleName(FILE_ID_BIN),TRUE );
-                debugWndData.bNeedSave = TRUE;
-            }
             break;
         default:
             break;
@@ -420,17 +410,6 @@ debugOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         switch( LOWORD(wParam) )
         {
         case IDM_DEBUG_FILE_NEW:
-            if( debugWndData.bNeedSave && ((debugAskAboutSave( hwnd, FileGetTitleName(FILE_ID_BIN))) == IDCANCEL) )
-            {
-                nop();
-            }
-            else
-            {
-                debugWndData.bNeedSave = FALSE;
-                debugDoCaption( hwnd, "", FALSE);
-            }
-            break;
-        case IDM_DEBUG_FILE_SAVE:
             break;
         case IDM_DEBUG_FILE_SAVE_AS:
             break;
@@ -763,57 +742,14 @@ getModuleString( void )
  * 内容  :
  * 引数  : HWND hwnd
  * 引数  : TCHAR* szTitleName
- * 引数  : BOOL bNeedSave
  * 戻り値: なし
  ***************************************/
 void
-debugDoCaption( HWND hwnd, TCHAR* szTitleName, BOOL bNeedSave )
+debugDoCaption( HWND hwnd, TCHAR* szTitleName )
 {
      TCHAR szCaption[64 + MAX_PATH];
 
-     if( bNeedSave )
-     {
-         wsprintf( szCaption, TEXT ("*%s - %s"), (szTitleName[0] ? szTitleName : TEXT("無題")),getModuleString() );
-     }
-     else
-     {
-         wsprintf( szCaption, TEXT ("%s - %s"), (szTitleName[0] ? szTitleName : TEXT("無題")),getModuleString() );
-     }
+     wsprintf( szCaption, TEXT ("%s - %s"), (szTitleName[0] ? szTitleName : TEXT("無題")),getModuleString() );
 
      SetWindowText( hwnd, szCaption );
-}
-
-/********************************************************************************
- * 内容  :
- * 引数  : HWND hwnd
- * 引数  : TCHAR* szTitleName
- * 戻り値: なし
- ***************************************/
-short
-debugAskAboutSave( HWND hwnd, TCHAR * szTitleName )
-{
-    TCHAR szBuffer[64 + MAX_PATH];
-    int   iReturn;
-
-    wsprintf(szBuffer, TEXT("ファイル %s の内容は変更されています。\n\n変更を保存しますか?"), szTitleName[0] ? szTitleName : TEXT("無題") );
-
-    iReturn = MessageBox( hwnd,szBuffer,getModuleString(),MB_YESNOCANCEL|MB_ICONEXCLAMATION );
-
-    if( iReturn == IDYES )
-    {
-        if( !SendMessage( hwnd,WM_COMMAND,IDM_DEBUG_FILE_SAVE,0) )
-        {
-            iReturn = IDCANCEL;
-        }
-        else
-        {
-            nop();
-        }
-    }
-    else
-    {
-        nop();
-    }
-
-    return iReturn;
 }
