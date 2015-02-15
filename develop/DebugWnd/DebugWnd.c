@@ -253,7 +253,7 @@ debugOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     DebugFontInit();
 
-    debugWndData.hWndIo = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW,
+    debugWndData.hWndEdit = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW,
                                          TEXT ("edit"), NULL,
                                          WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL |
                                          ES_LEFT | ES_MULTILINE | ES_NOHIDESEL | ES_AUTOHSCROLL | ES_AUTOVSCROLL,
@@ -262,6 +262,8 @@ debugOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     debugWndData.hFontIo = NULL;
 
     debugDoCaption( hwnd, "applicationName" );
+
+    SetWindowText(debugWndData.hWndEdit,"-----Debug Console Start-----\r\n");
 
     return rtn;
 }
@@ -296,7 +298,7 @@ debugOnSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     debugWndData.cxClient = LOWORD( lParam );
     debugWndData.cyClient = HIWORD( lParam );
 
-    MoveWindow( debugWndData.hWndIo, 0, topSizeSum, debugWndData.cxClient, debugWndData.cyClient - topSizeSum - bottomSizeSum, TRUE) ;
+    MoveWindow( debugWndData.hWndEdit, 0, topSizeSum, debugWndData.cxClient, debugWndData.cyClient - topSizeSum - bottomSizeSum, TRUE) ;
 
     return 0;
 }
@@ -369,7 +371,7 @@ debugOnClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 static LRESULT
 debugOnDestroy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
-    DestroyWindow( debugWndData.hWndIo );
+    DestroyWindow( debugWndData.hWndEdit );
 
     return 0;
 }
@@ -393,7 +395,7 @@ debugOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     static TCHAR strFind[80],strRep[80],strMsg[1024];
     HFONT hFontOld;
 
-    if( (HWND)lParam == debugWndData.hWndIo )
+    if( (HWND)lParam == debugWndData.hWndEdit )
     {
         switch( HIWORD(wParam) )
         {
@@ -415,7 +417,7 @@ debugOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break;
 
         case IDM_DEBUG_EDIT_COPY:
-            SendMessage( debugWndData.hWndIo, WM_COPY, 0, 0 );
+            SendMessage( debugWndData.hWndEdit, WM_COPY, 0, 0 );
             break;
 
         case IDM_DEBUG_EDIT_FIND:
@@ -431,7 +433,7 @@ debugOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break;
 
         case IDM_DEBUG_EDIT_SELECT_ALL:
-            SendMessage( debugWndData.hWndIo, EM_SETSEL, 0, -1 );
+            SendMessage( debugWndData.hWndEdit, EM_SETSEL, 0, -1 );
             break;
 
         case IDM_DEBUG_FORMAT_FONT:
@@ -439,7 +441,7 @@ debugOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             {
                 hFontOld = debugWndData.hFontIo;
                 debugWndData.hFontIo = CreateFontIndirect( DebugFontGetLogFont() );
-                SendMessage( debugWndData.hWndIo, WM_SETFONT, (WPARAM)debugWndData.hFontIo, (LPARAM)TRUE );
+                SendMessage( debugWndData.hWndEdit, WM_SETFONT, (WPARAM)debugWndData.hFontIo, (LPARAM)TRUE );
 
                 if( hFontOld != NULL )
                 {
@@ -561,7 +563,7 @@ debugOnMouseWheel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
-    SendMessage(debugWndData.hWndIo,message,wParam,lParam);
+    SendMessage(debugWndData.hWndEdit,message,wParam,lParam);
 
     return rtn;
 }
@@ -579,7 +581,7 @@ debugOnSetFocus( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
-    SetFocus(debugWndData.hWndIo);
+    SetFocus(debugWndData.hWndEdit);
 
     return rtn;
 }
@@ -597,7 +599,7 @@ debugOnKillFocus( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 
-    SendMessage(debugWndData.hWndIo,message,wParam,lParam);
+    SendMessage(debugWndData.hWndEdit,message,wParam,lParam);
 
     return rtn;
 }

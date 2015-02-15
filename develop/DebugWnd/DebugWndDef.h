@@ -40,7 +40,7 @@ typedef struct
     int  cxChar;
     int  cyChar;
     int  cxCaps;
-    HWND hWndIo;
+    HWND hWndEdit;
     HFONT hFontIo;
     HACCEL hAccel;
     UINT messageFindReplace;
