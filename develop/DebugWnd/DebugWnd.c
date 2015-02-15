@@ -7,9 +7,7 @@
 
 /* 外部関数定義 */
 #include "WinMain.h"
-#include "SomeCtrl.h"
 #include "File.h"
-#include "StsBar.h"
 #include "Font.h"
 #include "Config.h"
 #include "DateTime.h"
@@ -267,11 +265,6 @@ debugOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                                          hwnd, (HMENU)0, GetHinst(), NULL) ;
     debugWndData.hFontIo = NULL;
 
-#if 0
-    SomeCtrlCreate( hwnd ); /* コントロールを生成 */
-#endif
-    StsBarCreate( hwnd, TRUE ); /* ステータスバー生成、デフォルト表示 */
-
     DebugMenuCheckItem( IDM_DEBUG_VIEW_STS_BAR );
     DebugMenuCheckItem( IDM_DEBUG_EXTEND_NEWLINE_CRLF );
 
@@ -309,11 +302,6 @@ debugOnSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     debugWndData.cxClient = LOWORD( lParam );
     debugWndData.cyClient = HIWORD( lParam );
-
-#if 0
-    topSizeSum += SomeCtrlSize( debugWndData.cxClient, debugWndData.cyChar ); /* コントロール   */
-#endif
-    bottomSizeSum += StsBarSize( debugWndData.cxClient, debugWndData.cyChar ); /* ステータスバー */
 
     MoveWindow( debugWndData.hWndIo, 0, topSizeSum, debugWndData.cxClient, debugWndData.cyClient - topSizeSum - bottomSizeSum, TRUE) ;
 
@@ -418,8 +406,6 @@ debugOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         switch( HIWORD(wParam) )
         {
         case EN_UPDATE:
-            StsBarSetText( STS_BAR_0  ,"%d バイト、全 %d 行",GetWindowTextLength(debugWndData.hWndIo),(DWORD)SendMessage(debugWndData.hWndIo,EM_GETLINECOUNT,0,0) );
-            StsBarSetText( STS_BAR_MAX,"   %d 行、%d 列",(DWORD)(SendMessage(debugWndData.hWndIo,EM_LINEFROMCHAR,-1,0))+1,0);
             break;
         case EN_CHANGE:
             if( debugWndData.bNeedSave )
@@ -551,12 +537,10 @@ debugOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             if( DebugMenuInqItemChecked(IDM_DEBUG_VIEW_STS_BAR) )
             {
                 DebugMenuUnCheckItem( IDM_DEBUG_VIEW_STS_BAR );
-                StsBarShowWindow( FALSE );
             }
             else
             {
                 DebugMenuCheckItem( IDM_DEBUG_VIEW_STS_BAR );
-                StsBarShowWindow( TRUE );
             }
             SendMessage(hwnd,WM_SIZE,0,MAKELONG(debugWndData.cxClient,debugWndData.cyClient));
             break;
