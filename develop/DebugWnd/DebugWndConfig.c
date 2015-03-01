@@ -3,7 +3,6 @@
 /* 個別インクルードファイル */
 
 /* 外部関数定義 */
-#include "WinMain.h"
 
 /* 外部変数定義 */
 /* 内部関数定義 */
@@ -25,6 +24,8 @@ static S_DEBUG_CONFIG_INFO configInfoTbl[DEBUG_CONFIG_ID_MAX] =
     { TEXT("iWindowPosDX"),TEXT("0x000001F4") }, /* 500 */
     { TEXT("iWindowPosDY"),TEXT("0x0000012C") }, /* 300 */
 };
+
+static const TCHAR szDebugProfileName[] = TEXT("Debug");
 
 /********************************************************************************
  * 内容  : 設定管理モジュールの初期化
@@ -68,7 +69,7 @@ DebugConfigSaveDword( DEBUG_CONFIG_ID id, DWORD data )
         if( id < DEBUG_CONFIG_ID_MAX )
         {
             wsprintf( szDword, "0x%08lX", data );
-            WritePrivateProfileString( GetAppName(), configInfoTbl[id].pKeyName, szDword, szIniFileName );
+            WritePrivateProfileString( szDebugProfileName, configInfoTbl[id].pKeyName, szDword, szIniFileName );
         }
         else
         {
@@ -96,7 +97,7 @@ DebugConfigLoadDword( DEBUG_CONFIG_ID id )
     {
         if( id < DEBUG_CONFIG_ID_MAX )
         {
-            GetPrivateProfileString( GetAppName(), configInfoTbl[id].pKeyName, configInfoTbl[id].pInitValue, szDword, 11, szIniFileName );
+            GetPrivateProfileString( szDebugProfileName, configInfoTbl[id].pKeyName, configInfoTbl[id].pInitValue, szDword, 11, szIniFileName );
             rtn = strtol( szDword+2,NULL,16 );
         }
         else
