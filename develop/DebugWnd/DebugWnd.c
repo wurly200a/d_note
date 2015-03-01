@@ -7,9 +7,8 @@
 
 /* 外部関数定義 */
 #include "WinMain.h"
-#include "File.h"
 #include "DebugWndFont.h"
-#include "Config.h"
+#include "DebugWndConfig.h"
 
 /* 外部変数定義 */
 
@@ -106,8 +105,8 @@ DebugWndCreate( int nCmdShow )
     }
     else
     {
-        /* 設定の初期化 */
-        ConfigInit();
+        DebugConfigInit();
+        DebugFontInit();
 
         /* メニューの生成 */
         hMenu = DebugMenuCreate();
@@ -117,8 +116,8 @@ DebugWndCreate( int nCmdShow )
         hDebugWnd = CreateWindowEx(0,
                                    pAppName, pAppName,
                                    WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS /* | WS_VSCROLL | WS_HSCROLL*/,
-                                   ConfigLoadDword(CONFIG_ID_WINDOW_POS_X) , ConfigLoadDword(CONFIG_ID_WINDOW_POS_Y) ,
-                                   ConfigLoadDword(CONFIG_ID_WINDOW_POS_DX), ConfigLoadDword(CONFIG_ID_WINDOW_POS_DY),
+                                   DebugConfigLoadDword(DEBUG_CONFIG_ID_WINDOW_POS_X) , DebugConfigLoadDword(DEBUG_CONFIG_ID_WINDOW_POS_Y) ,
+                                   DebugConfigLoadDword(DEBUG_CONFIG_ID_WINDOW_POS_DX), DebugConfigLoadDword(DEBUG_CONFIG_ID_WINDOW_POS_DY),
                                    NULL, hMenu, hInst, NULL );
 
         if( hDebugWnd == NULL )
@@ -251,8 +250,6 @@ debugOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     DeleteObject(hFont);
     ReleaseDC( hwnd,hdc );
 
-    DebugFontInit();
-
     debugWndData.hWndEdit = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW,
                                          TEXT ("edit"), NULL,
                                          WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL |
@@ -350,11 +347,6 @@ debugOnWindowPosChanged( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 static LRESULT
 debugOnClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
-    ConfigSaveDword( CONFIG_ID_WINDOW_POS_X , debugWndData.xWindowPos );
-    ConfigSaveDword( CONFIG_ID_WINDOW_POS_Y , debugWndData.yWindowPos );
-    ConfigSaveDword( CONFIG_ID_WINDOW_POS_DX, debugWndData.cxWindow   );
-    ConfigSaveDword( CONFIG_ID_WINDOW_POS_DY, debugWndData.cyWindow   );
-
     DestroyWindow( hwnd );
 
     return 0;
@@ -371,6 +363,11 @@ debugOnClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 static LRESULT
 debugOnDestroy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
+    DebugConfigSaveDword( DEBUG_CONFIG_ID_WINDOW_POS_X , debugWndData.xWindowPos );
+    DebugConfigSaveDword( DEBUG_CONFIG_ID_WINDOW_POS_Y , debugWndData.yWindowPos );
+    DebugConfigSaveDword( DEBUG_CONFIG_ID_WINDOW_POS_DX, debugWndData.cxWindow   );
+    DebugConfigSaveDword( DEBUG_CONFIG_ID_WINDOW_POS_DY, debugWndData.cyWindow   );
+
     DestroyWindow( debugWndData.hWndEdit );
 
     return 0;

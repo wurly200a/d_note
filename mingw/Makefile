@@ -11,7 +11,7 @@ CPPFLAGS = -c
 
 LDFLAGS = -Wl,--subsystem,windows -mwindows
 LDLIBS = -lcomctl32 -lcomdlg32 -luser32 -lgdi32 -lkernel32 -limm32
-OBJECTS = DebugWnd.o DebugWndMenu.o DebugWndFont.o Config.o DateTime.o File.o Font.o LinkedList.o Version.o WinMain.o EditWnd.o EditWndBuffer.o MainWnd.o MainWndMenu.o ModalDialog.o SomeCtrl.o StsBar.o resource.o
+OBJECTS = DebugWnd.o DebugWndMenu.o DebugWndFont.o DebugWndConfig.o Config.o DateTime.o File.o Font.o LinkedList.o Version.o WinMain.o EditWnd.o EditWndBuffer.o MainWnd.o MainWndMenu.o ModalDialog.o SomeCtrl.o StsBar.o resource.o
 
 $(TARGET): $(OBJECTS)
 		$(CC) $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS) -o $@
@@ -27,6 +27,9 @@ DebugWndMenu.o: ../develop/DebugWnd/DebugWndMenu.c
 		$(CC) $(CFLAGS) $(CPPFLAGS) $< -o $@
 
 DebugWndFont.o: ../develop/DebugWnd/DebugWndFont.c
+		$(CC) $(CFLAGS) $(CPPFLAGS) $< -o $@
+
+DebugWndConfig.o: ../develop/DebugWnd/DebugWndConfig.c
 		$(CC) $(CFLAGS) $(CPPFLAGS) $< -o $@
 
 Config.o: ../sys/Config/Config.c
