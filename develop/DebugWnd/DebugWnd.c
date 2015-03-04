@@ -72,6 +72,8 @@ static LRESULT (*wndProcTbl[DEBUGWND_MAX])( HWND hwnd, UINT message, WPARAM wPar
 
 static TCHAR szModuleName[] = TEXT("Debug"); /* アプリケーションの名称 */
 
+#define WND_INFO_BUFSIZE (16*1024)
+
 /********************************************************************************
  * 内容  : デバッグウィンドウクラスの登録、ウィンドウの生成
  * 引数  : int nCmdShow
@@ -155,6 +157,133 @@ IsDebugWndMessage( MSG *msgPtr )
     }
 
     return bRtn;
+}
+
+/********************************************************************************
+ * 内容   : デバッグウィンドウへの printf
+ * 引数   : PTSTR ptstrFormat, ...
+ * 戻り値 : BOOL
+ ********************************************************************************/
+BOOL
+DebugWndPrintf( PTSTR ptstrFormat, ...)
+{
+    va_list vaArgs;
+    INT iPos;
+    static TCHAR szBuf[1024];
+
+    if( debugWndData.hWndEdit != NULL )
+    {
+        va_start(vaArgs, ptstrFormat);
+
+        if( wvsprintf(szBuf, ptstrFormat, vaArgs) != EOF )
+        {
+            iPos = SendMessage(debugWndData.hWndEdit, WM_GETTEXTLENGTH, 0, 0); /* 末尾位置を取得*/
+
+            /* テキストサイズのリミット値をチェック */
+            if((iPos + strlen(szBuf)) >= WND_INFO_BUFSIZE)
+            {
+                /* リミットを越えそうなら、先頭部分を切り捨てる */
+                iPos = SendMessage(debugWndData.hWndEdit, EM_LINEFROMCHAR, WND_INFO_BUFSIZE/10, 0) + 1; /* 10分の1の位置を取得                   */
+                iPos = SendMessage(debugWndData.hWndEdit, EM_LINEINDEX, iPos, 0);                       /* 行頭を取得                            */
+                SendMessage(debugWndData.hWndEdit, EM_SETSEL, 0, iPos);                                 /* 先頭から、10分の1の位置(の行頭)を選択 */
+                SendMessage(debugWndData.hWndEdit, EM_REPLACESEL, FALSE, (LPARAM)"");                   /* 選択した領域を消去                    */
+
+                iPos = SendMessage(debugWndData.hWndEdit, WM_GETTEXTLENGTH, 0, 0);                      /* 再度、末尾位置を取得*/
+            }
+
+            SendMessage(debugWndData.hWndEdit, EM_SETSEL, iPos, iPos);
+            SendMessage(debugWndData.hWndEdit, EM_REPLACESEL, FALSE, (LPARAM)szBuf);
+        }
+        else
+        {
+            /* do nothing */
+        }
+        va_end(vaArgs);
+    }
+    else
+    {
+        /* do nothing */
+    }
+
+    return TRUE;
+}
+
+
+/********************************************************************************
+ * 内容   : デバッグウィンドウへの printf (上書き)
+ * 引数   : PTSTR ptstrFormat, ...
+ * 戻り値 : BOOL
+ ********************************************************************************/
+BOOL
+DebugWndPrintfOW( PTSTR ptstrFormat, ...)
+{
+    va_list vaArgs;
+    INT iPos,iPos2;
+    static TCHAR szBuf[1024];
+
+    if( debugWndData.hWndEdit != NULL )
+    {
+        va_start(vaArgs, ptstrFormat);
+
+        if( wvsprintf(szBuf, ptstrFormat, vaArgs) != EOF )
+        {
+            iPos = SendMessage(debugWndData.hWndEdit, WM_GETTEXTLENGTH, 0, 0); /* 末尾位置を取得*/
+
+            /* テキストサイズのリミット値をチェック */
+            if((iPos + strlen(szBuf)) >= WND_INFO_BUFSIZE)
+            {
+                /* リミットを越えそうなら、先頭部分を切り捨てる */
+                iPos = SendMessage(debugWndData.hWndEdit, EM_LINEFROMCHAR, WND_INFO_BUFSIZE/10, 0) + 1; /* 10分の1の位置を取得                   */
+                iPos = SendMessage(debugWndData.hWndEdit, EM_LINEINDEX, iPos, 0);                       /* 行頭を取得                            */
+                SendMessage(debugWndData.hWndEdit, EM_SETSEL, 0, iPos);                                 /* 先頭から、10分の1の位置(の行頭)を選択 */
+                SendMessage(debugWndData.hWndEdit, EM_REPLACESEL, FALSE, (LPARAM)"");                   /* 選択した領域を消去                    */
+
+                iPos = SendMessage(debugWndData.hWndEdit, WM_GETTEXTLENGTH, 0, 0);                      /* 再度、末尾位置を取得*/
+            }
+
+            SendMessage(debugWndData.hWndEdit, EM_SETSEL, iPos, iPos);
+            iPos2 = SendMessage(debugWndData.hWndEdit, EM_LINEINDEX, -1, 0);  /* 行頭を取得 */ /* 違うのはココと    */
+            SendMessage(debugWndData.hWndEdit, EM_SETSEL, iPos2, iPos);                        /* ココだけ          */
+            SendMessage(debugWndData.hWndEdit, EM_REPLACESEL, FALSE, (LPARAM)szBuf);
+        }
+        else
+        {
+            /* do nothing */
+        }
+        va_end(vaArgs);
+    }
+    else
+    {
+        /* do nothing */
+    }
+
+    return TRUE;
+}
+
+
+/********************************************************************************
+ * 内容   : デバッグウィンドウの最終行クリア
+ * 引数   : なし
+ * 戻り値 : BOOL
+ ********************************************************************************/
+BOOL
+DebugWndClearLine( void )
+{
+    INT iPos,iPos2;
+
+    if( debugWndData.hWndEdit != NULL )
+    {
+        iPos  = SendMessage(debugWndData.hWndEdit, WM_GETTEXTLENGTH, 0, 0);   /* 末尾位置を取得     */
+        iPos2 = SendMessage(debugWndData.hWndEdit, EM_LINEINDEX, -1, 0);      /* 行頭を取得         */
+        SendMessage(debugWndData.hWndEdit, EM_SETSEL, iPos2, iPos);           /* 行頭から行末を選択 */
+        SendMessage(debugWndData.hWndEdit, EM_REPLACESEL, FALSE, (LPARAM)""); /* 選択した領域を消去 */
+    }
+    else
+    {
+        /* do nothing */
+    }
+
+    return TRUE;
 }
 
 /********************************************************************************
