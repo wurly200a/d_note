@@ -499,6 +499,8 @@ debugOnDestroy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     DestroyWindow( debugWndData.hWndEdit );
 
+    memset( &debugWndData, 0, sizeof(debugWndData) );
+
     return 0;
 }
 
