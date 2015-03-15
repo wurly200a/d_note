@@ -278,9 +278,7 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     DeleteObject(hFont);
     ReleaseDC( hwnd,hdc );
 
-#ifdef USE_DEBUG_WINDOW
     mainWndData.hWndDebug = DebugWndCreate(TRUE);
-#endif
 
     ModalDlgInit();
     FileInitialize( hwnd ); /* ファイル初期化     */
@@ -451,9 +449,7 @@ onDestroy( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     DestroyWindow( mainWndData.hWndIo );
     FileEnd();
 
-#ifdef USE_DEBUG_WINDOW
     DestroyWindow( mainWndData.hWndDebug );
-#endif
 
     PostQuitMessage(0); /* WM_QUITメッセージをポストする */
     return 0;
@@ -977,8 +973,39 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     pfr = (LPFINDREPLACE)lParam;
 
+#if 0
+    typedef struct tagFINDREPLACEA {
+        DWORD lStructSize;
+        HWND hwndOwner;
+        HINSTANCE hInstance;
+        DWORD Flags;
+        LPSTR lpstrFindWhat;
+        LPSTR lpstrReplaceWith;
+        WORD wFindWhatLen;
+        WORD wReplaceWithLen;
+        LPARAM lCustData;
+        LPFRHOOKPROC lpfnHook;
+        LPCSTR lpTemplateName;
+    } FINDREPLACEA,*LPFINDREPLACEA;
+
+    typedef struct tagFINDREPLACEW {
+        DWORD lStructSize;
+        HWND hwndOwner;
+        HINSTANCE hInstance;
+        DWORD Flags;
+        LPWSTR lpstrFindWhat;
+        LPWSTR lpstrReplaceWith;
+        WORD wFindWhatLen;
+        WORD wReplaceWithLen;
+        LPARAM lCustData;
+        LPFRHOOKPROC lpfnHook;
+        LPCWSTR lpTemplateName;
+    } FINDREPLACEW,*LPFINDREPLACEW;
+#endif
+
     if( pfr->Flags & FR_DIALOGTERM )
     {
+        DebugWndPrintf("FR_DIALOGTERM\r\n");
         mainWndData.hDlgModeless = NULL;
     }
     else
@@ -986,16 +1013,24 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         nop();
     }
 
-#if 0
-    if( (pfr->Flags & FR_FINDNEXT) && !PopFindFindText(hwndEdit,&iOffset,pfr) )
+    if( (pfr->Flags & FR_FINDNEXT) )
     {
-        OkMessage(hwnd, TEXT ("Text not found!"),TEXT ("\0")) ;
+        DebugWndPrintf("FR_FINDNEXT:%s\r\n",pfr->lpstrFindWhat);
+
+        if( 1 /*&& !PopFindFindText(hwndEdit,&iOffset,pfr)*/ )
+        {
+        }
+        else
+        {
+            OkMessage(hwnd, TEXT ("Text not found!"),TEXT ("\0")) ;
+        }
     }
     else
     {
         nop();
     }
 
+#if 0
     if( ((pfr->Flags & FR_REPLACE) || (pfr->Flags & FR_REPLACEALL)) && (!PopFindReplaceText(hwndEdit,&iOffset,pfr)) )
     {
         OkMessage (hwnd, TEXT ("Text not found!"),TEXT ("\0")) ;
