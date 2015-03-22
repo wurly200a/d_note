@@ -540,6 +540,8 @@ debugOnCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         switch( LOWORD(wParam) )
         {
         case IDM_DEBUG_FILE_NEW:
+            SendMessage(debugWndData.hWndEdit, EM_SETSEL, 0, SendMessage(debugWndData.hWndEdit, WM_GETTEXTLENGTH, 0, 0));
+            SendMessage(debugWndData.hWndEdit, EM_REPLACESEL, FALSE, (LPARAM)"");  /* ‘I‘ð‚µ‚½—Ìˆæ‚ðÁ‹Ž */
             break;
         case IDM_DEBUG_FILE_SAVE_AS:
             break;
@@ -788,35 +790,6 @@ debugOnFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     {
         nop();
     }
-
-#if 0
-    if( (pfr->Flags & FR_FINDNEXT) && !PopFindFindText(hwndEdit,&iOffset,pfr) )
-    {
-        OkMessage(hwnd, TEXT ("Text not found!"),TEXT ("\0")) ;
-    }
-    else
-    {
-        nop();
-    }
-
-    if( ((pfr->Flags & FR_REPLACE) || (pfr->Flags & FR_REPLACEALL)) && (!PopFindReplaceText(hwndEdit,&iOffset,pfr)) )
-    {
-        OkMessage (hwnd, TEXT ("Text not found!"),TEXT ("\0")) ;
-    }
-    else
-    {
-        nop();
-    }
-
-    if( pfr->Flags & FR_REPLACEALL )
-    {
-        while( PopFindReplaceText(hwndEdit, &iOffset, pfr) );
-    }
-    else
-    {
-        nop();
-    }
-#endif
 
     return rtn;
 }
