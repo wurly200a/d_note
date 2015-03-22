@@ -284,6 +284,29 @@ EditWndNewLineCodeSet( HWND hwnd, NEWLINECODE_TYPE newLineCodeType )
 }
 
 /********************************************************************************
+ * 内容  : EDITウィンドウの検索文字列データセット
+ * 引数  : HWND hwnd
+ * 引数  : TCHAR* dataPtr
+ * 引数  : DWORD  length
+ * 戻り値: BOOL
+ ***************************************/
+BOOL
+EditWndFindDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length )
+{
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    BOOL rtn = (BOOL)FALSE;
+
+    rtn = EditWndBuffFindDataSet( editWndDataPtr->hEditWndBuff, dataPtr, length );
+
+    SendMessage(GetParent(hwnd), (UINT)WM_COMMAND, MAKEWPARAM(0,EN_CHANGE), (LPARAM)hwnd);
+
+    setAllScrollInfo(hwnd);
+    InvalidateRect( hwnd, NULL, TRUE );
+
+    return rtn;
+}
+
+/********************************************************************************
  * 内容  : メインウィンドウ内で処理するメッセージを判定する
  * 引数  : MSG *msg
  * 戻り値: BOOL

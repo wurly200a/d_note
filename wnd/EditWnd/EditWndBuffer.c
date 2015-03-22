@@ -1,6 +1,7 @@
 /* 共通インクルードファイル */
 #include "common.h"
 /* 個別インクルードファイル */
+#include "DebugWnd.h"
 
 /* 外部関数定義 */
 
@@ -1325,6 +1326,58 @@ EditWndBuffSelectAll( H_EDITWND_BUFF hEditWndBuff )
     }
 
     return bRtn;
+}
+
+/********************************************************************************
+ * 内容  : EDITウィンドウバッファの検索データセット
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
+ * 引数  : TCHAR* dataPtr
+ * 引数  : DWORD  length
+ * 戻り値: BOOL
+ ***************************************/
+BOOL
+EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length )
+{
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
+    BOOL rtn = (BOOL)FALSE;
+
+    if( (dataPtr != NULL) && (length > 0) )
+    { /* データ有りの場合 */
+        S_BUFF_LINE_DATA *nowPtr;
+        DWORD nowDataPos;
+        DWORD findDataLen;
+
+        findDataLen = min(length,strlen(dataPtr));
+        DebugWndPrintf("EditWndBuffFindDataSet,Target:%s,%d\r\n",dataPtr,findDataLen);
+
+        for( nowPtr = (h->lineData.nowPtr),nowDataPos=(h->lineData.nowPtr)->caretDataPos; nowPtr != NULL; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr,nowDataPos=0 )
+        {
+            TCHAR *ptr;
+
+            DebugWndPrintf("EditWndBuffFindDataSet:%s\r\n",nowPtr->data);
+#if 0
+            ptr = wcsstr((const wchar_t *)(nowPtr->data),(const wchar_t *)dataPtr);
+#endif
+            ptr = (TCHAR *)strstr(nowPtr->data+nowDataPos,dataPtr);
+
+            if( ptr )
+            { /* 見つかった */
+                h->lineData.nowPtr = nowPtr;
+                (h->lineData.nowPtr)->caretDataPos = (DWORD)(ptr - nowPtr->data) + findDataLen;
+                h->lineData.selectPtr = nowPtr;
+                h->lineData.selectCaretPos = (DWORD)(ptr - nowPtr->data);
+                DebugWndPrintf("EditWndBuffFindDataSet,Found:%s\r\n",(TCHAR *)ptr);
+                rtn = (BOOL)TRUE;
+                break;
+            }
+        }
+    }
+    else
+    { /* データ無しの場合 */
+        nop();
+    }
+
+    return rtn;
 }
 
 /********************************************************************************

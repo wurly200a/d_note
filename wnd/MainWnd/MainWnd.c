@@ -46,6 +46,7 @@ static LRESULT onFindMsgString   ( HWND hwnd, UINT message, WPARAM wParam, LPARA
 static LRESULT onApp             ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onDefault         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
+void okMessage( HWND hwnd, TCHAR *szMessageFormat, ... );
 void doCaption( HWND hwnd, TCHAR* szTitleName, BOOL bNeedSave );
 short AskAboutSave( HWND hwnd, TCHAR * szTitleName );
 
@@ -1015,14 +1016,14 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     if( (pfr->Flags & FR_FINDNEXT) )
     {
-        DebugWndPrintf("FR_FINDNEXT:%s\r\n",pfr->lpstrFindWhat);
+        DebugWndPrintf("FR_FINDNEXT:%s,%d\r\n",pfr->lpstrFindWhat,pfr->wFindWhatLen);
 
-        if( 1 /*&& !PopFindFindText(hwndEdit,&iOffset,pfr)*/ )
+        if( EditWndFindDataSet( mainWndData.hWndIo, pfr->lpstrFindWhat, pfr->wFindWhatLen )  )
         {
         }
         else
         {
-            OkMessage(hwnd, TEXT ("Text not found!"),TEXT ("\0")) ;
+            okMessage(hwnd, TEXT("\"%s\" が見つかりません。"),pfr->lpstrFindWhat);
         }
     }
     else
@@ -1033,7 +1034,7 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 #if 0
     if( ((pfr->Flags & FR_REPLACE) || (pfr->Flags & FR_REPLACEALL)) && (!PopFindReplaceText(hwndEdit,&iOffset,pfr)) )
     {
-        OkMessage (hwnd, TEXT ("Text not found!"),TEXT ("\0")) ;
+        okMessage(hwnd, TEXT("\"%s\" が見つかりません。"),pfr->lpstrFindWhat);
     }
     else
     {
@@ -1087,6 +1088,32 @@ static LRESULT
 onDefault( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     return DefWindowProc( hwnd, message, wParam, lParam );
+}
+
+/********************************************************************************
+ * 内容  :
+ * 引数  : HWND hwnd
+ * 引数  : TCHAR *szMessageFormat, ...
+ * 戻り値: なし
+ ***************************************/
+void
+okMessage( HWND hwnd, TCHAR *szMessageFormat, ... )
+{
+    va_list vaArgs;
+    TCHAR szBuffer[64 + MAX_PATH] ;
+
+    va_start(vaArgs, szMessageFormat);
+
+    if( wvsprintf(szBuffer, szMessageFormat, vaArgs) != EOF )
+    {
+        MessageBox( hwnd, szBuffer, GetAppName(), MB_OK | MB_ICONINFORMATION ) ;
+    }
+    else
+    {
+        /* do nothing */
+    }
+
+    va_end(vaArgs);
 }
 
 /********************************************************************************

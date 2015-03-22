@@ -244,5 +244,14 @@ BOOL EditWndBuffSelectOff( H_EDITWND_BUFF hEditWndBuff );
  ***************************************/
 BOOL EditWndBuffSelectAll( H_EDITWND_BUFF hEditWndBuff );
 
+/********************************************************************************
+ * 内容  : EDITウィンドウバッファの検索データセット
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
+ * 引数  : TCHAR* dataPtr
+ * 引数  : DWORD  length
+ * 戻り値: BOOL
+ ***************************************/
+BOOL EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length );
+
 #define EDITWND_BUFFER_H
 #endif /* EDITWND_BUFFER_H */

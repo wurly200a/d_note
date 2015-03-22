@@ -129,5 +129,14 @@ typedef UINT NEWLINECODE_TYPE;
  ***************************************/
 BOOL EditWndNewLineCodeSet( HWND hwnd, NEWLINECODE_TYPE newLineCodeType );
 
+/********************************************************************************
+ * 内容  : EDITウィンドウの検索文字列データセット
+ * 引数  : HWND hwnd
+ * 引数  : TCHAR* dataPtr
+ * 引数  : DWORD  length
+ * 戻り値: BOOL
+ ***************************************/
+BOOL EditWndFindDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length );
+
 #define EDITWND_H
 #endif /* EDITWND_H */
