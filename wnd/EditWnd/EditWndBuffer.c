@@ -1333,10 +1333,11 @@ EditWndBuffSelectAll( H_EDITWND_BUFF hEditWndBuff )
  * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 引数  : TCHAR* dataPtr
  * 引数  : DWORD  length
+ * 引数  : BOOL bDirectionUp
  * 戻り値: BOOL
  ***************************************/
 BOOL
-EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length )
+EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp )
 {
     H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
     BOOL rtn = (BOOL)FALSE;
@@ -1348,27 +1349,50 @@ EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD lengt
         DWORD findDataLen;
 
         findDataLen = min(length,strlen(dataPtr));
-        DebugWndPrintf("EditWndBuffFindDataSet,Target:%s,%d\r\n",dataPtr,findDataLen);
+        DebugWndPrintf("EditWndBuffFindDataSet,Target:%s,%d,%d\r\n",dataPtr,findDataLen,bDirectionUp);
 
-        for( nowPtr = (h->lineData.nowPtr),nowDataPos=(h->lineData.nowPtr)->caretDataPos; nowPtr != NULL; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr,nowDataPos=0 )
-        {
-            TCHAR *ptr;
-
-            DebugWndPrintf("EditWndBuffFindDataSet:%s\r\n",nowPtr->data);
+        if( !bDirectionUp )
+        { /* 下へ */
+            for( nowPtr = (h->lineData.nowPtr),nowDataPos=(h->lineData.nowPtr)->caretDataPos; nowPtr != NULL; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr,nowDataPos=0 )
+            {
+                TCHAR *ptr;
 #if 0
-            ptr = wcsstr((const wchar_t *)(nowPtr->data),(const wchar_t *)dataPtr);
+                DebugWndPrintf("EditWndBuffFindDataSet:%s\r\n",nowPtr->data);
 #endif
-            ptr = (TCHAR *)strstr(nowPtr->data+nowDataPos,dataPtr);
+                ptr = (TCHAR *)strstr(nowPtr->data+nowDataPos,dataPtr);
 
-            if( ptr )
-            { /* 見つかった */
-                h->lineData.nowPtr = nowPtr;
-                (h->lineData.nowPtr)->caretDataPos = (DWORD)(ptr - nowPtr->data) + findDataLen;
-                h->lineData.selectPtr = nowPtr;
-                h->lineData.selectCaretPos = (DWORD)(ptr - nowPtr->data);
-                DebugWndPrintf("EditWndBuffFindDataSet,Found:%s\r\n",(TCHAR *)ptr);
-                rtn = (BOOL)TRUE;
-                break;
+                if( ptr )
+                { /* 見つかった */
+                    h->lineData.nowPtr = nowPtr;
+                    (h->lineData.nowPtr)->caretDataPos = (DWORD)(ptr - nowPtr->data) + findDataLen;
+                    h->lineData.selectPtr = nowPtr;
+                    h->lineData.selectCaretPos = (DWORD)(ptr - nowPtr->data);
+                    DebugWndPrintf("EditWndBuffFindDataSet,Found:%s\r\n",(TCHAR *)ptr);
+                    rtn = (BOOL)TRUE;
+                    break;
+                }
+            }
+        }
+        else
+        { /* 上へ */
+            for( nowPtr = (h->lineData.nowPtr),nowDataPos=(h->lineData.nowPtr)->caretDataPos; nowPtr != NULL; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.prevPtr,nowDataPos=0 )
+            {
+                TCHAR *ptr;
+#if 0
+                DebugWndPrintf("EditWndBuffFindDataSet:%s\r\n",nowPtr->data);
+#endif
+                ptr = (TCHAR *)strstr(nowPtr->data,dataPtr); /* 暫定、各行、逆からサーチしなければならない */
+
+                if( ptr )
+                { /* 見つかった */
+                    h->lineData.nowPtr = nowPtr;
+                    (h->lineData.nowPtr)->caretDataPos = (DWORD)(ptr - nowPtr->data) + findDataLen;
+                    h->lineData.selectPtr = nowPtr;
+                    h->lineData.selectCaretPos = (DWORD)(ptr - nowPtr->data);
+                    DebugWndPrintf("EditWndBuffFindDataSet,Found:%s\r\n",(TCHAR *)ptr);
+                    rtn = (BOOL)TRUE;
+                    break;
+                }
             }
         }
     }

@@ -288,19 +288,51 @@ EditWndNewLineCodeSet( HWND hwnd, NEWLINECODE_TYPE newLineCodeType )
  * 引数  : HWND hwnd
  * 引数  : TCHAR* dataPtr
  * 引数  : DWORD  length
+ * 引数  : BOOL bDirectionUp
  * 戻り値: BOOL
  ***************************************/
 BOOL
-EditWndFindDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length )
+EditWndFindDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp )
 {
     S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
     BOOL rtn = (BOOL)FALSE;
 
-    rtn = EditWndBuffFindDataSet( editWndDataPtr->hEditWndBuff, dataPtr, length );
+    rtn = EditWndBuffFindDataSet( editWndDataPtr->hEditWndBuff, dataPtr, length, bDirectionUp );
 
     SendMessage(GetParent(hwnd), (UINT)WM_COMMAND, MAKEWPARAM(0,EN_CHANGE), (LPARAM)hwnd);
 
     setAllScrollInfo(hwnd);
+
+#if 1 /* editOnKeyDown()の処理からコピーしてきたもの。できれば関数化  */
+    /* キャレットが表示範囲外に有った場合の処理(横方向) */
+    if( EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) < editWndDataPtr->iHorzPos )
+    {
+        setScrollPos( hwnd, SB_HORZ, EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) );
+    }
+    else if( (editWndDataPtr->iHorzPos+editWndDataPtr->cxBuffer-1) < EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) )
+    {
+        setScrollPos( hwnd, SB_HORZ, (editWndDataPtr->iHorzPos+editWndDataPtr->cxBuffer-1) );
+    }
+    else
+    {
+        nop();
+    }
+
+    /* キャレットが表示範囲外に有った場合の処理(縦方向) */
+    if( EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) < editWndDataPtr->iVertPos )
+    {
+        setScrollPos( hwnd, SB_VERT, EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) );
+    }
+    else if( (editWndDataPtr->iVertPos+editWndDataPtr->cyBuffer-1) < EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) )
+    {
+        setScrollPos( hwnd, SB_VERT, EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) - (editWndDataPtr->cyBuffer-1) );
+    }
+    else
+    {
+        nop();
+    }
+#endif
+
     InvalidateRect( hwnd, NULL, TRUE );
 
     return rtn;

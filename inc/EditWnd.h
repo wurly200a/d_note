@@ -134,9 +134,10 @@ BOOL EditWndNewLineCodeSet( HWND hwnd, NEWLINECODE_TYPE newLineCodeType );
  * ˆø”  : HWND hwnd
  * ˆø”  : TCHAR* dataPtr
  * ˆø”  : DWORD  length
+ * ˆø”  : BOOL bDirectionUp
  * –ß‚è’l: BOOL
  ***************************************/
-BOOL EditWndFindDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length );
+BOOL EditWndFindDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp );
 
 #define EDITWND_H
 #endif /* EDITWND_H */

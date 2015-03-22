@@ -46,7 +46,7 @@ static LRESULT onFindMsgString   ( HWND hwnd, UINT message, WPARAM wParam, LPARA
 static LRESULT onApp             ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onDefault         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
-void okMessage( HWND hwnd, TCHAR *szMessageFormat, ... );
+int okMessage( HWND hwnd, TCHAR *szMessageFormat, ... );
 void doCaption( HWND hwnd, TCHAR* szTitleName, BOOL bNeedSave );
 short AskAboutSave( HWND hwnd, TCHAR * szTitleName );
 
@@ -633,7 +633,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         case IDM_EDIT_FIND:
             fr.lStructSize   = sizeof (FINDREPLACE);
             fr.hwndOwner     = hwnd;
-            fr.Flags         = FR_MATCHCASE|FR_HIDEWHOLEWORD;
+            fr.Flags         = FR_DOWN|/*FR_MATCHCASE|*/FR_HIDEWHOLEWORD|FR_HIDEMATCHCASE;
             fr.lpstrFindWhat = strFind;
             fr.wFindWhatLen  = 80;
             mainWndData.hDlgModeless = FindText(&fr);
@@ -642,7 +642,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         case IDM_EDIT_REPLACE:
             fr.lStructSize      = sizeof(FINDREPLACE);
             fr.hwndOwner        = hwnd;
-            fr.Flags            = FR_MATCHCASE|FR_HIDEWHOLEWORD;
+            fr.Flags            = FR_DOWN|/*FR_MATCHCASE|*/FR_HIDEWHOLEWORD|FR_HIDEMATCHCASE;
             fr.lpstrFindWhat    = strFind;
             fr.lpstrReplaceWith = strRep;
             fr.wReplaceWithLen  = fr.wFindWhatLen = 80;
@@ -1016,14 +1016,25 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     if( (pfr->Flags & FR_FINDNEXT) )
     {
-        DebugWndPrintf("FR_FINDNEXT:%s,%d\r\n",pfr->lpstrFindWhat,pfr->wFindWhatLen);
+        static BOOL bFindExec;
 
-        if( EditWndFindDataSet( mainWndData.hWndIo, pfr->lpstrFindWhat, pfr->wFindWhatLen )  )
+        if( !bFindExec )
         {
+            bFindExec = TRUE;
+            DebugWndPrintf("FR_FINDNEXT:%s,%d\r\n",pfr->lpstrFindWhat,pfr->wFindWhatLen);
+
+            if( EditWndFindDataSet(mainWndData.hWndIo,pfr->lpstrFindWhat,pfr->wFindWhatLen,(pfr->Flags&FR_DOWN)?FALSE:TRUE) )
+            {
+            }
+            else
+            {
+                okMessage(hwnd, TEXT("\"%s\" が見つかりません。"),pfr->lpstrFindWhat);
+            }
+            bFindExec = FALSE;
         }
         else
         {
-            okMessage(hwnd, TEXT("\"%s\" が見つかりません。"),pfr->lpstrFindWhat);
+            /* do nothing */
         }
     }
     else
@@ -1094,26 +1105,36 @@ onDefault( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 内容  :
  * 引数  : HWND hwnd
  * 引数  : TCHAR *szMessageFormat, ...
- * 戻り値: なし
+ * 戻り値: int
  ***************************************/
-void
+int
 okMessage( HWND hwnd, TCHAR *szMessageFormat, ... )
 {
     va_list vaArgs;
     TCHAR szBuffer[64 + MAX_PATH] ;
+    BOOL bResult = (BOOL)FALSE;
 
     va_start(vaArgs, szMessageFormat);
-
     if( wvsprintf(szBuffer, szMessageFormat, vaArgs) != EOF )
     {
-        MessageBox( hwnd, szBuffer, GetAppName(), MB_OK | MB_ICONINFORMATION ) ;
+        bResult = (BOOL)TRUE;
     }
     else
     {
         /* do nothing */
     }
-
     va_end(vaArgs);
+
+    if( bResult )
+    {
+        /* do nothing */
+    }
+    else
+    {
+        szBuffer[0] = '\0';
+    }
+
+    return MessageBox( hwnd, szBuffer, GetAppName(), MB_OK | MB_ICONINFORMATION );
 }
 
 /********************************************************************************

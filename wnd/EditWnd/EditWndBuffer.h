@@ -249,9 +249,10 @@ BOOL EditWndBuffSelectAll( H_EDITWND_BUFF hEditWndBuff );
  * à¯êî  : H_EDITWND_BUFF hEditWndBuff
  * à¯êî  : TCHAR* dataPtr
  * à¯êî  : DWORD  length
+ * à¯êî  : BOOL bDirectionUp
  * ñﬂÇËíl: BOOL
  ***************************************/
-BOOL EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length );
+BOOL EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp );
 
 #define EDITWND_BUFFER_H
 #endif /* EDITWND_BUFFER_H */
