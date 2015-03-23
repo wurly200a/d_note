@@ -299,8 +299,6 @@ EditWndFindDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp )
 
     rtn = EditWndBuffFindDataSet( editWndDataPtr->hEditWndBuff, dataPtr, length, bDirectionUp );
 
-    SendMessage(GetParent(hwnd), (UINT)WM_COMMAND, MAKEWPARAM(0,EN_CHANGE), (LPARAM)hwnd);
-
     setAllScrollInfo(hwnd);
 
 #if 1 /* editOnKeyDown()の処理からコピーしてきたもの。できれば関数化  */
