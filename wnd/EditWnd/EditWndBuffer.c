@@ -193,6 +193,7 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
 
     if( (dataPtr != NULL) && (length > 0) )
     { /* データ有りの場合 */
+        DebugWndPrintf("EditWndBuffDataSet,0x%02X,%d\r\n",(BYTE)*dataPtr,length);
 
         /* 改行で分割したデータを仮連結リスト(tempTopPtr～tempEndPtr)に登録(ここから) */
         while( lineLengthSum < length )
@@ -958,27 +959,28 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
 
     if( (h->lineData.nowPtr) != NULL )
     {
+        DebugWndPrintf("EditWndBuffRemoveData,");
+
         if( (h->lineData.selectPtr) != NULL )
         { /* 選択開始位置有り */
-            if( ((h->lineData.selectPtr)->lineNum) == ((h->lineData.nowPtr)->lineNum) )
-            { /* 同一行内で選択 */
-                if( (h->lineData.nowPtr) == (h->lineData.selectPtr) )
+            if( ((h->lineData.nowPtr) == (h->lineData.selectPtr)) &&
+                (((h->lineData.nowPtr)->lineNum) == ((h->lineData.selectPtr)->lineNum)) )
+            { /* 選択範囲は同一行内 */
+                if( (h->lineData.nowPtr)->caretDataPos < (h->lineData.selectCaretPos) )
+                { /* キャレット位置＜選択開始位置 */
+                    removeSize += ((h->lineData.selectCaretPos) - (h->lineData.nowPtr)->caretDataPos);
+                    saveCaretPos = (h->lineData.nowPtr)->caretDataPos;
+                    (h->lineData.nowPtr)->caretDataPos = (h->lineData.selectCaretPos);
+                    (h->lineData.selectCaretPos) = saveCaretPos;
+                }
+                else
+                { /* 通常(選択開始位置≦キャレット位置) */
+                    removeSize += ((h->lineData.nowPtr)->caretDataPos - (h->lineData.selectCaretPos));
+                }
+
+                if( removeSize )
                 {
-                    if( (h->lineData.nowPtr)->caretDataPos < (h->lineData.selectCaretPos) )
-                    {
-                        removeSize += ((h->lineData.selectCaretPos) - (h->lineData.nowPtr)->caretDataPos);
-                        saveCaretPos = (h->lineData.nowPtr)->caretDataPos;
-                        (h->lineData.nowPtr)->caretDataPos = (h->lineData.selectCaretPos);
-                        (h->lineData.selectCaretPos) = saveCaretPos;
-                    }
-                    else if( (h->lineData.nowPtr)->caretDataPos > (h->lineData.selectCaretPos) )
-                    {
-                        removeSize += ((h->lineData.nowPtr)->caretDataPos - (h->lineData.selectCaretPos));
-                    }
-                    else
-                    {
-                        nop();
-                    }
+                    DebugWndPrintf("0x%02X,%d\r\n",(BYTE)(h->lineData.nowPtr)->data[h->lineData.selectCaretPos],removeSize);
 
                     divideData( (h->lineData.nowPtr), &dividePrePtr, &dividePostPtr ); /* キャレット位置で分割 */
                     newPtr = shortenData( dividePrePtr, removeSize );                 /* 分割後の前方データの末尾から所定量削除 */
@@ -1002,7 +1004,7 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
                 }
             }
             else
-            {
+            { /* 選択範囲が複数行にまたがっている */
                 if( ((h->lineData.selectPtr)->lineNum) < ((h->lineData.nowPtr)->lineNum) )
                 { /* 正方向に選択 */
                     nop();
@@ -1028,6 +1030,7 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
                 if( (h->lineData.selectCaretPos) == 0 )
                 { /* 選択位置が先頭だったら、1行丸々削除 */
                     removeLineData( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.selectPtr));
+                    destroyBuffLineData( (h->lineData.selectPtr) );
                 }
                 else
                 {
@@ -1151,6 +1154,8 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
 
             if( bValid )
             { /* 削除有効 */
+                DebugWndPrintf("0x%02X,%d\r\n",(BYTE)(h->lineData.nowPtr)->data[(h->lineData.nowPtr)->caretDataPos-removeSize],removeSize);
+
                 divideData( (h->lineData.nowPtr), &dividePrePtr, &dividePostPtr ); /* キャレット位置で分割 */
                 newPtr = shortenData( dividePrePtr, removeSize );                 /* 分割後の前方データの末尾から所定量削除 */
                 destroyBuffLineData( dividePrePtr );                                 /* 前方データを */
@@ -1169,7 +1174,7 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
             }
             else
             {
-                nop();
+                DebugWndPrintf("No Action\r\n");
             }
         }
     }
