@@ -936,13 +936,13 @@ editOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             default:
                 /* •¶Žš“ü—Í */
                 data[0] = (TCHAR)wParam;
-            size = 1;
-            rect.left   = (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar;
-            rect.top    = (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar;
-            rect.right  = editWndDataPtr->cxClient;
-            rect.bottom = rect.top + editWndDataPtr->cyChar;
-            bRectSelect = TRUE;
-            break;
+                size = 1;
+                rect.left   = (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar;
+                rect.top    = (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar;
+                rect.right  = editWndDataPtr->cxClient;
+                rect.bottom = rect.top + editWndDataPtr->cyChar;
+                bRectSelect = TRUE;
+                break;
             }
 
             if( size )
