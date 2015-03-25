@@ -5,6 +5,7 @@
 
 /* 外部関数定義 */
 #include "EditWndBuffer.h"
+#include "DebugWnd.h"
 
 /* 外部変数定義 */
 
@@ -358,6 +359,9 @@ IsEditWndMessage( MSG *msg )
 LRESULT CALLBACK
 EditWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
+#if 0
+    DebugWndPrintf("EditWndProc,%X,%X,%X\r\n",message,wParam,lParam);
+#endif
     return editWndProcTbl[editWndConvertMSGtoINDEX(message)]( hwnd, message, wParam, lParam );
 }
 

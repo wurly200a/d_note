@@ -957,10 +957,10 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
     BOOL bNormalDelete = FALSE;
     H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
+    DebugWndPrintf("EditWndBuffRemoveData,");
+
     if( (h->lineData.nowPtr) != NULL )
     {
-        DebugWndPrintf("EditWndBuffRemoveData,");
-
         if( (h->lineData.selectPtr) != NULL )
         { /* 選択開始位置有り */
             if( ((h->lineData.nowPtr) == (h->lineData.selectPtr)) &&
@@ -1093,12 +1093,12 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
                         }
                         else
                         {
-                            nop();
+                            DebugWndPrintf("Bug!!!\r\n");
                         }
                     }
                     else
                     {
-                        nop();
+                        DebugWndPrintf("No Action(Position 0,0)\r\n");
                     }
                 }
             }
@@ -1174,13 +1174,13 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
             }
             else
             {
-                DebugWndPrintf("No Action\r\n");
+                nop();
             }
         }
     }
     else
     {
-        nop();
+        DebugWndPrintf("No Action(Empty)\r\n");
     }
 }
 

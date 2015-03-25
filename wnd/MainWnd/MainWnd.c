@@ -196,6 +196,9 @@ IsMainWndMessage( MSG *msgPtr )
 LRESULT CALLBACK
 WndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
+#if 0
+    DebugWndPrintf("WndProc,%X,%X,%X\r\n",message,wParam,lParam);
+#endif
     return wndProcTbl[convertMSGtoINDEX(message)]( hwnd, message, wParam, lParam );
 }
 
