@@ -954,7 +954,7 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
     DWORD removeSize = 0,saveCaretPos;
     S_BUFF_LINE_DATA *newPtr = NULL,*prevPtr = NULL,*nextPtr = NULL,*nowPtr = NULL,*savePtr;
     S_BUFF_LINE_DATA *dividePrePtr,*dividePostPtr;
-    BOOL bValid = FALSE;
+    BOOL bNormalDelete = FALSE;
     H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     if( (h->lineData.nowPtr) != NULL )
@@ -1058,7 +1058,7 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
             { /* BSキー */
                 if( (h->lineData.nowPtr)->caretDataPos > 0  )
                 {
-                    bValid = TRUE;
+                    bNormalDelete = TRUE;
 
                     if( detectCharSet((h->lineData.nowPtr),(h->lineData.nowPtr)->caretDataPos-1) == DOUBLE_CHAR_LOW )
                     { /* 次の文字で削除量を判断 */
@@ -1106,7 +1106,7 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
             { /* DELキー */
                 if( (h->lineData.nowPtr)->caretDataPos != ((h->lineData.nowPtr)->dataSize - (h->lineData.nowPtr)->newLineCodeSize) )
                 {
-                    bValid = TRUE;
+                    bNormalDelete = TRUE;
 
                     if( detectCharSet((h->lineData.nowPtr),(h->lineData.nowPtr)->caretDataPos) == DOUBLE_CHAR_HIGH )
                     { /* キャレット位置の文字で削除量を判断 */
@@ -1152,7 +1152,7 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
                 }
             }
 
-            if( bValid )
+            if( bNormalDelete )
             { /* 削除有効 */
                 DebugWndPrintf("0x%02X,%d\r\n",(BYTE)(h->lineData.nowPtr)->data[(h->lineData.nowPtr)->caretDataPos-removeSize],removeSize);
 
