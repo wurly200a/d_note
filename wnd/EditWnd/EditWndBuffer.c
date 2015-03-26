@@ -1105,7 +1105,7 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
             else
             { /* DELキー */
                 if( (h->lineData.nowPtr)->caretDataPos != ((h->lineData.nowPtr)->dataSize - (h->lineData.nowPtr)->newLineCodeSize) )
-                {
+                { /* キャレットが行の最終位置でない */
                     bNormalDelete = TRUE;
 
                     if( detectCharSet((h->lineData.nowPtr),(h->lineData.nowPtr)->caretDataPos) == DOUBLE_CHAR_HIGH )
@@ -1121,7 +1121,7 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
                 else
                 { /* キャレットが行の最終位置。つまり、次行との結合。*/
                     if( (h->lineData.nowPtr)->header.nextPtr != NULL )
-                    {
+                    { /* 次行有り */
                         nextPtr = (S_BUFF_LINE_DATA *)(h->lineData.nowPtr)->header.nextPtr;
                         newPtr = joinData( (h->lineData.nowPtr),nextPtr ); /* 本行と次行を結合した新しい行データを生成 */
 
@@ -1146,8 +1146,8 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
                         }
                     }
                     else
-                    {
-                        nop();
+                    { /* 次行無し */
+                        DebugWndPrintf("No Action(DEL at LastPos)\r\n");
                     }
                 }
             }
