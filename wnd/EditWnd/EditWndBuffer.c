@@ -193,7 +193,7 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
 
     if( (dataPtr != NULL) && (length > 0) )
     { /* データ有りの場合 */
-        DebugWndPrintf("EditWndBuffDataSet,0x%02X,%d\r\n",(BYTE)*dataPtr,length);
+        DebugWndPrintf("EditWndBuffDataSet,");
 
         /* 改行で分割したデータを仮連結リスト(tempTopPtr～tempEndPtr)に登録(ここから) */
         while( lineLengthSum < length )
@@ -214,6 +214,7 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
 
         if( (h->lineData.nowPtr)->caretDataPos == 0 )
         { /* 行の先頭に挿入 */
+            DebugWndPrintf("Top,");
             insertLineData(&(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr),&tempTopPtr,&tempEndPtr);
 
             if( tempEndPtr->newLineCodeSize == 0 )
@@ -353,6 +354,8 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
                 nop();
             }
         }
+
+        DebugWndPrintf("0x%02X,%d\r\n",(BYTE)*dataPtr,length);
     }
     else
     { /* データ無しの場合 */
@@ -1407,6 +1410,22 @@ EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD lengt
     }
 
     return rtn;
+}
+
+/********************************************************************************
+ * 内容  : EDITウィンドウバッファのUndo
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
+ * 戻り値: BOOL
+ ***************************************/
+BOOL
+EditWndBuffUndo( H_EDITWND_BUFF hEditWndBuff )
+{
+    H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
+    BOOL rtn = (BOOL)FALSE;
+
+    DebugWndPrintf("EditWndBuffUndo,");
+
+    return (BOOL)rtn;
 }
 
 /********************************************************************************

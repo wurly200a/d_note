@@ -1653,6 +1653,9 @@ static LRESULT
 editOnUndo( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+
+    EditWndBuffUndo(editWndDataPtr->hEditWndBuff);
 
     return rtn;
 }

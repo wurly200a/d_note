@@ -254,5 +254,12 @@ BOOL EditWndBuffSelectAll( H_EDITWND_BUFF hEditWndBuff );
  ***************************************/
 BOOL EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp );
 
+/********************************************************************************
+ * 内容  : EDITウィンドウバッファのUndo
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
+ * 戻り値: BOOL
+ ***************************************/
+BOOL EditWndBuffUndo( H_EDITWND_BUFF hEditWndBuff );
+
 #define EDITWND_BUFFER_H
 #endif /* EDITWND_BUFFER_H */
