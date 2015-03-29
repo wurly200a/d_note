@@ -53,7 +53,7 @@ static void addLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtr
 static void removeLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *dataPtr );
 static void insertLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA **insertTopPtrPtr, S_BUFF_LINE_DATA **insertEndPtrPtr );
 static S_BUFF_LINE_DATA *replaceLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA *dataPtr );
-static void clearBuffLineData( H_EDITWND_BUFF_LOCAL h );
+static void clearBuffLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr );
 
 /* 内部変数定義 */
 
@@ -121,7 +121,7 @@ EditWndBuffInit( H_EDITWND_BUFF hEditWndBuff )
     H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
     S_BUFF_LINE_DATA *lineDataPtr;
 
-    clearBuffLineData(h);
+    clearBuffLineData(&(h->lineData.topPtr),&(h->lineData.endPtr));
 
     /* 空データを追加 */
     lineDataPtr = createBuffLineData( 0, 0, NULL, 0, 0 );
@@ -149,7 +149,7 @@ EditWndBuffEnd( H_EDITWND_BUFF hEditWndBuff )
 {
     H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
-    clearBuffLineData(h);
+    clearBuffLineData(&(h->lineData.topPtr),&(h->lineData.endPtr));
 }
 
 /********************************************************************************
@@ -2110,18 +2110,19 @@ replaceLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_B
 
 /********************************************************************************
  * 内容  : バッファデータのクリア
- * 引数  : H_EDITWND_BUFF_LOCAL h
+ * 引数  : S_BUFF_LINE_DATA **topPtrPtr 先頭データをつなぐポインタ(のポインタ)
+ * 引数  : S_BUFF_LINE_DATA **endPtrPtr 最終データをつなぐポインタ(のポインタ)
  * 戻り値: なし
  ***************************************/
 static void
-clearBuffLineData( H_EDITWND_BUFF_LOCAL h )
+clearBuffLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr )
 {
     S_BUFF_LINE_DATA *lineDataPtr,*nextPtr;
 
-    lineDataPtr = h->lineData.topPtr;
+    lineDataPtr = *topPtrPtr;
     while( lineDataPtr != NULL )
     {
-        nextPtr = (S_BUFF_LINE_DATA *)RemoveLinkedList((S_LIST_HEADER **)&(h->lineData.topPtr),(S_LIST_HEADER **)&(h->lineData.endPtr),(S_LIST_HEADER *)lineDataPtr);
+        nextPtr = (S_BUFF_LINE_DATA *)RemoveLinkedList((S_LIST_HEADER **)topPtrPtr,(S_LIST_HEADER **)endPtrPtr,(S_LIST_HEADER *)lineDataPtr);
         destroyBuffLineData(lineDataPtr);
         lineDataPtr = nextPtr;
     }
