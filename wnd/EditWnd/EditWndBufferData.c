@@ -19,7 +19,7 @@
  * 戻り値: なし
  ***************************************/
 void
-addLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *dataPtr )
+EditWndBufferAddLinkedList( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *dataPtr )
 {
     if( *topPtrPtr == NULL )
     {
@@ -48,7 +48,7 @@ addLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_
  * 戻り値: S_BUFF_LINE_DATA *           削除した次のデータ
  ***************************************/
 void
-removeLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *dataPtr )
+EditWndBufferRemoveLinkedList( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *dataPtr )
 {
     S_BUFF_LINE_DATA *removeNextPtr;
 
@@ -81,7 +81,7 @@ removeLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BU
  * 戻り値: void
  ***************************************/
 void
-insertLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA **insertTopPtrPtr, S_BUFF_LINE_DATA **insertEndPtrPtr )
+EditWndBufferInsertLinkedList( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA **insertTopPtrPtr, S_BUFF_LINE_DATA **insertEndPtrPtr )
 {
     if( (nowPtr != NULL) && (insertTopPtrPtr != NULL) )
     {
@@ -105,7 +105,7 @@ insertLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BU
  * 戻り値: 置き換えたデータ
  ***************************************/
 S_BUFF_LINE_DATA *
-replaceLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA *dataPtr )
+EditWndBufferReplaceLinkedList( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA *dataPtr )
 {
     if( (topPtrPtr != NULL) && (endPtrPtr != NULL) && (nowPtr != NULL) && (dataPtr != NULL) )
     {
@@ -127,7 +127,7 @@ replaceLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_B
  * 戻り値: なし
  ***************************************/
 void
-clearBuffLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr )
+EditWndBufferAllRemoveLinkedList( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr )
 {
     S_BUFF_LINE_DATA *lineDataPtr,*nextPtr;
 

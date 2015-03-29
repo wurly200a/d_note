@@ -17,7 +17,7 @@ typedef struct tag_buffer_line_data
  * 引数  : S_BUFF_LINE_DATA *dataPtr つなぐデータ
  * 戻り値: なし
  ***************************************/
-void addLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *dataPtr );
+void EditWndBufferAddLinkedList( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *dataPtr );
 
 /********************************************************************************
  * 内容  : 行データを削除する
@@ -26,7 +26,7 @@ void addLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_
  * 引数  : S_BUFF_LINE_DATA *dataPtr    削除するデータ
  * 戻り値: S_BUFF_LINE_DATA *           削除した次のデータ
  ***************************************/
-void removeLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *dataPtr );
+void EditWndBufferRemoveLinkedList( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *dataPtr );
 
 /********************************************************************************
  * 内容  : 行データの挿入
@@ -37,7 +37,7 @@ void removeLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr,
  * 引数  : S_BUFF_LINE_DATA **insertEndPtrPtr
  * 戻り値: void
  ***************************************/
-void insertLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA **insertTopPtrPtr, S_BUFF_LINE_DATA **insertEndPtrPtr );
+void EditWndBufferInsertLinkedList( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA **insertTopPtrPtr, S_BUFF_LINE_DATA **insertEndPtrPtr );
 
 /********************************************************************************
  * 内容  : 行データを置き換える
@@ -47,7 +47,7 @@ void insertLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr,
  * 引数  : S_BUFF_LINE_DATA *dataPtr    置き換えるデータ
  * 戻り値: 置き換えたデータ
  ***************************************/
-S_BUFF_LINE_DATA * replaceLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA *dataPtr );
+S_BUFF_LINE_DATA * EditWndBufferReplaceLinkedList( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA *dataPtr );
 
 /********************************************************************************
  * 内容  : バッファデータのクリア
@@ -55,7 +55,7 @@ S_BUFF_LINE_DATA * replaceLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DA
  * 引数  : S_BUFF_LINE_DATA **endPtrPtr 最終データをつなぐポインタ(のポインタ)
  * 戻り値: なし
  ***************************************/
-void clearBuffLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr );
+void EditWndBufferAllRemoveLinkedList( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr );
 
 /********************************************************************************
  * 内容  : 行データの生成
