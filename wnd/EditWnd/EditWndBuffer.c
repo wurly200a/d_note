@@ -3,6 +3,7 @@
 /* 個別インクルードファイル */
 #include "DebugWnd.h"
 #include "LinkedList.h"
+#include "EditWndBufferDataType.h"
 
 /* 外部関数定義 */
 
@@ -10,16 +11,6 @@
 
 /* 内部関数定義 */
 #include "EditWndBuffer.h"
-
-typedef struct tag_buffer_line_data
-{
-    S_LIST_HEADER header         ;
-    DWORD         lineNum        ; /* Y位置            */
-    DWORD         caretDataPos   ; /* X位置            */
-    DWORD         dataSize       ; /* データサイズ     */
-    INT           newLineCodeSize; /* 改行コードサイズ */
-    TCHAR         data[]         ;
-} S_BUFF_LINE_DATA;
 
 typedef struct tagS_EDITWND_BUFF_LOCAL
 {
@@ -38,22 +29,10 @@ typedef struct tagS_EDITWND_BUFF_LOCAL
 } S_EDITWND_BUFF_LOCAL;
 typedef S_EDITWND_BUFF_LOCAL * H_EDITWND_BUFF_LOCAL;
 
-static S_BUFF_LINE_DATA *createBuffLineData( DWORD size, INT newLineCodeSize, TCHAR *dataPtr, DWORD lineNum, DWORD caretPos );
-static void destroyBuffLineData( S_BUFF_LINE_DATA *dataPtr );
 static S_BUFF_LINE_DATA *getBuffLine( H_EDITWND_BUFF_LOCAL h, TCHAR *dataPtr, DWORD maxLength );
-static S_BUFF_LINE_DATA *joinData( S_BUFF_LINE_DATA *data1Ptr, S_BUFF_LINE_DATA *data2Ptr );
-static void divideData( S_BUFF_LINE_DATA *dataPtr, S_BUFF_LINE_DATA **new1PtrPtr, S_BUFF_LINE_DATA **new2PtrPtr );
-static S_BUFF_LINE_DATA *shortenData( S_BUFF_LINE_DATA *dataPtr, DWORD size );
 static CHARSET_TYPE detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset );
 static DWORD getCaretDispXpos( H_EDITWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dataPos );
 static BOOL getDispCharData( H_EDITWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
-static void updateLineNum( S_BUFF_LINE_DATA *dataPtr );
-
-static void addLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *dataPtr );
-static void removeLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *dataPtr );
-static void insertLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA **insertTopPtrPtr, S_BUFF_LINE_DATA **insertEndPtrPtr );
-static S_BUFF_LINE_DATA *replaceLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA *dataPtr );
-static void clearBuffLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr );
 
 /* 内部変数定義 */
 
@@ -1419,58 +1398,6 @@ EditWndBuffUndo( H_EDITWND_BUFF hEditWndBuff )
 }
 
 /********************************************************************************
- * 内容  : 行データの生成
- * 引数  : DWORD size          データサイズ(改行コード含む)
- * 引数  : INT newLineCodeSize 改行コードサイズ
- * 引数  : TCHAR *dataPtr      データ(ポインタ)
- * 引数  : DWORD lineNum       行番号
- * 引数  : DWORD caretPos      キャレット位置
- * 戻り値: S_BUFF_LINE_DATA *
- ***************************************/
-static S_BUFF_LINE_DATA *
-createBuffLineData( DWORD size, INT newLineCodeSize, TCHAR *dataPtr, DWORD lineNum, DWORD caretPos )
-{
-    S_BUFF_LINE_DATA *newPtr = NULL;
-
-    newPtr = (S_BUFF_LINE_DATA *)malloc( sizeof(S_BUFF_LINE_DATA) + (size * sizeof(TCHAR)) + 1 );
-    if( newPtr != NULL )
-    {
-        memset( newPtr, sizeof(S_BUFF_LINE_DATA), 0 );
-        newPtr->lineNum         = lineNum;
-        newPtr->caretDataPos    = caretPos;
-        newPtr->dataSize        = size;
-        newPtr->newLineCodeSize = newLineCodeSize;
-
-        if( dataPtr != NULL )
-        {
-            memcpy( newPtr->data, dataPtr, size );
-        }
-        else
-        {
-            nop();
-        }
-        newPtr->data[size] = '\0';
-    }
-    else
-    {
-        nop();
-    }
-
-    return newPtr;
-}
-
-/********************************************************************************
- * 内容  : 行データの解放
- * 引数  : S_BUFF_LINE_DATA *
- * 戻り値: なし
- ***************************************/
-static void
-destroyBuffLineData( S_BUFF_LINE_DATA *dataPtr )
-{
-    free( dataPtr );
-}
-
-/********************************************************************************
  * 内容  : バッファ行データを取得
  * 引数  : H_EDITWND_BUFF_LOCAL h
  * 引数  : TCHAR *dataPtr  データの先頭
@@ -1536,91 +1463,6 @@ getBuffLine( H_EDITWND_BUFF_LOCAL h, TCHAR *dataPtr, DWORD maxLength )
     lineDataPtr = createBuffLineData( i, newLineCodeSize, dataPtr, 0, 0 );
 
     return lineDataPtr;
-}
-
-/********************************************************************************
- * 内容  : 行データの結合
- * 引数  : S_BUFF_LINE_DATA *data1Ptr (改行コードは削除される)
- * 引数  : S_BUFF_LINE_DATA *data2Ptr
- * 戻り値: S_BUFF_LINE_DATA *
- ***************************************/
-static S_BUFF_LINE_DATA *
-joinData( S_BUFF_LINE_DATA *data1Ptr, S_BUFF_LINE_DATA *data2Ptr )
-{
-    S_BUFF_LINE_DATA *newPtr = NULL;
-
-    if( (data1Ptr != NULL) && (data2Ptr != NULL) )
-    {
-        newPtr = createBuffLineData( data1Ptr->dataSize-data1Ptr->newLineCodeSize+data2Ptr->dataSize, data2Ptr->newLineCodeSize, data1Ptr->data, data1Ptr->lineNum, 0 );
-        if( newPtr != NULL )
-        {
-            memcpy( newPtr->data + data1Ptr->dataSize - data1Ptr->newLineCodeSize, data2Ptr->data, data2Ptr->dataSize );
-        }
-        else
-        {
-            nop();
-        }
-    }
-    else
-    {
-        nop();
-    }
-
-    return newPtr;
-}
-
-/********************************************************************************
- * 内容  : 行データの分割
- * 引数  : S_BUFF_LINE_DATA *dataPtr  分割するデータ
- * 引数  : S_BUFF_LINE_DATA **new1Ptr 分割後のデータ1(のポインタ) (メモリ確保する)
- * 引数  : S_BUFF_LINE_DATA **new2Ptr 分割後のデータ2(のポインタ) (メモリ確保する)
- * 戻り値: なし
- ***************************************/
-static void
-divideData( S_BUFF_LINE_DATA *dataPtr, S_BUFF_LINE_DATA **new1PtrPtr, S_BUFF_LINE_DATA **new2PtrPtr )
-{
-    if( (dataPtr != NULL) && (new1PtrPtr != NULL) && (new2PtrPtr != NULL) )
-    {
-        *new1PtrPtr = createBuffLineData( dataPtr->caretDataPos                  , 0                       , dataPtr->data                  , dataPtr->lineNum  , dataPtr->caretDataPos ); /* 改行より前 */
-        *new2PtrPtr = createBuffLineData( dataPtr->dataSize-dataPtr->caretDataPos, dataPtr->newLineCodeSize, dataPtr->data+dataPtr->caretDataPos, dataPtr->lineNum+1, 0                 ); /* 改行より後 */
-    }
-    else
-    {
-        nop();
-    }
-}
-
-/********************************************************************************
- * 内容  : 行データを短くする
- * 引数  : S_BUFF_LINE_DATA *dataPtr
- * 引数  : DWORD size
- * 戻り値: S_BUFF_LINE_DATA *
- ***************************************/
-static S_BUFF_LINE_DATA *
-shortenData( S_BUFF_LINE_DATA *dataPtr, DWORD size )
-{
-    S_BUFF_LINE_DATA *newPtr = NULL;
-
-    if( (dataPtr != NULL) &&
-        (dataPtr->dataSize >= size) )
-    {
-        newPtr = createBuffLineData( dataPtr->dataSize-size, dataPtr->newLineCodeSize, dataPtr->data, dataPtr->lineNum, dataPtr->caretDataPos );
-        if( newPtr != NULL )
-        {
-            /* 改行コードのコピー */
-            memcpy( newPtr->data + newPtr->dataSize - newPtr->newLineCodeSize, dataPtr->data + dataPtr->dataSize - dataPtr->newLineCodeSize, dataPtr->newLineCodeSize );
-        }
-        else
-        {
-            nop();
-        }
-    }
-    else
-    {
-        nop();
-    }
-
-    return newPtr;
 }
 
 /********************************************************************************
@@ -1973,157 +1815,3 @@ getDispCharData( H_EDITWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dispPo
     return TRUE;
 }
 
-/********************************************************************************
- * 内容  : 行番号の更新
- * 引数  : S_BUFF_LINE_DATA *dataPtr
- * 戻り値: なし
- ***************************************/
-static void
-updateLineNum( S_BUFF_LINE_DATA *dataPtr )
-{
-    S_BUFF_LINE_DATA *nowPtr;
-    DWORD i;
-
-    if( dataPtr != NULL )
-    {
-        i = dataPtr->lineNum;
-
-        for( nowPtr=dataPtr; (nowPtr != NULL); nowPtr=(S_BUFF_LINE_DATA *)nowPtr->header.nextPtr,i++ )
-        {
-            nowPtr->lineNum = i;
-        }
-    }
-    else
-    {
-        nop();
-    }
-}
-
-/********************************************************************************
- * 内容  : 行データを追加する
- * 引数  : S_LIST_HEADER **topPtrPtr 先頭データをつなぐポインタ(のポインタ)
- * 引数  : S_LIST_HEADER **topPtrPtr 最終データをつなぐポインタ(のポインタ)
- * 引数  : S_LIST_HEADER *dataPtr つなぐデータ
- * 戻り値: なし
- ***************************************/
-static void
-addLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *dataPtr )
-{
-    if( *topPtrPtr == NULL )
-    {
-        dataPtr->lineNum = 0;
-    }
-    else
-    {
-        if( *endPtrPtr != NULL )
-        {
-            dataPtr->lineNum = (*endPtrPtr)->lineNum+1;
-        }
-        else
-        {
-            nop(); /* 異常 */
-        }
-    }
-
-    AddLinkedList( (S_LIST_HEADER **)topPtrPtr, (S_LIST_HEADER **)endPtrPtr, (S_LIST_HEADER *)dataPtr );
-}
-
-/********************************************************************************
- * 内容  : 行データを削除する
- * 引数  : S_BUFF_LINE_DATA **topPtrPtr 先頭データがつないであるポインタ(のポインタ)
- * 引数  : S_BUFF_LINE_DATA **endPtrPtr 最終データをつないであるポインタ(のポインタ)
- * 引数  : S_BUFF_LINE_DATA *dataPtr    削除するデータ
- * 戻り値: S_BUFF_LINE_DATA *           削除した次のデータ
- ***************************************/
-static void
-removeLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *dataPtr )
-{
-    S_BUFF_LINE_DATA *removeNextPtr;
-
-    removeNextPtr = (S_BUFF_LINE_DATA *)RemoveLinkedList( (S_LIST_HEADER **)topPtrPtr,(S_LIST_HEADER **)endPtrPtr,(S_LIST_HEADER *)dataPtr );
-    if( removeNextPtr != NULL )
-    {
-        if( removeNextPtr->header.prevPtr != NULL )
-        {
-            updateLineNum( (S_BUFF_LINE_DATA *)removeNextPtr->header.prevPtr );
-        }
-        else
-        {
-            removeNextPtr->lineNum = 0;
-            updateLineNum( removeNextPtr );
-        }
-    }
-    else
-    {
-        nop();
-    }
-}
-
-/********************************************************************************
- * 内容  : 行データの挿入
- * 引数  : S_BUFF_LINE_DATA **topPtrPtr       先頭データをつなぐポインタ(のポインタ)
- * 引数  : S_BUFF_LINE_DATA **endPtrPtr       最終データをつなぐポインタ(のポインタ)
- * 引数  : S_BUFF_LINE_DATA *nowPtr           挿入位置
- * 引数  : S_BUFF_LINE_DATA **insertTopPtrPtr
- * 引数  : S_BUFF_LINE_DATA **insertEndPtrPtr
- * 戻り値: void
- ***************************************/
-static void
-insertLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA **insertTopPtrPtr, S_BUFF_LINE_DATA **insertEndPtrPtr )
-{
-    if( (nowPtr != NULL) && (insertTopPtrPtr != NULL) )
-    {
-        (*insertTopPtrPtr)->lineNum = nowPtr->lineNum;
-
-        InsertLinkedList((S_LIST_HEADER **)topPtrPtr,(S_LIST_HEADER **)endPtrPtr,(S_LIST_HEADER *)nowPtr,(S_LIST_HEADER **)insertTopPtrPtr,(S_LIST_HEADER **)insertEndPtrPtr);
-        updateLineNum( (*insertTopPtrPtr) );
-    }
-    else
-    {
-        nop();
-    }
-}
-
-/********************************************************************************
- * 内容  : 行データを置き換える
- * 引数  : S_BUFF_LINE_DATA **topPtrPtr 先頭データをつなぐポインタ(のポインタ)
- * 引数  : S_BUFF_LINE_DATA **endPtrPtr 最終データをつなぐポインタ(のポインタ)
- * 引数  : S_BUFF_LINE_DATA *nowPtr     置き換え対象のデータ
- * 引数  : S_BUFF_LINE_DATA *dataPtr    置き換えるデータ
- * 戻り値: 置き換えたデータ
- ***************************************/
-static S_BUFF_LINE_DATA *
-replaceLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr, S_BUFF_LINE_DATA *nowPtr, S_BUFF_LINE_DATA *dataPtr )
-{
-    if( (topPtrPtr != NULL) && (endPtrPtr != NULL) && (nowPtr != NULL) && (dataPtr != NULL) )
-    {
-        dataPtr->lineNum = nowPtr->lineNum;
-        dataPtr = (S_BUFF_LINE_DATA *)ReplaceLinkedList((S_LIST_HEADER **)topPtrPtr,(S_LIST_HEADER **)endPtrPtr,(S_LIST_HEADER *)nowPtr,(S_LIST_HEADER *)dataPtr);
-    }
-    else
-    {
-        nop();
-    }
-
-    return dataPtr;
-}
-
-/********************************************************************************
- * 内容  : バッファデータのクリア
- * 引数  : S_BUFF_LINE_DATA **topPtrPtr 先頭データをつなぐポインタ(のポインタ)
- * 引数  : S_BUFF_LINE_DATA **endPtrPtr 最終データをつなぐポインタ(のポインタ)
- * 戻り値: なし
- ***************************************/
-static void
-clearBuffLineData( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **endPtrPtr )
-{
-    S_BUFF_LINE_DATA *lineDataPtr,*nextPtr;
-
-    lineDataPtr = *topPtrPtr;
-    while( lineDataPtr != NULL )
-    {
-        nextPtr = (S_BUFF_LINE_DATA *)RemoveLinkedList((S_LIST_HEADER **)topPtrPtr,(S_LIST_HEADER **)endPtrPtr,(S_LIST_HEADER *)lineDataPtr);
-        destroyBuffLineData(lineDataPtr);
-        lineDataPtr = nextPtr;
-    }
-}
