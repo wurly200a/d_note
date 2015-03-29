@@ -33,6 +33,7 @@ static S_BUFF_LINE_DATA *getBuffLine( H_EDITWND_BUFF_LOCAL h, TCHAR *dataPtr, DW
 static CHARSET_TYPE detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset );
 static DWORD getCaretDispXpos( H_EDITWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dataPos );
 static BOOL getDispCharData( H_EDITWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
+static void setSelectPosNowPosToFar( H_EDITWND_BUFF_LOCAL h, BOOL bMinus, DWORD offset );
 
 /* 内部変数定義 */
 
@@ -1393,6 +1394,9 @@ EditWndBuffUndo( H_EDITWND_BUFF hEditWndBuff )
     BOOL rtn = (BOOL)FALSE;
 
     DebugWndPrintf("EditWndBuffUndo,");
+//    setSelectPosNowPosToFar(h,TRUE,3);
+    setSelectPosNowPosToFar(h,FALSE,3);
+    rtn = (BOOL)TRUE;
 
     return (BOOL)rtn;
 }
@@ -1815,3 +1819,78 @@ getDispCharData( H_EDITWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dispPo
     return TRUE;
 }
 
+/********************************************************************************
+ * 内容  : 現在のキャレットの位置から所定量移動した位置を選択する
+ * 引数  : H_EDITWND_BUFF_LOCAL h
+ * 引数  : BOOL                 bMinus
+ * 引数  : DWORD                offset
+ * 戻り値: なし
+ ***************************************/
+static void
+setSelectPosNowPosToFar( H_EDITWND_BUFF_LOCAL h, BOOL bMinus, DWORD offset )
+{
+    S_BUFF_LINE_DATA *nowPtr;
+    DWORD nowOffset;
+
+    if( (h->lineData.nowPtr) != NULL )
+    {
+        nowOffset = offset;
+
+        if( bMinus )
+        { /* 上方向 */
+            if( nowOffset <= (h->lineData.nowPtr)->caretDataPos )
+            { /* 同一行に含まれる*/
+                (h->lineData.selectPtr) = (h->lineData.nowPtr);
+                h->lineData.selectCaretPos = (h->lineData.nowPtr)->caretDataPos - nowOffset;
+            }
+            else
+            { /* 同一行に含まれない */
+                nowOffset -= (h->lineData.nowPtr)->caretDataPos;
+
+                for( nowPtr = (h->lineData.nowPtr)->header.prevPtr; nowPtr != NULL; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.prevPtr )
+                {
+                    if( nowOffset <= (nowPtr->dataSize-nowPtr->newLineCodeSize) )
+                    { /* この行に含まれる*/
+                        (h->lineData.selectPtr) = nowPtr;
+                        h->lineData.selectCaretPos = (nowPtr->dataSize-nowPtr->newLineCodeSize) - nowOffset;
+                        break;
+                    }
+                    else
+                    {
+                        nowOffset -= (nowPtr->dataSize-nowPtr->newLineCodeSize);
+                    }
+                }
+            }
+        }
+        else
+        { /* 下方向 */
+            if( (h->lineData.nowPtr)->caretDataPos + nowOffset <= ((h->lineData.nowPtr)->dataSize-(h->lineData.nowPtr)->newLineCodeSize)  )
+            { /* 同一行に含まれる*/
+                (h->lineData.selectPtr) = (h->lineData.nowPtr);
+                h->lineData.selectCaretPos = (h->lineData.nowPtr)->caretDataPos + nowOffset;
+            }
+            else
+            { /* 同一行に含まれない */
+                nowOffset -= ((h->lineData.nowPtr)->dataSize-(h->lineData.nowPtr)->newLineCodeSize) - (h->lineData.nowPtr)->caretDataPos;
+
+                for( nowPtr = (h->lineData.nowPtr)->header.nextPtr; nowPtr != NULL; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr )
+                {
+                    if( nowOffset <= (nowPtr->dataSize-nowPtr->newLineCodeSize) )
+                    { /* この行に含まれる*/
+                        (h->lineData.selectPtr) = nowPtr;
+                        h->lineData.selectCaretPos = nowOffset;
+                        break;
+                    }
+                    else
+                    {
+                        nowOffset -= (nowPtr->dataSize-nowPtr->newLineCodeSize);
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        nop(); /* 異常 */
+    }
+}
