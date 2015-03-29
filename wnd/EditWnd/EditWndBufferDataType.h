@@ -66,14 +66,14 @@ void EditWndBufferAllRemoveLinkedList( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE
  * 引数  : DWORD caretPos      キャレット位置
  * 戻り値: S_BUFF_LINE_DATA *
  ***************************************/
-S_BUFF_LINE_DATA * createBuffLineData( DWORD size, INT newLineCodeSize, TCHAR *dataPtr, DWORD lineNum, DWORD caretPos );
+S_BUFF_LINE_DATA * BuffLineDataCreate( DWORD size, INT newLineCodeSize, TCHAR *dataPtr, DWORD lineNum, DWORD caretPos );
 
 /********************************************************************************
  * 内容  : 行データの解放
  * 引数  : S_BUFF_LINE_DATA *
  * 戻り値: なし
  ***************************************/
-void destroyBuffLineData( S_BUFF_LINE_DATA *dataPtr );
+void BuffLineDataDestroy( S_BUFF_LINE_DATA *dataPtr );
 
 /********************************************************************************
  * 内容  : 行データの結合
@@ -81,7 +81,7 @@ void destroyBuffLineData( S_BUFF_LINE_DATA *dataPtr );
  * 引数  : S_BUFF_LINE_DATA *data2Ptr
  * 戻り値: S_BUFF_LINE_DATA *
  ***************************************/
-S_BUFF_LINE_DATA * joinData( S_BUFF_LINE_DATA *data1Ptr, S_BUFF_LINE_DATA *data2Ptr );
+S_BUFF_LINE_DATA * BuffLineDataJoin( S_BUFF_LINE_DATA *data1Ptr, S_BUFF_LINE_DATA *data2Ptr );
 
 /********************************************************************************
  * 内容  : 行データの分割
@@ -90,7 +90,7 @@ S_BUFF_LINE_DATA * joinData( S_BUFF_LINE_DATA *data1Ptr, S_BUFF_LINE_DATA *data2
  * 引数  : S_BUFF_LINE_DATA **new2Ptr 分割後のデータ2(のポインタ) (メモリ確保する)
  * 戻り値: なし
  ***************************************/
-void divideData( S_BUFF_LINE_DATA *dataPtr, S_BUFF_LINE_DATA **new1PtrPtr, S_BUFF_LINE_DATA **new2PtrPtr );
+void BuffLineDataDivide( S_BUFF_LINE_DATA *dataPtr, S_BUFF_LINE_DATA **new1PtrPtr, S_BUFF_LINE_DATA **new2PtrPtr );
 
 /********************************************************************************
  * 内容  : 行データを短くする
@@ -98,14 +98,14 @@ void divideData( S_BUFF_LINE_DATA *dataPtr, S_BUFF_LINE_DATA **new1PtrPtr, S_BUF
  * 引数  : DWORD size
  * 戻り値: S_BUFF_LINE_DATA *
  ***************************************/
-S_BUFF_LINE_DATA * shortenData( S_BUFF_LINE_DATA *dataPtr, DWORD size );
+S_BUFF_LINE_DATA * BuffLineDataShorten( S_BUFF_LINE_DATA *dataPtr, DWORD size );
 
 /********************************************************************************
  * 内容  : 行番号の更新
  * 引数  : S_BUFF_LINE_DATA *dataPtr
  * 戻り値: なし
  ***************************************/
-void updateLineNum( S_BUFF_LINE_DATA *dataPtr );
+void BuffLineDataUpdateLineNumAfter( S_BUFF_LINE_DATA *dataPtr );
 
 #define EDITWND_BUFFER_DATA_TYPE_H
 #endif /* EDITWND_BUFFER_DATA_TYPE_H */

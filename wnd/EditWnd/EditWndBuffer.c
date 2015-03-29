@@ -103,7 +103,7 @@ EditWndBuffInit( H_EDITWND_BUFF hEditWndBuff )
     EditWndBufferAllRemoveLinkedList(&(h->lineData.topPtr),&(h->lineData.endPtr));
 
     /* 空データを追加 */
-    lineDataPtr = createBuffLineData( 0, 0, NULL, 0, 0 );
+    lineDataPtr = BuffLineDataCreate( 0, 0, NULL, 0, 0 );
     if( lineDataPtr != NULL )
     {
         EditWndBufferAddLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),lineDataPtr );
@@ -188,16 +188,16 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
 
             if( tempEndPtr->newLineCodeSize == 0 )
             { /* 挿入データの最後に改行がなければ */
-                newPtr = joinData(tempEndPtr,(h->lineData.nowPtr)); /* 追加データの最終行と現在の行と結合した新たなデータ生成 */
+                newPtr = BuffLineDataJoin(tempEndPtr,(h->lineData.nowPtr)); /* 追加データの最終行と現在の行と結合した新たなデータ生成 */
                 if( newPtr != NULL )
                 {
                     targetPtr = (h->lineData.nowPtr);
                     (h->lineData.nowPtr) = EditWndBufferReplaceLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr),newPtr ); /* 現在の行を置き換え */
-                    destroyBuffLineData( targetPtr );                                                       /* 現在の行のデータを解放                   */
+                    BuffLineDataDestroy( targetPtr );                                                       /* 現在の行のデータを解放                   */
 
                     caretPos = tempEndPtr->dataSize - tempEndPtr->newLineCodeSize;           /* キャレット位置は追加データの最終行の最後 */
                     EditWndBufferRemoveLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),tempEndPtr); /* 最終行自体は不要なので連結リストから外す */
-                    destroyBuffLineData( tempEndPtr );
+                    BuffLineDataDestroy( tempEndPtr );
 
                     (h->lineData.nowPtr) = newPtr;                                            /* 結合したものを現在行とする */
                     (h->lineData.nowPtr)->caretDataPos = caretPos;                                /* キャレット位置は結合位置     */
@@ -215,7 +215,7 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
         else
         { /* 行の途中に挿入 */
             /* 現在の行をキャレット位置で分割(ここから) */
-            divideData( (h->lineData.nowPtr), &dividePrePtr, &dividePostPtr );
+            BuffLineDataDivide( (h->lineData.nowPtr), &dividePrePtr, &dividePostPtr );
             if( dividePrePtr != NULL )
             {
                 if( dividePostPtr != NULL )
@@ -223,7 +223,7 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
                     EditWndBufferReplaceLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr),dividePostPtr ); /* まず 古いデータを改行以降のデータに置き換え */
                     EditWndBufferInsertLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),dividePostPtr,&dividePrePtr,&dividePrePtr ); /* その前に改行前のデータを挿入 */
 
-                    destroyBuffLineData( (h->lineData.nowPtr) );
+                    BuffLineDataDestroy( (h->lineData.nowPtr) );
                     (h->lineData.nowPtr) = dividePostPtr;
                     (h->lineData.nowPtr)->caretDataPos = 0;
                     /* 現在の行をキャレット位置で分割(ここまで) */
@@ -233,14 +233,14 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
                         EditWndBufferInsertLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr),&tempEndPtr,&tempEndPtr );
 
                         /* 分割した前方データと、挿入データの先頭を結合(ここから) */
-                        newPtr = joinData( dividePrePtr, tempTopPtr );
+                        newPtr = BuffLineDataJoin( dividePrePtr, tempTopPtr );
                         if( newPtr != NULL )
                         {
                             targetPtr = tempTopPtr;
                             EditWndBufferReplaceLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),tempTopPtr,newPtr );
-                            destroyBuffLineData( targetPtr );
+                            BuffLineDataDestroy( targetPtr );
                             EditWndBufferRemoveLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),dividePrePtr);
-                            destroyBuffLineData( dividePrePtr );
+                            BuffLineDataDestroy( dividePrePtr );
                         }
                         else
                         {
@@ -250,15 +250,15 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
 
                         if( tempEndPtr->newLineCodeSize == 0 )
                         { /* 挿入データの最後に改行がなければ */
-                            newPtr = joinData(tempEndPtr,dividePostPtr); /* 追加データの最終行と改行以降の行と結合 */
+                            newPtr = BuffLineDataJoin(tempEndPtr,dividePostPtr); /* 追加データの最終行と改行以降の行と結合 */
                             if( newPtr != NULL )
                             {
                                 newPtr->caretDataPos = tempEndPtr->dataSize - tempEndPtr->newLineCodeSize;
                                 EditWndBufferReplaceLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),dividePostPtr,newPtr );
-                                destroyBuffLineData( dividePostPtr );
+                                BuffLineDataDestroy( dividePostPtr );
                                 (h->lineData.nowPtr) = newPtr;
                                 EditWndBufferRemoveLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),tempEndPtr);
-                                destroyBuffLineData( tempEndPtr );
+                                BuffLineDataDestroy( tempEndPtr );
                             }
                             else
                             {
@@ -277,15 +277,15 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
 
                         if( tempEndPtr->newLineCodeSize == 0 )
                         { /* 挿入データの最後に改行がなければ */
-                            newPtr = joinData(tempEndPtr,dividePostPtr); /* 追加データの最終行と改行以降の行と結合 */
+                            newPtr = BuffLineDataJoin(tempEndPtr,dividePostPtr); /* 追加データの最終行と改行以降の行と結合 */
                             if( newPtr != NULL )
                             {
                                 newPtr->caretDataPos = tempEndPtr->dataSize - tempEndPtr->newLineCodeSize;
                                 EditWndBufferReplaceLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),dividePostPtr,newPtr );
-                                destroyBuffLineData( dividePostPtr );
+                                BuffLineDataDestroy( dividePostPtr );
                                 (h->lineData.nowPtr) = newPtr;
                                 EditWndBufferRemoveLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),tempEndPtr);
-                                destroyBuffLineData( tempEndPtr );
+                                BuffLineDataDestroy( tempEndPtr );
                             }
                             else
                             {
@@ -298,14 +298,14 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
                         }
 
                         /* 分割した前方データと、挿入データの先頭を結合(ここから) */
-                        newPtr = joinData( dividePrePtr, tempTopPtr );
+                        newPtr = BuffLineDataJoin( dividePrePtr, tempTopPtr );
                         if( newPtr != NULL )
                         {
                             targetPtr = tempTopPtr;
                             EditWndBufferReplaceLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),tempTopPtr,newPtr );
-                            destroyBuffLineData( targetPtr );
+                            BuffLineDataDestroy( targetPtr );
                             EditWndBufferRemoveLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),dividePrePtr);
-                            destroyBuffLineData( dividePrePtr );
+                            BuffLineDataDestroy( dividePrePtr );
                         }
                         else
                         {
@@ -315,7 +315,7 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
                 }
                 else
                 {
-                    destroyBuffLineData( dividePrePtr );
+                    BuffLineDataDestroy( dividePrePtr );
                 }
             }
             else
@@ -954,20 +954,20 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
                 {
                     DebugWndPrintf("0x%02X,%d\r\n",(BYTE)(h->lineData.nowPtr)->data[h->lineData.selectCaretPos],removeSize);
 
-                    divideData( (h->lineData.nowPtr), &dividePrePtr, &dividePostPtr ); /* キャレット位置で分割 */
-                    newPtr = shortenData( dividePrePtr, removeSize );                 /* 分割後の前方データの末尾から所定量削除 */
-                    destroyBuffLineData( dividePrePtr );                                 /* 前方データを */
+                    BuffLineDataDivide( (h->lineData.nowPtr), &dividePrePtr, &dividePostPtr ); /* キャレット位置で分割 */
+                    newPtr = BuffLineDataShorten( dividePrePtr, removeSize );                 /* 分割後の前方データの末尾から所定量削除 */
+                    BuffLineDataDestroy( dividePrePtr );                                 /* 前方データを */
                     dividePrePtr = newPtr;                                            /* 書き換え     */
 
-                    newPtr = joinData( dividePrePtr, dividePostPtr );                 /* 再結合 */
+                    newPtr = BuffLineDataJoin( dividePrePtr, dividePostPtr );                 /* 再結合 */
                     newPtr->lineNum = (h->lineData.nowPtr)->lineNum;                   /* 行番号は同じ */
                     newPtr->caretDataPos = (h->lineData.nowPtr)->caretDataPos - removeSize;    /* キャレット位置は削除量分前方になる */
-                    destroyBuffLineData( dividePrePtr );                                 /* 作業データを削除 */
-                    destroyBuffLineData( dividePostPtr );                                /* 作業データを削除 */
+                    BuffLineDataDestroy( dividePrePtr );                                 /* 作業データを削除 */
+                    BuffLineDataDestroy( dividePostPtr );                                /* 作業データを削除 */
 
                     /* 古い行データと置き換える */
                     EditWndBufferReplaceLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr),newPtr );
-                    destroyBuffLineData( (h->lineData.nowPtr) );
+                    BuffLineDataDestroy( (h->lineData.nowPtr) );
                     (h->lineData.nowPtr) = newPtr;
                 }
                 else
@@ -996,29 +996,29 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
                 {
                     nextPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr;
                     EditWndBufferRemoveLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),nowPtr);
-                    destroyBuffLineData( nowPtr );
+                    BuffLineDataDestroy( nowPtr );
                 }
                 /* 先頭行のうち、選択位置から前を残す */
                 if( (h->lineData.selectCaretPos) == 0 )
                 { /* 選択位置が先頭だったら、1行丸々削除 */
                     EditWndBufferRemoveLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.selectPtr));
-                    destroyBuffLineData( (h->lineData.selectPtr) );
+                    BuffLineDataDestroy( (h->lineData.selectPtr) );
                 }
                 else
                 {
                     (h->lineData.selectPtr)->caretDataPos = (h->lineData.selectCaretPos);
-                    divideData( (h->lineData.selectPtr), &dividePrePtr, &dividePostPtr ); /* キャレット位置で分割 */
+                    BuffLineDataDivide( (h->lineData.selectPtr), &dividePrePtr, &dividePostPtr ); /* キャレット位置で分割 */
                     EditWndBufferReplaceLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.selectPtr),dividePrePtr );
-                    destroyBuffLineData( (h->lineData.selectPtr) );
+                    BuffLineDataDestroy( (h->lineData.selectPtr) );
                 }
 
                 /* 最終行のうち、選択位置から後を残す */
-                divideData( (h->lineData.nowPtr), &dividePrePtr, &dividePostPtr ); /* キャレット位置で分割 */
+                BuffLineDataDivide( (h->lineData.nowPtr), &dividePrePtr, &dividePostPtr ); /* キャレット位置で分割 */
                 EditWndBufferReplaceLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr),dividePostPtr );
-                destroyBuffLineData( (h->lineData.nowPtr) );
+                BuffLineDataDestroy( (h->lineData.nowPtr) );
                 (h->lineData.nowPtr) = dividePostPtr;
                 (h->lineData.nowPtr)->caretDataPos = 0;
-                updateLineNum( (h->lineData.nowPtr) );
+                BuffLineDataUpdateLineNumAfter( (h->lineData.nowPtr) );
             }
 
             (h->lineData.selectPtr) = NULL;
@@ -1046,7 +1046,7 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
                     if( (h->lineData.nowPtr)->header.prevPtr != NULL )
                     {
                         prevPtr = (S_BUFF_LINE_DATA *)(h->lineData.nowPtr)->header.prevPtr;
-                        newPtr = joinData( prevPtr,(h->lineData.nowPtr) ); /* 前行と本行を結合した新しい行データを生成 */
+                        newPtr = BuffLineDataJoin( prevPtr,(h->lineData.nowPtr) ); /* 前行と本行を結合した新しい行データを生成 */
 
                         if( newPtr != NULL )
                         {
@@ -1057,11 +1057,11 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
                             EditWndBufferRemoveLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr) ); /* 本行は削除 */
                             EditWndBufferReplaceLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),prevPtr,newPtr );    /* 前行は新しい行データに置き換える */
 
-                            destroyBuffLineData( (h->lineData.nowPtr) );
-                            destroyBuffLineData( prevPtr );
+                            BuffLineDataDestroy( (h->lineData.nowPtr) );
+                            BuffLineDataDestroy( prevPtr );
                             (h->lineData.nowPtr) = newPtr;
 
-                            updateLineNum( (h->lineData.nowPtr) );
+                            BuffLineDataUpdateLineNumAfter( (h->lineData.nowPtr) );
                         }
                         else
                         {
@@ -1095,7 +1095,7 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
                     if( (h->lineData.nowPtr)->header.nextPtr != NULL )
                     { /* 次行有り */
                         nextPtr = (S_BUFF_LINE_DATA *)(h->lineData.nowPtr)->header.nextPtr;
-                        newPtr = joinData( (h->lineData.nowPtr),nextPtr ); /* 本行と次行を結合した新しい行データを生成 */
+                        newPtr = BuffLineDataJoin( (h->lineData.nowPtr),nextPtr ); /* 本行と次行を結合した新しい行データを生成 */
 
                         if( newPtr != NULL )
                         {
@@ -1106,11 +1106,11 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
                             EditWndBufferRemoveLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),nextPtr );         /* 次行は削除 */
                             EditWndBufferReplaceLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr),newPtr ); /* 本行は新しい行データに置き換える */
 
-                            destroyBuffLineData( (h->lineData.nowPtr) );
-                            destroyBuffLineData( nextPtr );
+                            BuffLineDataDestroy( (h->lineData.nowPtr) );
+                            BuffLineDataDestroy( nextPtr );
                             (h->lineData.nowPtr) = newPtr;
 
-                            updateLineNum( (h->lineData.nowPtr) );
+                            BuffLineDataUpdateLineNumAfter( (h->lineData.nowPtr) );
                         }
                         else
                         {
@@ -1128,20 +1128,20 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
             { /* 削除有効 */
                 DebugWndPrintf("0x%02X,%d\r\n",(BYTE)(h->lineData.nowPtr)->data[(h->lineData.nowPtr)->caretDataPos-removeSize],removeSize);
 
-                divideData( (h->lineData.nowPtr), &dividePrePtr, &dividePostPtr ); /* キャレット位置で分割 */
-                newPtr = shortenData( dividePrePtr, removeSize );                 /* 分割後の前方データの末尾から所定量削除 */
-                destroyBuffLineData( dividePrePtr );                                 /* 前方データを */
+                BuffLineDataDivide( (h->lineData.nowPtr), &dividePrePtr, &dividePostPtr ); /* キャレット位置で分割 */
+                newPtr = BuffLineDataShorten( dividePrePtr, removeSize );                 /* 分割後の前方データの末尾から所定量削除 */
+                BuffLineDataDestroy( dividePrePtr );                                 /* 前方データを */
                 dividePrePtr = newPtr;                                            /* 書き換え     */
 
-                newPtr = joinData( dividePrePtr, dividePostPtr );                 /* 再結合 */
+                newPtr = BuffLineDataJoin( dividePrePtr, dividePostPtr );                 /* 再結合 */
                 newPtr->lineNum = (h->lineData.nowPtr)->lineNum;                   /* 行番号は同じ */
                 newPtr->caretDataPos = (h->lineData.nowPtr)->caretDataPos - removeSize;    /* キャレット位置は削除量分前方になる */
-                destroyBuffLineData( dividePrePtr );                                 /* 作業データを削除 */
-                destroyBuffLineData( dividePostPtr );                                /* 作業データを削除 */
+                BuffLineDataDestroy( dividePrePtr );                                 /* 作業データを削除 */
+                BuffLineDataDestroy( dividePostPtr );                                /* 作業データを削除 */
 
                 /* 古い行データと置き換える */
                 EditWndBufferReplaceLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr),newPtr );
-                destroyBuffLineData( (h->lineData.nowPtr) );
+                BuffLineDataDestroy( (h->lineData.nowPtr) );
                 (h->lineData.nowPtr) = newPtr;
             }
             else
@@ -1460,7 +1460,7 @@ getBuffLine( H_EDITWND_BUFF_LOCAL h, TCHAR *dataPtr, DWORD maxLength )
         }
     }
 
-    lineDataPtr = createBuffLineData( i, newLineCodeSize, dataPtr, 0, 0 );
+    lineDataPtr = BuffLineDataCreate( i, newLineCodeSize, dataPtr, 0, 0 );
 
     return lineDataPtr;
 }

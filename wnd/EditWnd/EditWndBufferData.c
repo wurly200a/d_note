@@ -57,12 +57,12 @@ EditWndBufferRemoveLinkedList( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **
     {
         if( removeNextPtr->header.prevPtr != NULL )
         {
-            updateLineNum( (S_BUFF_LINE_DATA *)removeNextPtr->header.prevPtr );
+            BuffLineDataUpdateLineNumAfter( (S_BUFF_LINE_DATA *)removeNextPtr->header.prevPtr );
         }
         else
         {
             removeNextPtr->lineNum = 0;
-            updateLineNum( removeNextPtr );
+            BuffLineDataUpdateLineNumAfter( removeNextPtr );
         }
     }
     else
@@ -88,7 +88,7 @@ EditWndBufferInsertLinkedList( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA **
         (*insertTopPtrPtr)->lineNum = nowPtr->lineNum;
 
         InsertLinkedList((S_LIST_HEADER **)topPtrPtr,(S_LIST_HEADER **)endPtrPtr,(S_LIST_HEADER *)nowPtr,(S_LIST_HEADER **)insertTopPtrPtr,(S_LIST_HEADER **)insertEndPtrPtr);
-        updateLineNum( (*insertTopPtrPtr) );
+        BuffLineDataUpdateLineNumAfter( (*insertTopPtrPtr) );
     }
     else
     {
@@ -135,7 +135,7 @@ EditWndBufferAllRemoveLinkedList( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA
     while( lineDataPtr != NULL )
     {
         nextPtr = (S_BUFF_LINE_DATA *)RemoveLinkedList((S_LIST_HEADER **)topPtrPtr,(S_LIST_HEADER **)endPtrPtr,(S_LIST_HEADER *)lineDataPtr);
-        destroyBuffLineData(lineDataPtr);
+        BuffLineDataDestroy(lineDataPtr);
         lineDataPtr = nextPtr;
     }
 }
@@ -150,7 +150,7 @@ EditWndBufferAllRemoveLinkedList( S_BUFF_LINE_DATA **topPtrPtr, S_BUFF_LINE_DATA
  * 戻り値: S_BUFF_LINE_DATA *
  ***************************************/
 S_BUFF_LINE_DATA *
-createBuffLineData( DWORD size, INT newLineCodeSize, TCHAR *dataPtr, DWORD lineNum, DWORD caretPos )
+BuffLineDataCreate( DWORD size, INT newLineCodeSize, TCHAR *dataPtr, DWORD lineNum, DWORD caretPos )
 {
     S_BUFF_LINE_DATA *newPtr = NULL;
 
@@ -187,7 +187,7 @@ createBuffLineData( DWORD size, INT newLineCodeSize, TCHAR *dataPtr, DWORD lineN
  * 戻り値: なし
  ***************************************/
 void
-destroyBuffLineData( S_BUFF_LINE_DATA *dataPtr )
+BuffLineDataDestroy( S_BUFF_LINE_DATA *dataPtr )
 {
     free( dataPtr );
 }
@@ -199,13 +199,13 @@ destroyBuffLineData( S_BUFF_LINE_DATA *dataPtr )
  * 戻り値: S_BUFF_LINE_DATA *
  ***************************************/
 S_BUFF_LINE_DATA *
-joinData( S_BUFF_LINE_DATA *data1Ptr, S_BUFF_LINE_DATA *data2Ptr )
+BuffLineDataJoin( S_BUFF_LINE_DATA *data1Ptr, S_BUFF_LINE_DATA *data2Ptr )
 {
     S_BUFF_LINE_DATA *newPtr = NULL;
 
     if( (data1Ptr != NULL) && (data2Ptr != NULL) )
     {
-        newPtr = createBuffLineData( data1Ptr->dataSize-data1Ptr->newLineCodeSize+data2Ptr->dataSize, data2Ptr->newLineCodeSize, data1Ptr->data, data1Ptr->lineNum, 0 );
+        newPtr = BuffLineDataCreate( data1Ptr->dataSize-data1Ptr->newLineCodeSize+data2Ptr->dataSize, data2Ptr->newLineCodeSize, data1Ptr->data, data1Ptr->lineNum, 0 );
         if( newPtr != NULL )
         {
             memcpy( newPtr->data + data1Ptr->dataSize - data1Ptr->newLineCodeSize, data2Ptr->data, data2Ptr->dataSize );
@@ -231,12 +231,12 @@ joinData( S_BUFF_LINE_DATA *data1Ptr, S_BUFF_LINE_DATA *data2Ptr )
  * 戻り値: なし
  ***************************************/
 void
-divideData( S_BUFF_LINE_DATA *dataPtr, S_BUFF_LINE_DATA **new1PtrPtr, S_BUFF_LINE_DATA **new2PtrPtr )
+BuffLineDataDivide( S_BUFF_LINE_DATA *dataPtr, S_BUFF_LINE_DATA **new1PtrPtr, S_BUFF_LINE_DATA **new2PtrPtr )
 {
     if( (dataPtr != NULL) && (new1PtrPtr != NULL) && (new2PtrPtr != NULL) )
     {
-        *new1PtrPtr = createBuffLineData( dataPtr->caretDataPos                  , 0                       , dataPtr->data                  , dataPtr->lineNum  , dataPtr->caretDataPos ); /* 改行より前 */
-        *new2PtrPtr = createBuffLineData( dataPtr->dataSize-dataPtr->caretDataPos, dataPtr->newLineCodeSize, dataPtr->data+dataPtr->caretDataPos, dataPtr->lineNum+1, 0                 ); /* 改行より後 */
+        *new1PtrPtr = BuffLineDataCreate( dataPtr->caretDataPos                  , 0                       , dataPtr->data                  , dataPtr->lineNum  , dataPtr->caretDataPos ); /* 改行より前 */
+        *new2PtrPtr = BuffLineDataCreate( dataPtr->dataSize-dataPtr->caretDataPos, dataPtr->newLineCodeSize, dataPtr->data+dataPtr->caretDataPos, dataPtr->lineNum+1, 0                 ); /* 改行より後 */
     }
     else
     {
@@ -251,14 +251,14 @@ divideData( S_BUFF_LINE_DATA *dataPtr, S_BUFF_LINE_DATA **new1PtrPtr, S_BUFF_LIN
  * 戻り値: S_BUFF_LINE_DATA *
  ***************************************/
 S_BUFF_LINE_DATA *
-shortenData( S_BUFF_LINE_DATA *dataPtr, DWORD size )
+BuffLineDataShorten( S_BUFF_LINE_DATA *dataPtr, DWORD size )
 {
     S_BUFF_LINE_DATA *newPtr = NULL;
 
     if( (dataPtr != NULL) &&
         (dataPtr->dataSize >= size) )
     {
-        newPtr = createBuffLineData( dataPtr->dataSize-size, dataPtr->newLineCodeSize, dataPtr->data, dataPtr->lineNum, dataPtr->caretDataPos );
+        newPtr = BuffLineDataCreate( dataPtr->dataSize-size, dataPtr->newLineCodeSize, dataPtr->data, dataPtr->lineNum, dataPtr->caretDataPos );
         if( newPtr != NULL )
         {
             /* 改行コードのコピー */
@@ -283,7 +283,7 @@ shortenData( S_BUFF_LINE_DATA *dataPtr, DWORD size )
  * 戻り値: なし
  ***************************************/
 void
-updateLineNum( S_BUFF_LINE_DATA *dataPtr )
+BuffLineDataUpdateLineNumAfter( S_BUFF_LINE_DATA *dataPtr )
 {
     S_BUFF_LINE_DATA *nowPtr;
     DWORD i;
