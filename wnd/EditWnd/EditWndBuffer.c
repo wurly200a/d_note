@@ -34,6 +34,7 @@ static CHARSET_TYPE detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset );
 static DWORD getCaretDispXpos( H_EDITWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dataPos );
 static BOOL getDispCharData( H_EDITWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
 static void setSelectPosNowPosToFar( H_EDITWND_BUFF_LOCAL h, BOOL bMinus, DWORD offset );
+static TCHAR *my_strstr( const TCHAR *strSource, const TCHAR *strTarget );
 
 /* 内部変数定義 */
 
@@ -1337,7 +1338,7 @@ EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD lengt
 #if 0
                 DebugWndPrintf("EditWndBuffFindDataSet:%s\r\n",nowPtr->data);
 #endif
-                ptr = (TCHAR *)strstr(nowPtr->data+nowDataPos,dataPtr);
+                ptr = (TCHAR *)my_strstr(nowPtr->data+nowDataPos,dataPtr);
 
                 if( ptr )
                 { /* 見つかった */
@@ -1359,7 +1360,7 @@ EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD lengt
 #if 0
                 DebugWndPrintf("EditWndBuffFindDataSet:%s\r\n",nowPtr->data);
 #endif
-                ptr = (TCHAR *)strstr(nowPtr->data,dataPtr); /* 暫定、各行、逆からサーチしなければならない */
+                ptr = (TCHAR *)my_strstr(nowPtr->data,dataPtr); /* 暫定、各行、逆からサーチしなければならない */
 
                 if( ptr )
                 { /* 見つかった */
@@ -1893,4 +1894,56 @@ setSelectPosNowPosToFar( H_EDITWND_BUFF_LOCAL h, BOOL bMinus, DWORD offset )
     {
         nop(); /* 異常 */
     }
+}
+
+/********************************************************************************
+ * 内容  :
+ * 引数  : const TCHAR *strSource
+ * 引数  : const TCHAR *strTarget
+ * 戻り値: TCHAR *
+ ***************************************/
+static TCHAR *
+my_strstr( const TCHAR *strSource, const TCHAR *strTarget )
+{
+    TCHAR *ptr = strSource;
+    TCHAR *rtnPtr = (TCHAR *)NULL;
+
+    for( ; *ptr != NULL; ptr++ )
+    {
+        if( *ptr == *strTarget )
+        { /* 先頭文字が一致 */
+            TCHAR *ptr1 = ptr;
+            TCHAR *ptr2 = strTarget;
+            BOOL bMatched = (BOOL)TRUE;
+
+            for( ; *ptr2 != NULL; ptr1++,ptr2++ )
+            {
+                if( *ptr1 == *ptr2 )
+                {
+                    nop();
+                }
+                else
+                {
+                    bMatched = FALSE;
+                    break;
+                }
+            }
+
+            if( bMatched )
+            {
+                rtnPtr = ptr;
+                break;
+            }
+            else
+            {
+                nop();
+            }
+        }
+        else
+        {
+            nop();
+        }
+    }
+
+    return rtnPtr;
 }
