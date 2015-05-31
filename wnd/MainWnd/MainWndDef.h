@@ -48,6 +48,8 @@ typedef struct
     UINT messageFindReplace;
     HWND hDlgModeless;
     HWND hWndDebug;
+    BOOL bFrUp;
+    BOOL bFrMatchCase;
 } S_MAINWND_DATA;
 
 #define MAINWND_DEF_H

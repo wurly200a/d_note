@@ -35,6 +35,7 @@ static DWORD getCaretDispXpos( H_EDITWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr
 static BOOL getDispCharData( H_EDITWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
 static void setSelectPosNowPosToFar( H_EDITWND_BUFF_LOCAL h, BOOL bMinus, DWORD offset );
 static TCHAR *my_strstr( const TCHAR *strSource, const TCHAR *strTarget, BOOL bMatchCase );
+static BOOL isMatch( TCHAR data1, TCHAR data2, BOOL bMatchCase );
 
 /* ì‡ïîïœêîíËã` */
 
@@ -1912,7 +1913,7 @@ my_strstr( const TCHAR *strSource, const TCHAR *strTarget, BOOL bMatchCase )
 
     for( ; *ptr != NULL; ptr++ )
     {
-        if( *ptr == *strTarget )
+        if( isMatch(*ptr,*strTarget,bMatchCase) )
         { /* êÊì™ï∂éöÇ™àÍív */
             TCHAR *ptr1 = ptr;
             TCHAR *ptr2 = strTarget;
@@ -1920,7 +1921,7 @@ my_strstr( const TCHAR *strSource, const TCHAR *strTarget, BOOL bMatchCase )
 
             for( ; *ptr2 != NULL; ptr1++,ptr2++ )
             {
-                if( *ptr1 == *ptr2 )
+                if( isMatch(*ptr1,*ptr2,bMatchCase) )
                 {
                     nop();
                 }
@@ -1950,28 +1951,38 @@ my_strstr( const TCHAR *strSource, const TCHAR *strTarget, BOOL bMatchCase )
     return rtnPtr;
 }
 
-#if 0
 /********************************************************************************
  * ì‡óe  :
- * à¯êî  : TCHAR data
+ * à¯êî  : TCHAR data1
+ * à¯êî  : TCHAR data2
  * ñﬂÇËíl: BOOL
  ***************************************/
 static BOOL
-isSingleChar( TCHAR data )
+isMatch( TCHAR data1, TCHAR data2, BOOL bMatchCase )
 {
     BOOL bResult = (BOOL)FALSE;
 
-    if( ( (BYTE)data <= (BYTE)0x80) ||
-        (((BYTE)0xA0 <= (BYTE)data) && ((BYTE)data <= (BYTE)0xDF)) ||
-        ((BYTE)0xF0 <= (BYTE)data) )
+    if( bMatchCase )
     {
-        bResult = (BOOL)TRUE;
+        if( data1 == data2 )
+        {
+            bResult = (BOOL)TRUE;
+        }
+        else
+        {
+            nop();
+        }
     }
     else
     {
-        nop();
+        if( ((isalpha(data1) ? tolower(data1) : data1) == (isalpha(data2) ? tolower(data2) : data2)) )
+        {
+            bResult = (BOOL)TRUE;
+        }
+        else
+        {
+        }
     }
 
     return bResult;
 }
-#endif
