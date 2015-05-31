@@ -636,7 +636,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         case IDM_EDIT_FIND:
             fr.lStructSize   = sizeof (FINDREPLACE);
             fr.hwndOwner     = hwnd;
-            fr.Flags         = FR_DOWN|/*FR_MATCHCASE|*/FR_HIDEWHOLEWORD|FR_HIDEMATCHCASE;
+            fr.Flags         = FR_DOWN|/*FR_MATCHCASE|*/FR_HIDEWHOLEWORD/*|FR_HIDEMATCHCASE*/;
             fr.lpstrFindWhat = strFind;
             fr.wFindWhatLen  = 80;
             mainWndData.hDlgModeless = FindText(&fr);
@@ -645,7 +645,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         case IDM_EDIT_REPLACE:
             fr.lStructSize      = sizeof(FINDREPLACE);
             fr.hwndOwner        = hwnd;
-            fr.Flags            = FR_DOWN|/*FR_MATCHCASE|*/FR_HIDEWHOLEWORD|FR_HIDEMATCHCASE;
+            fr.Flags            = FR_DOWN|/*FR_MATCHCASE|*/FR_HIDEWHOLEWORD/*|FR_HIDEMATCHCASE*/;
             fr.lpstrFindWhat    = strFind;
             fr.lpstrReplaceWith = strRep;
             fr.wReplaceWithLen  = fr.wFindWhatLen = 80;
@@ -1026,7 +1026,7 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             bFindExec = TRUE;
             DebugWndPrintf("FR_FINDNEXT:%s,%d\r\n",pfr->lpstrFindWhat,pfr->wFindWhatLen);
 
-            if( EditWndFindDataSet(mainWndData.hWndIo,pfr->lpstrFindWhat,pfr->wFindWhatLen,(pfr->Flags&FR_DOWN)?FALSE:TRUE) )
+            if( EditWndFindDataSet(mainWndData.hWndIo,pfr->lpstrFindWhat,pfr->wFindWhatLen,(pfr->Flags&FR_DOWN)?FALSE:TRUE,(pfr->Flags&FR_MATCHCASE)?TRUE:FALSE) )
             {
             }
             else

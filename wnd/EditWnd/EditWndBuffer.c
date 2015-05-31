@@ -34,7 +34,7 @@ static CHARSET_TYPE detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset );
 static DWORD getCaretDispXpos( H_EDITWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dataPos );
 static BOOL getDispCharData( H_EDITWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
 static void setSelectPosNowPosToFar( H_EDITWND_BUFF_LOCAL h, BOOL bMinus, DWORD offset );
-static TCHAR *my_strstr( const TCHAR *strSource, const TCHAR *strTarget );
+static TCHAR *my_strstr( const TCHAR *strSource, const TCHAR *strTarget, BOOL bMatchCase );
 
 /* 内部変数定義 */
 
@@ -1313,10 +1313,11 @@ EditWndBuffSelectAll( H_EDITWND_BUFF hEditWndBuff )
  * 引数  : TCHAR* dataPtr
  * 引数  : DWORD  length
  * 引数  : BOOL bDirectionUp
+ * 引数  : BOOL bMatchCase
  * 戻り値: BOOL
  ***************************************/
 BOOL
-EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp )
+EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp, BOOL bMatchCase )
 {
     H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
     BOOL rtn = (BOOL)FALSE;
@@ -1328,7 +1329,7 @@ EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD lengt
         DWORD findDataLen;
 
         findDataLen = min(length,strlen(dataPtr));
-        DebugWndPrintf("EditWndBuffFindDataSet,Target:%s,%d,%d\r\n",dataPtr,findDataLen,bDirectionUp);
+        DebugWndPrintf("EditWndBuffFindDataSet,Target:%s,%d,%d,%d\r\n",dataPtr,findDataLen,bDirectionUp,bMatchCase);
 
         if( !bDirectionUp )
         { /* 下へ */
@@ -1338,7 +1339,7 @@ EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD lengt
 #if 0
                 DebugWndPrintf("EditWndBuffFindDataSet:%s\r\n",nowPtr->data);
 #endif
-                ptr = (TCHAR *)my_strstr(nowPtr->data+nowDataPos,dataPtr);
+                ptr = (TCHAR *)my_strstr(nowPtr->data+nowDataPos,dataPtr,bMatchCase);
 
                 if( ptr )
                 { /* 見つかった */
@@ -1360,7 +1361,7 @@ EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD lengt
 #if 0
                 DebugWndPrintf("EditWndBuffFindDataSet:%s\r\n",nowPtr->data);
 #endif
-                ptr = (TCHAR *)my_strstr(nowPtr->data,dataPtr); /* 暫定、各行、逆からサーチしなければならない */
+                ptr = (TCHAR *)my_strstr(nowPtr->data,dataPtr,bMatchCase); /* 暫定、各行、逆からサーチしなければならない */
 
                 if( ptr )
                 { /* 見つかった */
@@ -1900,10 +1901,11 @@ setSelectPosNowPosToFar( H_EDITWND_BUFF_LOCAL h, BOOL bMinus, DWORD offset )
  * 内容  :
  * 引数  : const TCHAR *strSource
  * 引数  : const TCHAR *strTarget
+ * 引数  : BOOL        bMatchCase
  * 戻り値: TCHAR *
  ***************************************/
 static TCHAR *
-my_strstr( const TCHAR *strSource, const TCHAR *strTarget )
+my_strstr( const TCHAR *strSource, const TCHAR *strTarget, BOOL bMatchCase )
 {
     TCHAR *ptr = strSource;
     TCHAR *rtnPtr = (TCHAR *)NULL;
@@ -1947,3 +1949,29 @@ my_strstr( const TCHAR *strSource, const TCHAR *strTarget )
 
     return rtnPtr;
 }
+
+#if 0
+/********************************************************************************
+ * 内容  :
+ * 引数  : TCHAR data
+ * 戻り値: BOOL
+ ***************************************/
+static BOOL
+isSingleChar( TCHAR data )
+{
+    BOOL bResult = (BOOL)FALSE;
+
+    if( ( (BYTE)data <= (BYTE)0x80) ||
+        (((BYTE)0xA0 <= (BYTE)data) && ((BYTE)data <= (BYTE)0xDF)) ||
+        ((BYTE)0xF0 <= (BYTE)data) )
+    {
+        bResult = (BOOL)TRUE;
+    }
+    else
+    {
+        nop();
+    }
+
+    return bResult;
+}
+#endif

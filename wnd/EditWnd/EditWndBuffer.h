@@ -250,9 +250,10 @@ BOOL EditWndBuffSelectAll( H_EDITWND_BUFF hEditWndBuff );
  * 引数  : TCHAR* dataPtr
  * 引数  : DWORD  length
  * 引数  : BOOL bDirectionUp
+ * 引数  : BOOL bMatchCase
  * 戻り値: BOOL
  ***************************************/
-BOOL EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp );
+BOOL EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp, BOOL bMatchCase );
 
 /********************************************************************************
  * 内容  : EDITウィンドウバッファのUndo

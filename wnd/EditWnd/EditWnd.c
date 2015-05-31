@@ -290,15 +290,16 @@ EditWndNewLineCodeSet( HWND hwnd, NEWLINECODE_TYPE newLineCodeType )
  * ˆø”  : TCHAR* dataPtr
  * ˆø”  : DWORD  length
  * ˆø”  : BOOL bDirectionUp
+ * ˆø”  : BOOL bMatchCase
  * –ß‚è’l: BOOL
  ***************************************/
 BOOL
-EditWndFindDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp )
+EditWndFindDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp, BOOL bMatchCase )
 {
     S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
     BOOL rtn = (BOOL)FALSE;
 
-    rtn = EditWndBuffFindDataSet( editWndDataPtr->hEditWndBuff, dataPtr, length, bDirectionUp );
+    rtn = EditWndBuffFindDataSet( editWndDataPtr->hEditWndBuff, dataPtr, length, bDirectionUp, bMatchCase );
 
     setAllScrollInfo(hwnd);
 
