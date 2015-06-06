@@ -52,6 +52,7 @@ static void updateTextMetrics( HWND hwnd );
 static void setAllScrollInfo( HWND hwnd );
 static void getAllScrollInfo( HWND hwnd );
 static void setScrollPos( HWND hwnd, int fnBar, DWORD nPos );
+static void editWndInvalidateRect( HWND hWnd, RECT *rectPtr, BOOL bErase );
 
 /* 内部変数定義 */
 typedef struct
@@ -161,7 +162,7 @@ EditWndDataInit( HWND hwnd )
     EditWndBuffInit(editWndDataPtr->hEditWndBuff);
 
     setAllScrollInfo(hwnd);
-    InvalidateRect( hwnd, NULL, TRUE );
+    editWndInvalidateRect( hwnd, NULL, TRUE );
 }
 
 /********************************************************************************
@@ -190,7 +191,7 @@ EditWndDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bInit )
 
     EditWndBuffSelectOff(editWndDataPtr->hEditWndBuff);
     setAllScrollInfo(hwnd);
-    InvalidateRect( hwnd, NULL, TRUE );
+    editWndInvalidateRect( hwnd, NULL, TRUE );
 }
 
 /********************************************************************************
@@ -271,7 +272,7 @@ EditWndNewLineCodeSet( HWND hwnd, NEWLINECODE_TYPE newLineCodeType )
         EditWndBuffDataGet( editWndDataPtr->hEditWndBuff, dataTopPtr, allDataSize, BUFF_ALL );
         EditWndBuffDataSet( editWndDataPtr->hEditWndBuff, dataTopPtr, allDataSize, TRUE );
         setAllScrollInfo(hwnd);
-        InvalidateRect( hwnd, NULL, TRUE );
+        editWndInvalidateRect( hwnd, NULL, TRUE );
 
         free( dataTopPtr );
         bRtn = TRUE;
@@ -333,7 +334,7 @@ EditWndFindDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp, 
     }
 #endif
 
-    InvalidateRect( hwnd, NULL, TRUE );
+    editWndInvalidateRect( hwnd, NULL, TRUE );
 
     return rtn;
 }
@@ -882,7 +883,7 @@ editOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             }
 
             HideCaret(hwnd);
-            InvalidateRect( hwnd, NULL, bErase );
+            editWndInvalidateRect( hwnd, NULL, bErase );
             SetCaretPos( (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar, (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar);
             ShowCaret(hwnd);
         }
@@ -958,11 +959,11 @@ editOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 #if 0 /* デバッグ用 */
                     DebugEditWndRect = 1;
 #endif
-                    InvalidateRect( hwnd, &rect, TRUE );
+                    editWndInvalidateRect( hwnd, &rect, TRUE );
                 }
                 else
                 {
-                    InvalidateRect( hwnd, NULL, TRUE );
+                    editWndInvalidateRect( hwnd, NULL, TRUE );
                 }
                 SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_CHANGE), (LPARAM)hwnd);
             }
@@ -1228,7 +1229,7 @@ editOnMouseMove( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         if( bCaretPosChange )
         {
             SetCaretPos( (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar, (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar);
-            InvalidateRect( hwnd, NULL, FALSE );
+            editWndInvalidateRect( hwnd, NULL, FALSE );
         }
         else
         {
@@ -1289,7 +1290,7 @@ editOnLbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     if( bSelectOff )
     {
-        InvalidateRect( hwnd, NULL, TRUE );
+        editWndInvalidateRect( hwnd, NULL, TRUE );
     }
     else
     {
@@ -1511,7 +1512,7 @@ editOnCut( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
             /* CUTのみ */
             editWndRemoveData( hwnd,FALSE );
-            InvalidateRect( hwnd, NULL, TRUE );
+            editWndInvalidateRect( hwnd, NULL, TRUE );
         }
         else
         {
@@ -1636,7 +1637,7 @@ editOnClear( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     else
     {
         editWndRemoveData( hwnd,FALSE );
-        InvalidateRect( hwnd, NULL, TRUE );
+        editWndInvalidateRect( hwnd, NULL, TRUE );
     }
 
     return rtn;
@@ -1658,7 +1659,7 @@ editOnUndo( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     if( EditWndBuffUndo(editWndDataPtr->hEditWndBuff) )
     {
-        InvalidateRect( hwnd, NULL, TRUE );
+        editWndInvalidateRect( hwnd, NULL, TRUE );
     }
     else
     {
@@ -1688,7 +1689,7 @@ editOnSetSel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         {
             EditWndBuffSetCaretPos(editWndDataPtr->hEditWndBuff, EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff),EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff));
             setScrollPos( hwnd, SB_VERT, EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff) );
-            InvalidateRect( hwnd, NULL, TRUE );
+            editWndInvalidateRect( hwnd, NULL, TRUE );
         }
         else
         {
@@ -1701,7 +1702,7 @@ editOnSetSel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         HideCaret(hwnd);
         EditWndBuffSetCaretPos(editWndDataPtr->hEditWndBuff,0xffffffff,EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff));
         setScrollPos( hwnd, SB_VERT, EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff) );
-        InvalidateRect( hwnd, NULL, TRUE );
+        editWndInvalidateRect( hwnd, NULL, TRUE );
         SetCaretPos( (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar, (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar);
         ShowCaret(hwnd);
     }
@@ -1729,7 +1730,7 @@ editOnSetFont( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     if( lParam )
     {
-        InvalidateRect( hwnd, NULL, TRUE );
+        editWndInvalidateRect( hwnd, NULL, TRUE );
     }
     else
     {
@@ -1898,4 +1899,25 @@ setScrollPos( HWND hwnd, int fnBar, DWORD nPos )
     GetScrollInfo( hwnd, fnBar, &si );
     si.nPos   = nPos;
     SetScrollInfo( hwnd, fnBar, &si, TRUE );
+}
+
+/********************************************************************************
+ * 内容  : 矩形無効化
+ * 引数  : HWND hWnd
+ * 引数  : RECT *rectPtr
+ * 引数  : BOOL bErase
+ * 戻り値: なし
+ ***************************************/
+static void
+editWndInvalidateRect( HWND hWnd, RECT *rectPtr, BOOL bErase )
+{
+    if( rectPtr != NULL )
+    {
+        DebugWndPrintf("InvalidateRect,left:%d,top:%d,right:%d,bottom:%d,%s\r\n",rectPtr->left,rectPtr->top,rectPtr->right,rectPtr->bottom,(bErase?"TRUE":"FALSE"));
+    }
+    else
+    {
+        DebugWndPrintf("InvalidateRect,NULL,%s\r\n",(bErase?"TRUE":"FALSE"));
+    }
+    InvalidateRect( hWnd, rectPtr, bErase );
 }
