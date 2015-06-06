@@ -1049,7 +1049,7 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             }
             else
             {
-                okMessage(hwnd, TEXT("\"%s\" ‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñB"),pfr->lpstrFindWhat);
+                okMessage(mainWndData.hDlgModeless, TEXT("\"%s\" ‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñB"),pfr->lpstrFindWhat);
             }
             bFindExec = FALSE;
         }

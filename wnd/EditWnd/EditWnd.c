@@ -608,8 +608,15 @@ editOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     EndPaint( hwnd, &ps );
 
-    SetCaretPos( (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar, (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar);
-    SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_UPDATE), (LPARAM)hwnd);
+    if( hwnd == GetFocus() )
+    {
+        SetCaretPos( (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar, (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar);
+        SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_UPDATE), (LPARAM)hwnd);
+    }
+    else
+    {
+        /* do nothing */
+    }
 
     DebugEditWndRect = 0; /* デバッグ用 */
 
