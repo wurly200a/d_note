@@ -507,6 +507,8 @@ editOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     iHorzPos = editWndDataPtr->iHorzPos;
     iVertPos = editWndDataPtr->iVertPos;
 
+    DebugWndPrintf("WM_PAINT,left:%d,top:%d,right:%d,bottom:%d\r\n",ps.rcPaint.left,ps.rcPaint.top,ps.rcPaint.right,ps.rcPaint.bottom);
+
     iPaintBeg = max(0, ps.rcPaint.top / editWndDataPtr->cyChar);
     iPaintEnd = ps.rcPaint.bottom / editWndDataPtr->cyChar;
 
@@ -635,6 +637,10 @@ static LRESULT
 editOnSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    RECT        rc;
+
+    GetClientRect(hwnd, &rc);
+    DebugWndPrintf("WM_SIZE,left:%d,top:%d,right:%d,bottom:%d\r\n",rc.left,rc.top,rc.right,rc.bottom);
 
     editWndDataPtr->cxClient = LOWORD( lParam );
     editWndDataPtr->cyClient = HIWORD( lParam );
