@@ -1034,6 +1034,7 @@ editOnHscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         si.nPos += si.nPage;
         break;
     case SB_THUMBPOSITION:
+    case SB_THUMBTRACK:
         si.nPos = si.nTrackPos;
         break;
     default :
@@ -1100,6 +1101,7 @@ editOnVscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     case SB_PAGEDOWN:
         si.nPos += si.nPage;
         break;
+    case SB_THUMBPOSITION:
     case SB_THUMBTRACK:
         si.nPos = si.nTrackPos;
         break;
