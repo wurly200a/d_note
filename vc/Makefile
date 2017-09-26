@@ -1,18 +1,15 @@
 .SUFFIXES: .rc .res
 
 TARGET = dnote.exe
-CC = gcc
-RC = windres
+CC      = "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.11.25503\bin\HostX86\x86\cl.exe"
+RC      = "C:\Program Files (x86)\Windows Kits\8.1\bin\x86\rc.exe"
+LINK    = "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.11.25503\bin\HostX86\x86\link.exe"
+LIBPATH = "C:/Program Files (x86)/Windows Kits/8.1/Lib/winv6.3/um/x86"
 
-#Debug
-CFLAGS = -I../inc -Ic:/usr/MinGW/inc -O0 -g -Wall -fmessage-length=0 -finput-charset=cp932 -fexec-charset=cp932
-#Release
-#CFLAGS = -I../inc -Ic:/usr/MinGW/inc -O1 -Wall -fmessage-length=0 -finput-charset=cp932 -fexec-charset=cp932
+CFLAGS = //I ../inc //W4 //O2 //MT //EHsc
 
-CPPFLAGS = -c
-
-LDFLAGS = -Wl,--subsystem,windows -mwindows
-LDLIBS = -lcomctl32 -lcomdlg32 -luser32 -lgdi32 -lkernel32 -limm32
+LDFLAGS = /SUBSYSTEM:WINDOWS /LIBPATH:$(LIBPATH)
+LDLIBS  = ComCtl32.Lib ComDlg32.Lib User32.Lib Gdi32.Lib kernel32.Lib Imm32.Lib shell32.lib
 
 OBJECTS = \
           ..\\develop\\DebugWnd\\DebugWnd.o       \
@@ -37,17 +34,17 @@ OBJECTS = \
           ..\\wnd\\SomeCtrl\\SomeCtrl.o			  \
           ..\\wnd\\StsBar\\StsBar.o               \
                                                   \
-          ../resources/resource.o                 \
+          ..\\resources\\resource.res             \
 
 $(TARGET): $(OBJECTS)
-		$(CC) $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS) -o $@
+		$(LINK) /OUT:$@ $(LDFLAGS) $^ $(LDLIBS)
 
 clean:
 		$(RM) $(OBJECTS)
 		$(RM) $(TARGET)
 
 .c.o:
-		$(CC) $(CFLAGS) $(CPPFLAGS) $< -o $@
+		$(CC) //c $< $(CFLAGS) //Fo$@
 
-.rc.o:
-		$(RC) $< -o $@
+.rc.res:
+		$(RC) -FO $@ $<
