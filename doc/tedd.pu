@@ -2,76 +2,201 @@
 
 ' sys/
 package sys {
-    class Config
-    class DateTime
-    class File
-    class Font
-    class LinkedList
-    class Version
-    class WinMain
+    class Config {
+        ConfigInit()
+        ConfigSaveDword()
+        ConfigLoadDword()
+    }
+    class DateTime {
+        DateTimeGetString()
+    }
+    class File {
+        FileInitialize()
+        FileEnd()
+        FileOpenDlg()
+        FileGetName()
+        FileGetTitleName()
+        FileGetDir()
+        FileSetName()
+        FileReadByte()
+        FileGetLength()
+        FileWrite()
+        FileSaveDlg()
+    }
+    class Font {
+        FontInit()
+        FontChooseFont()
+        FontGetLogFont()
+    }
+    class LinkedList {
+        AddLinkedList()
+        ReplaceLinkedList()
+        RemoveLinkedList()
+        InsertLinkedList()
+    }
+    class Version {
+        VersionStringGet()
+    }
+    class WinMain {
+        GetHinst()
+        GetAppName()
+    }
 }
 
 ' wnd/
 package wnd {
     package MainWnd {
-        class MainWnd
-        class MainWndMenu
+        class MainWnd {
+            MainWndCreate()
+            IsMainWndMessage()
+            WM_CREATE()
+            WM_PAINT()
+            WM_SIZE()
+            WM_MOVE()
+            WM_WINDOWPOSCHANGED()
+            WM_CLOSE()
+            WM_DESTROY()
+            WM_COMMAND()
+            WM_KEYUP()
+            WM_KEYDOWN()
+            WM_CHAR()
+            WM_HSCROLL()
+            WM_VSCROLL()
+            WM_MOUSEWHEEL()
+            WM_SETFOCUS()
+            WM_KILLFOCUS()
+            WM_DROPFILES()
+            WM_INITMENUPOPUP()
+            FINDMSGSTRINGÇÃìoò^ÉÅÉbÉZÅ[ÉW()
+            WM_APP()
+        }
+
+        class MainWndMenu {
+            MenuCreate()
+            AccelCreate()
+            MenuInqItemChecked()
+            MenuCheckItem()
+            MenuUnCheckItem()
+            MenuEnableItem()
+            MenuUnEnableItem()
+        }
+
         MainWnd -- MainWndMenu
     }
 
     package EditWnd {
         class "EditWnd" as EditWnd {
-            BOOL EditWndRegisterClass( HINSTANCE hInst );
-            void EditWndDataInit( HWND hwnd );
-            void EditWndDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bInit );
-            BOOL EditWndDataGet( HWND hwnd, TCHAR *dataPtr, DWORD dataSize, EDITWND_REGION region );
-            DWORD EditWndGetDataSize( HWND hwnd, EDITWND_REGION region );
-            DWORD EditWndGetColumnMaxSize( HWND hwnd );
-            DWORD EditWndGetCaretXpos( HWND hwnd );
-            typedef UINT NEWLINECODE_TYPE;
-            BOOL EditWndNewLineCodeSet( HWND hwnd, NEWLINECODE_TYPE newLineCodeType );
-            BOOL EditWndFindDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp, BOOL bMatchCase );
+            EditWndRegisterClass()
+            EditWndDataInit()
+            EditWndDataSet()
+            EditWndDataGet()
+            EditWndGetDataSize()
+            EditWndGetColumnMaxSize()
+            EditWndGetCaretXpos()
+            EditWndNewLineCodeSet()
+            EditWndFindDataSet()
+            WM_CREATE()
+            WM_PAINT()
+            WM_SIZE()
+            WM_CLOSE()
+            WM_DESTROY()
+            WM_COMMAND()
+            WM_KEYUP()
+            WM_KEYDOWN()
+            WM_CHAR()
+            WM_HSCROLL()
+            WM_VSCROLL()
+            WM_SETFOCUS()
+            WM_KILLFOCUS()
+            WM_MOUSEACTIVATE()
+            WM_MOUSEWHEEL()
+            WM_MOUSEMOVE()
+            WM_LBUTTONDOWN()
+            WM_MBUTTONDOWN()
+            WM_RBUTTONDOWN()
+            WM_LBUTTONUP()
+            WM_MBUTTONUP()
+            WM_RBUTTONUP()
+            WM_IME_STARTCOMPOSITION()
+            WM_CUT()
+            WM_COPY()
+            WM_PASTE()
+            WM_CLEAR()
+            WM_UNDO()
+            EM_SETSEL()
+            WM_SETFONT()
+            EM_GETLINECOUNT()
+            EM_LINEFROMCHAR()
         }
 
         class "EditWndBuffer" as EditWndBuffer {
-            H_EDITWND_BUFF EditWndBuffCreate( void );
-            BOOL EditWndBuffDestroy( H_EDITWND_BUFF hEditWndBuff );
-            void EditWndBuffInit( H_EDITWND_BUFF hEditWndBuff );
-            void EditWndBuffEnd( H_EDITWND_BUFF hEditWndBuff );
-            void EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, BOOL bInit );
-            BOOL EditWndBuffDataGet( H_EDITWND_BUFF hEditWndBuff, TCHAR *dataPtr, DWORD dataSize, EDITWND_BUFF_REGION region );
-            DWORD EditWndBuffGetDataSize( H_EDITWND_BUFF hEditWndBuff, EDITWND_BUFF_REGION region );
-            DWORD EditWndBuffGetLineMaxSize( H_EDITWND_BUFF hEditWndBuff );
-            DWORD EditWndBuffGetColumnMaxSize( H_EDITWND_BUFF hEditWndBuff);
-            DWORD EditWndBuffGetCaretXpos( H_EDITWND_BUFF hEditWndBuff );
-            DWORD EditWndBuffGetCaretYpos( H_EDITWND_BUFF hEditWndBuff );
-            BOOL EditWndBuffSetCaretPos( H_EDITWND_BUFF hEditWndBuff, DWORD xPos, DWORD lineNum );
-            void EditWndBuffIncCaretXpos( H_EDITWND_BUFF hEditWndBuff );
-            void EditWndBuffDecCaretXpos( H_EDITWND_BUFF hEditWndBuff );
-            void EditWndBuffIncCaretYpos( H_EDITWND_BUFF hEditWndBuff );
-            void EditWndBuffDecCaretYpos( H_EDITWND_BUFF hEditWndBuff );
-            H_EDITWND_BUFF_LINE EditWndBuffGetLinePtr( H_EDITWND_BUFF hEditWndBuff, DWORD lineNum );
-            H_EDITWND_BUFF_LINE EditWndBuffGetLineNextPtr( H_EDITWND_BUFF_LINE hLineData );
-            BOOL EditWndBuffGetDispData( H_EDITWND_BUFF hEditWndBuff, H_EDITWND_BUFF_LINE hLineData, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
-            void EditWndBuffSetNewLineCode( H_EDITWND_BUFF hEditWndBuff, UINT newLineType );
-            void EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace );
-            INT EditWndBuffGetNewLineData( H_EDITWND_BUFF hEditWndBuff, PTSTR dataPtr );
-            BOOL EditWndBuffSetTabSize( H_EDITWND_BUFF hEditWndBuff, INT tabSize );
-            void EditWndBuffSelectOn( H_EDITWND_BUFF hEditWndBuff );
-            BOOL EditWndBuffSelectOff( H_EDITWND_BUFF hEditWndBuff );
-            BOOL EditWndBuffSelectAll( H_EDITWND_BUFF hEditWndBuff );
-            BOOL EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp, BOOL bMatchCase );
-            BOOL EditWndBuffUndo( H_EDITWND_BUFF hEditWndBuff );
+            EditWndBuffCreate()
+            EditWndBuffDestroy()
+            EditWndBuffInit()
+            EditWndBuffEnd()
+            EditWndBuffDataSet()
+            EditWndBuffDataGet()
+            EditWndBuffGetDataSize()
+            EditWndBuffGetLineMaxSize()
+            EditWndBuffGetColumnMaxSize()
+            EditWndBuffGetCaretXpos()
+            EditWndBuffGetCaretYpos()
+            EditWndBuffSetCaretPos()
+            EditWndBuffIncCaretXpos()
+            EditWndBuffDecCaretXpos()
+            EditWndBuffIncCaretYpos()
+            EditWndBuffDecCaretYpos()
+            EditWndBuffGetLinePtr()
+            EditWndBuffGetLineNextPtr()
+            EditWndBuffGetDispData()
+            EditWndBuffSetNewLineCode()
+            EditWndBuffRemoveData()
+            EditWndBuffGetNewLineData()
+            EditWndBuffSetTabSize()
+            EditWndBuffSelectOn()
+            EditWndBuffSelectOff()
+            EditWndBuffSelectAll()
+            EditWndBuffFindDataSet()
+            EditWndBuffUndo()
         }
-        class EditWndBufferData
+        class EditWndBufferData {
+            EditWndBufferAddLinkedList()
+            EditWndBufferRemoveLinkedList()
+            EditWndBufferInsertLinkedList()
+            EditWndBufferReplaceLinkedList()
+            EditWndBufferAllRemoveLinkedList()
+            BuffLineDataCreate()
+            BuffLineDataDestroy()
+            BuffLineDataJoin()
+            BuffLineDataDivide()
+            BuffLineDataShorten()
+            BuffLineDataUpdateLineNumAfter()
+        }
 
         EditWnd -- EditWndBuffer
         EditWndBuffer -- EditWndBufferData
     }
 
-    class ModalDlg
-    class SomeCtrl
-    class StsBar
+    class ModalDlg {
+        ModalDlgInit()
+        ModalDlg()
+    }
+
+    class SomeCtrl {
+        SomeCtrlCreate()
+        SomeCtrlSize()
+        SomeCtrlGetHWND()
+        SomeCtrlEnable()
+        SomeCtrlDisable()
+        SomeCtrlGetText()
+    }
+
+    class StsBar {
+        StsBarCreate()
+        StsBarSize()
+        StsBarSetText()
+        StsBarShowWindow()
+    }
 }
 
 WinMain -- MainWnd
