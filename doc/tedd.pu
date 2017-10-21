@@ -1,76 +1,98 @@
 @startuml
 
-' #ifndef EDITWND_BUFFER_H
-' 
-' typedef struct tagS_EDITWND_BUFF
-' {
-'     int unused;
-' } S_EDITWND_BUFF;
-' typedef S_EDITWND_BUFF * H_EDITWND_BUFF;
-' 
-' typedef struct tagS_EDITWND_BUFF_LINE
-' {
-'     int unused;
-' } S_EDITWND_BUFF_LINE;
-' typedef S_EDITWND_BUFF_LINE * H_EDITWND_BUFF_LINE;
-' 
-' typedef struct
-' {
-'     TCHAR        data[8] ; /* データ(半角,全角,タブ)                   */
-'     INT          offset  ; /* 半角以外の場合、先頭からのオフセット位置 */
-'     INT          size    ; /* データサイズ                             */
-'     CHARSET_TYPE type    ;
-'     BOOL         bSelect ; /* 選択されているか否か                     */
-'     DWORD        dataPos ; /* データ位置                               */
-'     DWORD        caretPos; /* キャレット位置(区切りのいい位置)         */
-' } S_BUFF_DISP_DATA;
-
-class "EditWnd" as EditWnd {
-BOOL EditWndRegisterClass( HINSTANCE hInst );
-void EditWndDataInit( HWND hwnd );
-void EditWndDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bInit );
-BOOL EditWndDataGet( HWND hwnd, TCHAR *dataPtr, DWORD dataSize, EDITWND_REGION region );
-DWORD EditWndGetDataSize( HWND hwnd, EDITWND_REGION region );
-DWORD EditWndGetColumnMaxSize( HWND hwnd );
-DWORD EditWndGetCaretXpos( HWND hwnd );
-typedef UINT NEWLINECODE_TYPE;
-BOOL EditWndNewLineCodeSet( HWND hwnd, NEWLINECODE_TYPE newLineCodeType );
-BOOL EditWndFindDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp, BOOL bMatchCase );
+' sys/
+package sys {
+    class Config
+    class DateTime
+    class File
+    class Font
+    class LinkedList
+    class Version
+    class WinMain
 }
 
-class "EditWndBuffer" as EditWndBuffer {
+' wnd/
+package wnd {
+    package MainWnd {
+        class MainWnd
+        class MainWndMenu
+        MainWnd -- MainWndMenu
+    }
 
+    package EditWnd {
+        class "EditWnd" as EditWnd {
+            BOOL EditWndRegisterClass( HINSTANCE hInst );
+            void EditWndDataInit( HWND hwnd );
+            void EditWndDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bInit );
+            BOOL EditWndDataGet( HWND hwnd, TCHAR *dataPtr, DWORD dataSize, EDITWND_REGION region );
+            DWORD EditWndGetDataSize( HWND hwnd, EDITWND_REGION region );
+            DWORD EditWndGetColumnMaxSize( HWND hwnd );
+            DWORD EditWndGetCaretXpos( HWND hwnd );
+            typedef UINT NEWLINECODE_TYPE;
+            BOOL EditWndNewLineCodeSet( HWND hwnd, NEWLINECODE_TYPE newLineCodeType );
+            BOOL EditWndFindDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp, BOOL bMatchCase );
+        }
 
-H_EDITWND_BUFF EditWndBuffCreate( void );
-BOOL EditWndBuffDestroy( H_EDITWND_BUFF hEditWndBuff );
-void EditWndBuffInit( H_EDITWND_BUFF hEditWndBuff );
-void EditWndBuffEnd( H_EDITWND_BUFF hEditWndBuff );
-void EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, BOOL bInit );
-BOOL EditWndBuffDataGet( H_EDITWND_BUFF hEditWndBuff, TCHAR *dataPtr, DWORD dataSize, EDITWND_BUFF_REGION region );
-DWORD EditWndBuffGetDataSize( H_EDITWND_BUFF hEditWndBuff, EDITWND_BUFF_REGION region );
-DWORD EditWndBuffGetLineMaxSize( H_EDITWND_BUFF hEditWndBuff );
-DWORD EditWndBuffGetColumnMaxSize( H_EDITWND_BUFF hEditWndBuff);
-DWORD EditWndBuffGetCaretXpos( H_EDITWND_BUFF hEditWndBuff );
-DWORD EditWndBuffGetCaretYpos( H_EDITWND_BUFF hEditWndBuff );
-BOOL EditWndBuffSetCaretPos( H_EDITWND_BUFF hEditWndBuff, DWORD xPos, DWORD lineNum );
-void EditWndBuffIncCaretXpos( H_EDITWND_BUFF hEditWndBuff );
-void EditWndBuffDecCaretXpos( H_EDITWND_BUFF hEditWndBuff );
-void EditWndBuffIncCaretYpos( H_EDITWND_BUFF hEditWndBuff );
-void EditWndBuffDecCaretYpos( H_EDITWND_BUFF hEditWndBuff );
-H_EDITWND_BUFF_LINE EditWndBuffGetLinePtr( H_EDITWND_BUFF hEditWndBuff, DWORD lineNum );
-H_EDITWND_BUFF_LINE EditWndBuffGetLineNextPtr( H_EDITWND_BUFF_LINE hLineData );
-BOOL EditWndBuffGetDispData( H_EDITWND_BUFF hEditWndBuff, H_EDITWND_BUFF_LINE hLineData, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
-void EditWndBuffSetNewLineCode( H_EDITWND_BUFF hEditWndBuff, UINT newLineType );
-void EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace );
-INT EditWndBuffGetNewLineData( H_EDITWND_BUFF hEditWndBuff, PTSTR dataPtr );
-BOOL EditWndBuffSetTabSize( H_EDITWND_BUFF hEditWndBuff, INT tabSize );
-void EditWndBuffSelectOn( H_EDITWND_BUFF hEditWndBuff );
-BOOL EditWndBuffSelectOff( H_EDITWND_BUFF hEditWndBuff );
-BOOL EditWndBuffSelectAll( H_EDITWND_BUFF hEditWndBuff );
-BOOL EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp, BOOL bMatchCase );
-BOOL EditWndBuffUndo( H_EDITWND_BUFF hEditWndBuff );
+        class "EditWndBuffer" as EditWndBuffer {
+            H_EDITWND_BUFF EditWndBuffCreate( void );
+            BOOL EditWndBuffDestroy( H_EDITWND_BUFF hEditWndBuff );
+            void EditWndBuffInit( H_EDITWND_BUFF hEditWndBuff );
+            void EditWndBuffEnd( H_EDITWND_BUFF hEditWndBuff );
+            void EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, BOOL bInit );
+            BOOL EditWndBuffDataGet( H_EDITWND_BUFF hEditWndBuff, TCHAR *dataPtr, DWORD dataSize, EDITWND_BUFF_REGION region );
+            DWORD EditWndBuffGetDataSize( H_EDITWND_BUFF hEditWndBuff, EDITWND_BUFF_REGION region );
+            DWORD EditWndBuffGetLineMaxSize( H_EDITWND_BUFF hEditWndBuff );
+            DWORD EditWndBuffGetColumnMaxSize( H_EDITWND_BUFF hEditWndBuff);
+            DWORD EditWndBuffGetCaretXpos( H_EDITWND_BUFF hEditWndBuff );
+            DWORD EditWndBuffGetCaretYpos( H_EDITWND_BUFF hEditWndBuff );
+            BOOL EditWndBuffSetCaretPos( H_EDITWND_BUFF hEditWndBuff, DWORD xPos, DWORD lineNum );
+            void EditWndBuffIncCaretXpos( H_EDITWND_BUFF hEditWndBuff );
+            void EditWndBuffDecCaretXpos( H_EDITWND_BUFF hEditWndBuff );
+            void EditWndBuffIncCaretYpos( H_EDITWND_BUFF hEditWndBuff );
+            void EditWndBuffDecCaretYpos( H_EDITWND_BUFF hEditWndBuff );
+            H_EDITWND_BUFF_LINE EditWndBuffGetLinePtr( H_EDITWND_BUFF hEditWndBuff, DWORD lineNum );
+            H_EDITWND_BUFF_LINE EditWndBuffGetLineNextPtr( H_EDITWND_BUFF_LINE hLineData );
+            BOOL EditWndBuffGetDispData( H_EDITWND_BUFF hEditWndBuff, H_EDITWND_BUFF_LINE hLineData, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
+            void EditWndBuffSetNewLineCode( H_EDITWND_BUFF hEditWndBuff, UINT newLineType );
+            void EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace );
+            INT EditWndBuffGetNewLineData( H_EDITWND_BUFF hEditWndBuff, PTSTR dataPtr );
+            BOOL EditWndBuffSetTabSize( H_EDITWND_BUFF hEditWndBuff, INT tabSize );
+            void EditWndBuffSelectOn( H_EDITWND_BUFF hEditWndBuff );
+            BOOL EditWndBuffSelectOff( H_EDITWND_BUFF hEditWndBuff );
+            BOOL EditWndBuffSelectAll( H_EDITWND_BUFF hEditWndBuff );
+            BOOL EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp, BOOL bMatchCase );
+            BOOL EditWndBuffUndo( H_EDITWND_BUFF hEditWndBuff );
+        }
+        class EditWndBufferData
+
+        EditWnd -- EditWndBuffer
+        EditWndBuffer -- EditWndBufferData
+    }
+
+    class ModalDlg
+    class SomeCtrl
+    class StsBar
 }
 
-EditWnd -- EditWndBuffer
+WinMain -- MainWnd
+
+MainWnd -- EditWnd
+MainWnd -- ModalDlg
+MainWnd -- StsBar
+MainWnd -- SomeCtrl
+
+MainWnd ----- Config
+MainWnd ----- DateTime
+MainWnd ----- File
+MainWnd ----- Font
+
+EditWndBufferData -- LinkedList
+
+ModalDlg -- Version
+
+ModalDlg -- WinMain
+SomeCtrl -- WinMain
+StsBar -- WinMain
+Config -- WinMain
 
 @enduml
