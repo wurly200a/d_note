@@ -6,7 +6,6 @@
 #include "MainWndMenu.h"
 
 /* 外部関数定義 */
-#include "WinMain.h"
 #include "EditWnd.h"
 #include "SomeCtrl.h"
 #include "File.h"
@@ -74,17 +73,18 @@ static LRESULT (*wndProcTbl[MAINWND_MAX])( HWND hwnd, UINT message, WPARAM wPara
 
 /********************************************************************************
  * 内容  : メインウィンドウクラスの登録、ウィンドウの生成
+ * 引数  : HINSTANCE hInst
+ * 引数  : PTSTR szAppName
  * 引数  : LPSTR szCmdLine
  * 引数  : int nCmdShow
  * 引数  : HACCEL *hAccelPtr
  * 戻り値: HWND
  ***************************************/
 HWND
-MainWndCreate( LPSTR szCmdLine, int nCmdShow, HACCEL *hAccelPtr )
+MainWndCreate( HINSTANCE hInst, PTSTR szAppName, LPSTR szCmdLine, int nCmdShow, HACCEL *hAccelPtr )
 {
     WNDCLASS wc = {0};
-    HINSTANCE hInst = GetHinst();
-    PTSTR pAppName = GetAppName();
+    PTSTR pAppName = szAppName;
     HMENU hMenu = NULL;
 
     hwndMain = NULL;
@@ -107,8 +107,12 @@ MainWndCreate( LPSTR szCmdLine, int nCmdShow, HACCEL *hAccelPtr )
     }
     else
     {
+        memset( &mainWndData, 0, sizeof(mainWndData) );
+        mainWndData.hInstance = hInst;
+        mainWndData.szAppName = szAppName;
+
         /* 設定の初期化 */
-        ConfigInit();
+        ConfigInit(mainWndData.hInstance,mainWndData.szAppName);
 
         /* メニューの生成 */
         hMenu = MenuCreate();
@@ -246,8 +250,6 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     TEXTMETRIC tm;
     HFONT hFont,hOldFont;
 
-    memset( &mainWndData, 0, sizeof(mainWndData) );
-
     hdc = GetDC( hwnd );
     hFont = GetStockObject(DEFAULT_GUI_FONT);
     hOldFont = SelectObject(hdc, hFont);
@@ -261,33 +263,33 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     DeleteObject(hFont);
     ReleaseDC( hwnd,hdc );
 
-    mainWndData.hWndDebug = DebugWndCreate(TRUE);
+    mainWndData.hWndDebug = DebugWndCreate(mainWndData.hInstance,mainWndData.szAppName,TRUE);
 
-    ModalDlgInit();
+    ModalDlgInit(mainWndData.hInstance,mainWndData.szAppName);
     FileInitialize( hwnd ); /* ファイル初期化     */
     FontInit();
 
 #ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-    EditWndRegisterClass( GetHinst() );
+    EditWndRegisterClass( mainWndData.hInstance );
     mainWndData.hWndIo = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW,
                                          TEXT("teddedit"), NULL,
                                          WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL ,
                                          CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
-                                         hwnd, (HMENU)0, GetHinst(), NULL );
+                                         hwnd, (HMENU)0, mainWndData.hInstance, NULL );
 #else                   /* [エディットコントロール使用] or  通常  */
     mainWndData.hWndIo = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW,
                                          TEXT ("edit"), NULL,
                                          WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL |
                                          ES_LEFT | ES_MULTILINE | ES_NOHIDESEL | ES_AUTOHSCROLL | ES_AUTOVSCROLL,
                                          0, 0, 0, 0,
-                                         hwnd, (HMENU)0, GetHinst(), NULL) ;
+                                         hwnd, (HMENU)0, mainWndData.hInstance, NULL) ;
 #endif                  /*  エディットコントロール使用  or  通常  */
     mainWndData.hFontIo = NULL;
 
 #if 0
-    SomeCtrlCreate( hwnd ); /* コントロールを生成 */
+    SomeCtrlCreate( mainWndData.hInstance, mainWndData.szAppName, hwnd ); /* コントロールを生成 */
 #endif
-    StsBarCreate( hwnd, TRUE ); /* ステータスバー生成、デフォルト表示 */
+    StsBarCreate( mainWndData.hInstance, mainWndData.szAppName, hwnd, TRUE ); /* ステータスバー生成、デフォルト表示 */
 
     MenuCheckItem( IDM_VIEW_STS_BAR );
     MenuCheckItem( IDM_EXTEND_NEWLINE_CRLF );
@@ -1021,7 +1023,7 @@ okMessage( HWND hwnd, TCHAR *szMessageFormat, ... )
         szBuffer[0] = '\0';
     }
 
-    return MessageBox( hwnd, szBuffer, GetAppName(), MB_OK | MB_ICONINFORMATION );
+    return MessageBox( hwnd, szBuffer, mainWndData.szAppName, MB_OK | MB_ICONINFORMATION );
 }
 
 /********************************************************************************
@@ -1038,11 +1040,11 @@ doCaption( HWND hwnd, TCHAR* szTitleName, BOOL bNeedSave )
 
      if( bNeedSave )
      {
-         wsprintf( szCaption, TEXT ("*%s - %s"), (szTitleName[0] ? szTitleName : TEXT("無題")),GetAppName() );
+         wsprintf( szCaption, TEXT ("*%s - %s"), (szTitleName[0] ? szTitleName : TEXT("無題")),mainWndData.szAppName );
      }
      else
      {
-         wsprintf( szCaption, TEXT ("%s - %s"), (szTitleName[0] ? szTitleName : TEXT("無題")),GetAppName() );
+         wsprintf( szCaption, TEXT ("%s - %s"), (szTitleName[0] ? szTitleName : TEXT("無題")),mainWndData.szAppName );
      }
 
      SetWindowText( hwnd, szCaption );
@@ -1062,7 +1064,7 @@ AskAboutSave( HWND hwnd, TCHAR * szTitleName )
 
     wsprintf(szBuffer, TEXT("ファイル %s の内容は変更されています。\n\n変更を保存しますか?"), szTitleName[0] ? szTitleName : TEXT("無題") );
 
-    iReturn = MessageBox( hwnd,szBuffer,GetAppName(),MB_YESNOCANCEL|MB_ICONEXCLAMATION );
+    iReturn = MessageBox( hwnd,szBuffer,mainWndData.szAppName,MB_YESNOCANCEL|MB_ICONEXCLAMATION );
 
     if( iReturn == IDYES )
     {

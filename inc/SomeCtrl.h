@@ -12,46 +12,48 @@ typedef enum
 #define MY_EX_STYLE (WS_EX_OVERLAPPEDWINDOW)
 
 /********************************************************************************
- * $BFbMF(B  : $BEPO?$5$l$?A4$F$N%3%s%H%m!<%k$r@8@.$9$k(B
- * $B0z?t(B  : HWND hwnd $B?F%&%#%s%I%&$N%O%s%I%i(B
- * $BLa$jCM(B: BOOL
+ * “à—e  : “o˜^‚³‚ê‚½‘S‚Ä‚ÌƒRƒ“ƒgƒ[ƒ‹‚ð¶¬‚·‚é
+ * ˆø”  : HINSTANCE hInst
+ * ˆø”  : PTSTR szAppName
+ * ˆø”  : HWND hwnd eƒEƒBƒ“ƒhƒE‚Ìƒnƒ“ƒhƒ‰
+ * –ß‚è’l: BOOL
  ***************************************/
-BOOL SomeCtrlCreate( HWND hwnd );
+BOOL SomeCtrlCreate( HINSTANCE hInst, PTSTR szAppName, HWND hwnd );
 
 /********************************************************************************
- * $BFbMF(B  : $BEPO?$5$l$?A4$F$N%3%s%H%m!<%k$N%5%$%:$rD4@0$9$k(B
- * $B0z?t(B  : int cxClient
- * $B0z?t(B  : int cyClient
- * $BLa$jCM(B: LONG $B%3%s%H%m!<%k$rG[CV$9$k6k7A$N=DJ}8~$N%5%$%:(B
+ * “à—e  : “o˜^‚³‚ê‚½‘S‚Ä‚ÌƒRƒ“ƒgƒ[ƒ‹‚ÌƒTƒCƒY‚ð’²®‚·‚é
+ * ˆø”  : int cxClient
+ * ˆø”  : int cyClient
+ * –ß‚è’l: LONG ƒRƒ“ƒgƒ[ƒ‹‚ð”z’u‚·‚é‹éŒ`‚Ìc•ûŒü‚ÌƒTƒCƒY
  ***************************************/
 LONG SomeCtrlSize( int cxClient,int cyClient );
 
 /********************************************************************************
- * $BFbMF(B  : $B%3%s%H%m!<%k$N%&%#%s%I%&%O%s%I%i$r<hF@$9$k(B
- * $B0z?t(B  : SOME_CTRL_ID id
- * $BLa$jCM(B: HWND
+ * “à—e  : ƒRƒ“ƒgƒ[ƒ‹‚ÌƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‰‚ðŽæ“¾‚·‚é
+ * ˆø”  : SOME_CTRL_ID id
+ * –ß‚è’l: HWND
  ***************************************/
 HWND SomeCtrlGetHWND( SOME_CTRL_ID id );
 
 /********************************************************************************
- * $BFbMF(B  : $B%3%s%H%m!<%k$rM-8z$K$9$k(B
- * $B0z?t(B  : SOME_CTRL_ID id
- * $BLa$jCM(B: $B$J$7(B
+ * “à—e  : ƒRƒ“ƒgƒ[ƒ‹‚ð—LŒø‚É‚·‚é
+ * ˆø”  : SOME_CTRL_ID id
+ * –ß‚è’l: ‚È‚µ
  ***************************************/
 void SomeCtrlEnable( SOME_CTRL_ID id );
 
 /********************************************************************************
- * $BFbMF(B  : $B%3%s%H%m!<%k$rL58z$K$9$k(B
- * $B0z?t(B  : SOME_CTRL_ID id
- * $BLa$jCM(B: $B$J$7(B
+ * “à—e  : ƒRƒ“ƒgƒ[ƒ‹‚ð–³Œø‚É‚·‚é
+ * ˆø”  : SOME_CTRL_ID id
+ * –ß‚è’l: ‚È‚µ
  ***************************************/
 void SomeCtrlDisable( SOME_CTRL_ID id );
 
 /********************************************************************************
- * $BFbMF(B  : $B%3%s%H%m!<%k$+$i%F%-%9%H$r<hF@$9$k(B
- * $B0z?t(B  : SOME_CTRL_ID id
- * $B0z?t(B  : PTSTR ptstrText
- * $BLa$jCM(B: BOOL
+ * “à—e  : ƒRƒ“ƒgƒ[ƒ‹‚©‚çƒeƒLƒXƒg‚ðŽæ“¾‚·‚é
+ * ˆø”  : SOME_CTRL_ID id
+ * ˆø”  : PTSTR ptstrText
+ * –ß‚è’l: BOOL
  ***************************************/
 BOOL SomeCtrlGetText( SOME_CTRL_ID id, PTSTR ptstrText );
 

@@ -3,14 +3,21 @@
 /* 個別インクルードファイル */
 
 /* 外部関数定義 */
-#include "WinMain.h"
 
 /* 外部変数定義 */
 /* 内部関数定義 */
 #include "Config.h"
 /* 内部変数定義 */
-static BOOL bInitConfig;
-static TCHAR szIniFileName[512];
+
+typedef struct
+{
+    HINSTANCE hInstance;
+    PTSTR     szAppName;
+    BOOL      bInitConfig;
+    TCHAR     szIniFileName[512];
+} S_CONFIG__DATA;
+
+static S_CONFIG__DATA configData;
 
 typedef struct
 {
@@ -28,19 +35,23 @@ static S_CONFIG_INFO configInfoTbl[CONFIG_ID_MAX] =
 
 /********************************************************************************
  * 内容  : 設定管理モジュールの初期化
- * 引数  : なし
+ * 引数  : HINSTANCE hInst
+ * 引数  : PTSTR szAppName
  * 戻り値: なし
  ***************************************/
 void
-ConfigInit( void )
+ConfigInit( HINSTANCE hInst, PTSTR szAppName )
 {
     DWORD length;
 
-    bInitConfig = TRUE;
-    length = GetModuleFileName(NULL,szIniFileName,512);
-    szIniFileName[length-1] = 'i';
-    szIniFileName[length-2] = 'n';
-    szIniFileName[length-3] = 'i';
+    configData.bInitConfig = TRUE;
+    configData.hInstance   = hInst;
+    configData.szAppName   = szAppName;
+
+    length = GetModuleFileName(NULL,configData.szIniFileName,512);
+    configData.szIniFileName[length-1] = 'i';
+    configData.szIniFileName[length-2] = 'n';
+    configData.szIniFileName[length-3] = 'i';
 }
 
 /********************************************************************************
@@ -54,12 +65,12 @@ ConfigSaveDword( CONFIG_ID id, DWORD data )
 {
     TCHAR szDword[11];
 
-    if( bInitConfig )
+    if( configData.bInitConfig )
     {
         if( id < CONFIG_ID_MAX )
         {
             wsprintf( szDword, "0x%08lX", data );
-            WritePrivateProfileString( GetAppName(), configInfoTbl[id].pKeyName, szDword, szIniFileName );
+            WritePrivateProfileString( configData.szAppName, configInfoTbl[id].pKeyName, szDword, configData.szIniFileName );
         }
         else
         {
@@ -83,11 +94,11 @@ ConfigLoadDword( CONFIG_ID id )
     TCHAR szDword[11];
     DWORD rtn = (DWORD)0;
 
-    if( bInitConfig )
+    if( configData.bInitConfig )
     {
         if( id < CONFIG_ID_MAX )
         {
-            GetPrivateProfileString( GetAppName(), configInfoTbl[id].pKeyName, configInfoTbl[id].pInitValue, szDword, 11, szIniFileName );
+            GetPrivateProfileString( configData.szAppName, configInfoTbl[id].pKeyName, configInfoTbl[id].pInitValue, szDword, 11, configData.szIniFileName );
             rtn = strtol( szDword+2,NULL,16 );
         }
         else

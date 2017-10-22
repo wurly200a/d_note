@@ -3,7 +3,6 @@
 /* 個別インクルードファイル */
 
 /* 外部関数定義 */
-#include "WinMain.h"
 
 /* 外部変数定義 */
 
@@ -38,11 +37,13 @@ S_SOME_CTRL ctrlListTbl[SOME_CTRL_MAX] =
 
 /********************************************************************************
  * 内容  : 登録された全てのコントロールを生成する
+ * 引数  : HINSTANCE hInst
+ * 引数  : PTSTR szAppName
  * 引数  : HWND hwnd 親ウィンドウのハンドラ
  * 戻り値: BOOL
  ***************************************/
 BOOL
-SomeCtrlCreate( HWND hwnd )
+SomeCtrlCreate( HINSTANCE hInst, PTSTR szAppName, HWND hwnd )
 {
     int i;
 
@@ -56,7 +57,7 @@ SomeCtrlCreate( HWND hwnd )
                                               ctrlListTbl[i].width,                    /* 幅                 */
                                               ctrlListTbl[i].height,                   /* 高さ               */
                                               hwnd,(HMENU)(SOME_CTRL_ID_OFFSET+i),     /* 親ウィンドウ,子ウィンドウID */
-                                              GetHinst(),NULL );                       /* インスタンスハンドル,補助引数 */
+                                              hInst,NULL );                       /* インスタンスハンドル,補助引数 */
         if( ctrlListTbl[i].hwnd != NULL )
         {
             SendMessage(ctrlListTbl[i].hwnd, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0));

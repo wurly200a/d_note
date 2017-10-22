@@ -1,5 +1,8 @@
 @startuml
 
+class WinMain {
+}
+
 ' sys/
 package sys {
     class Config {
@@ -36,10 +39,6 @@ package sys {
     }
     class Version {
         VersionStringGet()
-    }
-    class WinMain {
-        GetHinst()
-        GetAppName()
     }
 }
 
@@ -124,6 +123,10 @@ package wnd {
         }
 
         class "EditWndBuffer" as EditWndBuffer {
+            NewLineType
+            xCaret
+            yCaret
+            tabSize
             EditWndBuffCreate()
             EditWndBuffDestroy()
             EditWndBuffInit()
@@ -167,8 +170,8 @@ package wnd {
             BuffLineDataUpdateLineNumAfter()
         }
 
-        EditWnd -- EditWndBuffer
-        EditWndBuffer -- EditWndBufferData
+        EditWnd - EditWndBuffer
+        EditWndBuffer - EditWndBufferData
     }
 
     class ModalDlg {
@@ -208,10 +211,5 @@ MainWnd ----- Font
 EditWndBufferData -- LinkedList
 
 ModalDlg -- Version
-
-ModalDlg -- WinMain
-SomeCtrl -- WinMain
-StsBar -- WinMain
-Config -- WinMain
 
 @enduml

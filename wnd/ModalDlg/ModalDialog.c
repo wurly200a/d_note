@@ -4,7 +4,6 @@
 #include <winnls.h>
 
 /* 外部関数定義 */
-#include "WinMain.h"
 #include "Version.h"
 
 /* 外部変数定義 */
@@ -16,6 +15,14 @@ LRESULT CALLBACK AboutDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lP
 
 /* 内部変数定義 */
 static TCHAR szAboutTitleName[64];
+
+typedef struct
+{
+    HINSTANCE hInstance;
+    PTSTR     szAppName;
+} S_MODAL_DLG__DATA;
+
+static S_MODAL_DLG__DATA modalDlgData;
 
 typedef struct
 {
@@ -36,14 +43,18 @@ S_MODAL_DLG_INFO modalDlgInfoTbl[MODAL_DLG_ID_MAX] =
 
 /********************************************************************************
  * 内容  : モーダルダイアログボックス初期化
- * 引数  : なし
+ * 引数  : HINSTANCE hInst
+ * 引数  : PTSTR szAppName
  * 戻り値: BOOL
  ***************************************/
 BOOL
-ModalDlgInit( void )
+ModalDlgInit( HINSTANCE hInst, PTSTR szAppName )
 {
     INT i;
     WNDCLASS wc = {0};
+
+    modalDlgData.hInstance = hInst;
+    modalDlgData.szAppName = szAppName;
 
     for( i=0; i<MODAL_DLG_ID_MAX; i++ )
     {
@@ -51,7 +62,7 @@ ModalDlgInit( void )
         wc.lpfnWndProc   = modalDlgInfoTbl[i].wndPrc;
         wc.cbClsExtra    = 0;
         wc.cbWndExtra    = 0;
-        wc.hInstance     = GetHinst();
+        wc.hInstance     = modalDlgData.hInstance;
         wc.hIcon         = NULL;
         wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
         wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE+1);
@@ -61,7 +72,7 @@ ModalDlgInit( void )
         switch( i )
         {
         case MODAL_DLG_ID_ABOUT:
-            wsprintf( szAboutTitleName, "%s のバージョン情報",GetAppName() );
+            wsprintf( szAboutTitleName, "%s のバージョン情報",modalDlgData.szAppName );
             modalDlgInfoTbl[i].titleName = szAboutTitleName;
             break;
         default:
@@ -98,7 +109,7 @@ ModalDlg( MODAL_DLG_ID id, S_MODAL_DLG_DATA *dataPtr, HWND hwnd, int x, int y )
                                WS_VISIBLE | (WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU/*|WS_THICKFRAME|WS_MINIMIZEBOX|WS_MAXIMIZEBOX */),
                                x+modalDlgInfoTbl[id].xOffset, y+modalDlgInfoTbl[id].yOffset,
                                modalDlgInfoTbl[id].nWidth   , modalDlgInfoTbl[id].nHeight  ,
-                               hwnd , NULL, GetHinst(), NULL );
+                               hwnd , NULL, modalDlgData.hInstance, NULL );
 
         EnableWindow(hwnd,FALSE); /* メインウインドウを無効化してモーダルに */
 
@@ -141,6 +152,7 @@ AboutDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     static HBITMAP hBitmap;
 #endif
     static HICON hIcon;
+    HINSTANCE hInst = modalDlgData.hInstance;
 
     NUMBERFMT numberFormat = {0};
     numberFormat.NumDigits = 0;
@@ -155,49 +167,49 @@ AboutDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     case WM_CREATE:
 #if 0
         /* 白矩形 */
-        CreateWindow(TEXT("static"),TEXT(""),WS_CHILD|WS_VISIBLE|SS_WHITERECT,0,0,481,90,hwnd,(HMENU)-1,GetHinst(),NULL);
+        CreateWindow(TEXT("static"),TEXT(""),WS_CHILD|WS_VISIBLE|SS_WHITERECT,0,0,481,90,hwnd,(HMENU)-1,hInst,NULL);
 #endif
 #if 0
         /* bar画像 */
-        hCtrl = CreateWindow( TEXT("Static"), TEXT(""), WS_CHILD|WS_VISIBLE|SS_BITMAP,0,0,481,90, hwnd, (HMENU)-1, GetHinst(), NULL);
-        hBitmap = (HBITMAP)LoadImage(GetHinst(), TEXT("BAR"), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR );
+        hCtrl = CreateWindow( TEXT("Static"), TEXT(""), WS_CHILD|WS_VISIBLE|SS_BITMAP,0,0,481,90, hwnd, (HMENU)-1, hInst, NULL);
+        hBitmap = (HBITMAP)LoadImage(hInst, TEXT("BAR"), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR );
         SendMessage(hCtrl, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBitmap);
 #endif
         /* アイコン画像 */
-        hCtrl = CreateWindow( TEXT("Static"), TEXT(""), WS_CHILD|WS_VISIBLE|SS_ICON,55,60,0,0, hwnd, (HMENU)-1, GetHinst(), NULL);
-        hIcon = (HICON)LoadImage(GetHinst(), GetAppName(), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR );
+        hCtrl = CreateWindow( TEXT("Static"), TEXT(""), WS_CHILD|WS_VISIBLE|SS_ICON,55,60,0,0, hwnd, (HMENU)-1, hInst, NULL);
+        hIcon = (HICON)LoadImage(hInst, modalDlgData.szAppName, IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR );
         SendMessage(hCtrl, STM_SETIMAGE, IMAGE_ICON, (LPARAM)hIcon);
 
         x = 60;
         y = 100;
         /* アプリケーション名 */
-        hCtrl = CreateWindow( TEXT("static"), GetAppName(), WS_CHILD|WS_VISIBLE, x, y, 400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
+        hCtrl = CreateWindow( TEXT("static"), modalDlgData.szAppName, WS_CHILD|WS_VISIBLE, x, y, 400,19, hwnd, (HMENU)-1, hInst, NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
 
 #if 0
         /* アプリケーション名(補足) */
-        hCtrl = CreateWindow( TEXT("static"), TEXT("(Text EDitor for Developers)"), WS_CHILD|WS_VISIBLE, x+35, y, 400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
+        hCtrl = CreateWindow( TEXT("static"), TEXT("(Text EDitor for Developers)"), WS_CHILD|WS_VISIBLE, x+35, y, 400,19, hwnd, (HMENU)-1, hInst, NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
 #endif
 
         /* バージョン */
         y += 15;
         wsprintf( szTemp, TEXT("Version %s"),VersionStringGet() );
-        hCtrl = CreateWindow( TEXT("static"), szTemp, WS_CHILD|WS_VISIBLE, x, y, 400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
+        hCtrl = CreateWindow( TEXT("static"), szTemp, WS_CHILD|WS_VISIBLE, x, y, 400,19, hwnd, (HMENU)-1, hInst, NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
 
         /* Copyright */
         y += 15;
-        hCtrl = CreateWindow( TEXT("static"), TEXT("Copyright (C) 2009-2010 Wurly"), WS_CHILD|WS_VISIBLE, x, y, 400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
+        hCtrl = CreateWindow( TEXT("static"), TEXT("Copyright (C) 2009-2010 Wurly"), WS_CHILD|WS_VISIBLE, x, y, 400,19, hwnd, (HMENU)-1, hInst, NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
 
         /* ライセンス */
         y = 180;
-        hCtrl = CreateWindow( TEXT("static"), TEXT("この製品はフリーソフトウェアです。"), WS_CHILD|WS_VISIBLE, x, y, 400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
+        hCtrl = CreateWindow( TEXT("static"), TEXT("この製品はフリーソフトウェアです。"), WS_CHILD|WS_VISIBLE, x, y, 400,19, hwnd, (HMENU)-1, hInst, NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
 
         /* 線 */
-        hCtrl = CreateWindow( TEXT("static"), TEXT(""), WS_CHILD|WS_VISIBLE|SS_SUNKEN, 60, 242,410,2, hwnd, (HMENU)-1, GetHinst(), NULL );
+        hCtrl = CreateWindow( TEXT("static"), TEXT(""), WS_CHILD|WS_VISIBLE|SS_SUNKEN, 60, 242,410,2, hwnd, (HMENU)-1, hInst, NULL );
 
         /* 物理メモリサイズ */
         memSts.dwLength = sizeof(MEMORYSTATUSEX);
@@ -205,11 +217,11 @@ AboutDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         wsprintf( szTemp3, TEXT("%ld"),(memSts.ullTotalPhys/1024) );
         GetNumberFormat( LOCALE_SYSTEM_DEFAULT, 0, szTemp3, &numberFormat, szTemp2, 256 );
         wsprintf( szTemp, TEXT("Windows が使用できる物理メモリ:\t        %s KB"),szTemp2 );
-        hCtrl = CreateWindow( TEXT("static"), szTemp, WS_CHILD|WS_VISIBLE, 60, 252,400,19, hwnd, (HMENU)-1, GetHinst(), NULL );
+        hCtrl = CreateWindow( TEXT("static"), szTemp, WS_CHILD|WS_VISIBLE, 60, 252,400,19, hwnd, (HMENU)-1, hInst, NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
 
         /* OKボタン */
-        hCtrl = CreateWindow( TEXT("Button"), TEXT("OK"), WS_CHILD|WS_VISIBLE, 382,270,90,19, hwnd, (HMENU)0, GetHinst(), NULL );
+        hCtrl = CreateWindow( TEXT("Button"), TEXT("OK"), WS_CHILD|WS_VISIBLE, 382,270,90,19, hwnd, (HMENU)0, hInst, NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
 
         SetFocus( hCtrl );

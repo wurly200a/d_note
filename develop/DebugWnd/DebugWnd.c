@@ -6,7 +6,6 @@
 #include "DebugWndMenu.h"
 
 /* 外部関数定義 */
-#include "WinMain.h"
 #include "DebugWndFont.h"
 #include "DebugWndConfig.h"
 
@@ -76,14 +75,15 @@ static TCHAR szModuleName[] = TEXT("Debug"); /* アプリケーションの名称 */
 
 /********************************************************************************
  * 内容  : デバッグウィンドウクラスの登録、ウィンドウの生成
+ * 引数  : HINSTANCE hInst
+ * 引数  : PTSTR szAppName
  * 引数  : int nCmdShow
  * 戻り値: HWND
  ***************************************/
 HWND
-DebugWndCreate( int nCmdShow )
+DebugWndCreate( HINSTANCE hInst, PTSTR szAppName, int nCmdShow )
 {
     WNDCLASS wc = {0};
-    HINSTANCE hInst = GetHinst();
     PTSTR pAppName = getModuleString();
     HMENU hMenu = NULL;
 
@@ -107,6 +107,10 @@ DebugWndCreate( int nCmdShow )
     }
     else
     {
+        memset( &debugWndData, 0, sizeof(debugWndData) );
+        debugWndData.hInstance = hInst;    
+        debugWndData.szAppName = szAppName;
+
         DebugConfigInit();
         DebugFontInit();
 
@@ -364,8 +368,6 @@ debugOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     TEXTMETRIC tm;
     HFONT hFont,hOldFont;
 
-    memset( &debugWndData, 0, sizeof(debugWndData) );
-
     hdc = GetDC( hwnd );
     hFont = GetStockObject(DEFAULT_GUI_FONT);
     hOldFont = SelectObject(hdc, hFont);
@@ -384,7 +386,7 @@ debugOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                                          WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL |
                                          ES_LEFT | ES_MULTILINE | ES_NOHIDESEL | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY,
                                          0, 0, 0, 0,
-                                         hwnd, (HMENU)0, GetHinst(), NULL) ;
+                                         hwnd, (HMENU)0, debugWndData.hInstance, NULL) ;
     debugWndData.hFontIo = NULL;
 
     debugDoCaption( hwnd, "applicationName" );
