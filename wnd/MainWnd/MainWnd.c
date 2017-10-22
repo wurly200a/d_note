@@ -25,25 +25,18 @@
 LRESULT CALLBACK WndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static MAINWND_INDEX convertMSGtoINDEX( UINT message );
 static LRESULT onCreate          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onPaint           ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onSize            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onMove            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onWindowPosChanged( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onClose           ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onDestroy         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onCommand         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onKeyUp           ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onKeyDown         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onChar            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onHscroll         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onVscroll         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onMouseWheel      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onSetFocus        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onKillFocus       ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onDropFiles       ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onInitMenuPopup   ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onFindMsgString   ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-static LRESULT onApp             ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onDefault         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
 int okMessage( HWND hwnd, TCHAR *szMessageFormat, ... );
@@ -59,25 +52,18 @@ static TCHAR szCmdLineLocal[1024];
 static LRESULT (*wndProcTbl[MAINWND_MAX])( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam ) =
 {
     onCreate          , /* WM_CREATE                     */
-    onPaint           , /* WM_PAINT                      */
     onSize            , /* WM_SIZE                       */
     onMove            , /* WM_MOVE                       */
     onWindowPosChanged, /* WM_WINDOWPOSCHANGED           */
     onClose           , /* WM_CLOSE                      */
     onDestroy         , /* WM_DESTROY                    */
     onCommand         , /* WM_COMMAND                    */
-    onKeyUp           , /* WM_KEYUP                      */
-    onKeyDown         , /* WM_KEYDOWN                    */
-    onChar            , /* WM_CHAR                       */
-    onHscroll         , /* WM_HSCROLL                    */
-    onVscroll         , /* WM_VSCROLL                    */
     onMouseWheel      , /* WM_MOUSEWHEEL                 */
     onSetFocus        , /* WM_SETFOCUS                   */
     onKillFocus       , /* WM_KILLFOCUS                  */
     onDropFiles       , /* WM_DROPFILES                  */
     onInitMenuPopup   , /* WM_INITMENUPOPUP              */
     onFindMsgString   , /* FINDMSGSTRINGの登録メッセージ */
-    onApp             , /* WM_APP                        */
     onDefault           /* default                       */
 };
 /* *INDENT-ON* */
@@ -217,19 +203,12 @@ convertMSGtoINDEX( UINT message )
     switch( message )
     {
     case WM_CREATE          :rtn = MAINWND_ON_CREATE          ;break;
-    case WM_PAINT           :rtn = MAINWND_ON_PAINT           ;break;
     case WM_SIZE            :rtn = MAINWND_ON_SIZE            ;break;
     case WM_MOVE            :rtn = MAINWND_ON_MOVE            ;break;
     case WM_WINDOWPOSCHANGED:rtn = MAINWND_ON_WINDOWPOSCHANGED;break;
     case WM_CLOSE           :rtn = MAINWND_ON_CLOSE           ;break;
     case WM_DESTROY         :rtn = MAINWND_ON_DESTROY         ;break;
     case WM_COMMAND         :rtn = MAINWND_ON_COMMAND         ;break;
-    case WM_APP             :rtn = MAINWND_ON_APP             ;break;
-    case WM_KEYUP           :rtn = MAINWND_ON_KEYUP           ;break;
-    case WM_KEYDOWN         :rtn = MAINWND_ON_KEYDOWN         ;break;
-    case WM_CHAR            :rtn = MAINWND_ON_CHAR            ;break;
-    case WM_HSCROLL         :rtn = MAINWND_ON_HSCROLL         ;break;
-    case WM_VSCROLL         :rtn = MAINWND_ON_VSCROLL         ;break;
     case WM_MOUSEWHEEL      :rtn = MAINWND_ON_MOUSEWHEEL      ;break;
     case WM_SETFOCUS        :rtn = MAINWND_ON_SETFOCUS        ;break;
     case WM_KILLFOCUS       :rtn = MAINWND_ON_KILLFOCUS       ;break;
@@ -331,20 +310,6 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     }
 
     return rtn;
-}
-
-/********************************************************************************
- * 内容  : WM_PAINT の処理
- * 引数  : HWND hwnd
- * 引数  : UINT message
- * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
- * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
- * 戻り値: LRESULT
- ***************************************/
-static LRESULT
-onPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
-{
-    return DefWindowProc( hwnd, message, wParam, lParam );
 }
 
 /********************************************************************************
@@ -745,86 +710,6 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 }
 
 /********************************************************************************
- * 内容  : WM_KEYUP の処理
- * 引数  : HWND hwnd
- * 引数  : UINT message
- * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
- * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
- * 戻り値: LRESULT
- ***************************************/
-static LRESULT
-onKeyUp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
-{
-    LRESULT rtn = 0;
-
-    return rtn;
-}
-
-/********************************************************************************
- * 内容  : WM_KEYDOWN の処理
- * 引数  : HWND hwnd
- * 引数  : UINT message
- * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
- * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
- * 戻り値: LRESULT
- ***************************************/
-static LRESULT
-onKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
-{
-    LRESULT rtn = 0;
-
-    return rtn;
-}
-
-/********************************************************************************
- * 内容  : WM_CHAR の処理
- * 引数  : HWND hwnd
- * 引数  : UINT message
- * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
- * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
- * 戻り値: LRESULT
- ***************************************/
-static LRESULT
-onChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
-{
-    LRESULT rtn = 0;
-
-    return rtn;
-}
-
-/********************************************************************************
- * 内容  : WM_HSCROLL の処理
- * 引数  : HWND hwnd
- * 引数  : UINT message
- * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
- * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
- * 戻り値: LRESULT
- ***************************************/
-static LRESULT
-onHscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
-{
-    LRESULT rtn = 0;
-
-    return rtn;
-}
-
-/********************************************************************************
- * 内容  : WM_VSCROLL の処理
- * 引数  : HWND hwnd
- * 引数  : UINT message
- * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
- * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
- * 戻り値: LRESULT
- ***************************************/
-static LRESULT
-onVscroll( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
-{
-    LRESULT rtn = 0;
-
-    return rtn;
-}
-
-/********************************************************************************
  * 内容  : WM_MOUSEWHEEL を処理する
  * 引数  : HWND hwnd
  * 引数  : UINT message
@@ -1082,28 +967,6 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         nop();
     }
 #endif
-
-    return rtn;
-}
-
-/********************************************************************************
- * 内容  : WM_APP の処理
- * 引数  : HWND hwnd
- * 引数  : UINT message
- * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
- * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
- * 戻り値: LRESULT
- ***************************************/
-static LRESULT
-onApp( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
-{
-    LRESULT rtn = 0;
-
-    switch( LOWORD(wParam) )
-    {
-    default:
-        break;
-    }
 
     return rtn;
 }
