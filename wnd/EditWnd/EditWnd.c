@@ -924,11 +924,13 @@ static LRESULT
 editOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
-    TCHAR data[2];
+    static TCHAR data[3];
     int i;
     INT size;
     RECT rect;
     BOOL bRectSelect = FALSE;
+    BOOL bLiteralFix;
+    static BOOL bMultiByteHighExist;
     S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
     if( editWndDataPtr->csStyle & ES_READONLY )
@@ -957,13 +959,53 @@ editOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             case '\t':  /* tab */
             default:
                 /* ï∂éöì¸óÕ */
-                data[0] = (TCHAR)wParam;
-                size = 1;
-                rect.left   = (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar;
-                rect.top    = (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar;
-                rect.right  = editWndDataPtr->cxClient;
-                rect.bottom = rect.top + editWndDataPtr->cyChar;
-                bRectSelect = TRUE;
+                bLiteralFix = (BOOL)TRUE;
+
+                if( bMultiByteHighExist )
+                { /* ëOï∂éöÇ™2byteï∂éöÇÃè„à byteÇæÇ¡ÇΩÇÁ */
+                    bMultiByteHighExist = (BOOL)FALSE;
+                    data[1] = (TCHAR)wParam;
+                    size = 2;
+                }
+                else
+                {
+                    if( (TCHAR)wParam == '\0' )
+                    {
+                        data[0] = (TCHAR)wParam;
+                        size = 1;
+                    }
+                    else if( (TCHAR)wParam == '\t' )
+                    { /* TAB */
+                        data[0] = (TCHAR)wParam;
+                        size = 1;
+                    }
+                    else if( ( (BYTE)wParam <= (BYTE)0x80) ||
+                             (((BYTE)0xA0 <= (BYTE)wParam) && ((BYTE)wParam <= (BYTE)0xDF)) ||
+                             ((BYTE)0xF0 <= (BYTE)wParam) )
+                    { /* 1byteï∂éö */
+                        data[0] = (TCHAR)wParam;
+                        size = 1;
+                    }
+                    else
+                    {  /* 2byteï∂éöÇÃè„à byte */
+                        data[0] = (TCHAR)wParam;
+                        bMultiByteHighExist = (BOOL)TRUE;
+                        bLiteralFix = (BOOL)FALSE;
+                    }
+                }
+
+                if( bLiteralFix )
+                {
+                    rect.left   = (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar;
+                    rect.top    = (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar;
+                    rect.right  = editWndDataPtr->cxClient;
+                    rect.bottom = rect.top + editWndDataPtr->cyChar;
+                    bRectSelect = TRUE;
+                }
+                else
+                {
+                    nop();
+                }
                 break;
             }
 
