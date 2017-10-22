@@ -912,7 +912,9 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     if( pfr->Flags & FR_DIALOGTERM )
     {
+#if 0
         DebugWndPrintf("FR_DIALOGTERM\r\n");
+#endif
         mainWndData.hDlgModeless = NULL;
     }
     else
@@ -927,8 +929,9 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         if( !bFindExec )
         {
             bFindExec = TRUE;
+#if 0
             DebugWndPrintf("FR_FINDNEXT:%s,%d\r\n",pfr->lpstrFindWhat,pfr->wFindWhatLen);
-
+#endif
             if( EditWndFindDataSet(mainWndData.hWndIo,pfr->lpstrFindWhat,pfr->wFindWhatLen,(pfr->Flags&FR_DOWN)?FALSE:TRUE,(pfr->Flags&FR_MATCHCASE)?TRUE:FALSE) )
             {
             }

@@ -507,7 +507,9 @@ editOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     iHorzPos = editWndDataPtr->iHorzPos;
     iVertPos = editWndDataPtr->iVertPos;
 
+#if 0
     DebugWndPrintf("WM_PAINT,left:%d,top:%d,right:%d,bottom:%d\r\n",ps.rcPaint.left,ps.rcPaint.top,ps.rcPaint.right,ps.rcPaint.bottom);
+#endif
 
     iPaintBeg = max(0, ps.rcPaint.top / editWndDataPtr->cyChar);
     iPaintEnd = ps.rcPaint.bottom / editWndDataPtr->cyChar;
@@ -640,8 +642,9 @@ editOnSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     RECT        rc;
 
     GetClientRect(hwnd, &rc);
+#if 0
     DebugWndPrintf("WM_SIZE,left:%d,top:%d,right:%d,bottom:%d\r\n",rc.left,rc.top,rc.right,rc.bottom);
-
+#endif
     editWndDataPtr->cxClient = LOWORD( lParam );
     editWndDataPtr->cyClient = HIWORD( lParam );
 
@@ -1926,6 +1929,7 @@ setScrollPos( HWND hwnd, int fnBar, DWORD nPos )
 static void
 editWndInvalidateRect( HWND hWnd, RECT *rectPtr, BOOL bErase )
 {
+#if 0
     if( rectPtr != NULL )
     {
         DebugWndPrintf("InvalidateRect,left:%d,top:%d,right:%d,bottom:%d,%s\r\n",rectPtr->left,rectPtr->top,rectPtr->right,rectPtr->bottom,(bErase?"TRUE":"FALSE"));
@@ -1934,5 +1938,6 @@ editWndInvalidateRect( HWND hWnd, RECT *rectPtr, BOOL bErase )
     {
         DebugWndPrintf("InvalidateRect,NULL,%s\r\n",(bErase?"TRUE":"FALSE"));
     }
+#endif
     InvalidateRect( hWnd, rectPtr, bErase );
 }

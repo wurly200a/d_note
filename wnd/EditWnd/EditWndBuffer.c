@@ -165,8 +165,9 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
 
     if( (dataPtr != NULL) && (length > 0) )
     { /* データ有りの場合 */
+#if 0
         DebugWndPrintf("EditWndBuffDataSet,");
-
+#endif
         /* 改行で分割したデータを仮連結リスト(tempTopPtr～tempEndPtr)に登録(ここから) */
         while( lineLengthSum < length )
         {
@@ -186,7 +187,9 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
 
         if( (h->lineData.nowPtr)->caretDataPos == 0 )
         { /* 行の先頭に挿入 */
+#if 0
             DebugWndPrintf("Top,");
+#endif
             EditWndBufferInsertLinkedList(&(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr),&tempTopPtr,&tempEndPtr);
 
             if( tempEndPtr->newLineCodeSize == 0 )
@@ -326,8 +329,9 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
                 nop();
             }
         }
-
+#if 0
         DebugWndPrintf("0x%02X,%d\r\n",(BYTE)*dataPtr,length);
+#endif
     }
     else
     { /* データ無しの場合 */
@@ -931,9 +935,9 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
     S_BUFF_LINE_DATA *dividePrePtr,*dividePostPtr;
     BOOL bNormalDelete = FALSE;
     H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
-
+#if 0
     DebugWndPrintf("EditWndBuffRemoveData,");
-
+#endif
     if( (h->lineData.nowPtr) != NULL )
     {
         if( (h->lineData.selectPtr) != NULL )
@@ -955,8 +959,9 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
 
                 if( removeSize )
                 {
+#if 0
                     DebugWndPrintf("0x%02X,%d\r\n",(BYTE)(h->lineData.nowPtr)->data[h->lineData.selectCaretPos],removeSize);
-
+#endif
                     BuffLineDataDivide( (h->lineData.nowPtr), &dividePrePtr, &dividePostPtr ); /* キャレット位置で分割 */
                     newPtr = BuffLineDataShorten( dividePrePtr, removeSize );                 /* 分割後の前方データの末尾から所定量削除 */
                     BuffLineDataDestroy( dividePrePtr );                                 /* 前方データを */
@@ -1129,8 +1134,9 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
 
             if( bNormalDelete )
             { /* 削除有効 */
+#if 0
                 DebugWndPrintf("0x%02X,%d\r\n",(BYTE)(h->lineData.nowPtr)->data[(h->lineData.nowPtr)->caretDataPos-removeSize],removeSize);
-
+#endif
                 BuffLineDataDivide( (h->lineData.nowPtr), &dividePrePtr, &dividePostPtr ); /* キャレット位置で分割 */
                 newPtr = BuffLineDataShorten( dividePrePtr, removeSize );                 /* 分割後の前方データの末尾から所定量削除 */
                 BuffLineDataDestroy( dividePrePtr );                                 /* 前方データを */
@@ -1330,8 +1336,9 @@ EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD lengt
         DWORD findDataLen;
 
         findDataLen = min(length,strlen(dataPtr));
+#if 0
         DebugWndPrintf("EditWndBuffFindDataSet,Target:%s,%d,%d,%d\r\n",dataPtr,findDataLen,bDirectionUp,bMatchCase);
-
+#endif
         if( !bDirectionUp )
         { /* 下へ */
             for( nowPtr = (h->lineData.nowPtr),nowDataPos=(h->lineData.nowPtr)->caretDataPos; nowPtr != NULL; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr,nowDataPos=0 )
@@ -1348,7 +1355,9 @@ EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD lengt
                     (h->lineData.nowPtr)->caretDataPos = (DWORD)(ptr - nowPtr->data) + findDataLen;
                     h->lineData.selectPtr = nowPtr;
                     h->lineData.selectCaretPos = (DWORD)(ptr - nowPtr->data);
+#if 0
                     DebugWndPrintf("EditWndBuffFindDataSet,Found:%s\r\n",(TCHAR *)ptr);
+#endif
                     rtn = (BOOL)TRUE;
                     break;
                 }
@@ -1370,7 +1379,9 @@ EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD lengt
                     (h->lineData.nowPtr)->caretDataPos = (DWORD)(ptr - nowPtr->data) + findDataLen;
                     h->lineData.selectPtr = nowPtr;
                     h->lineData.selectCaretPos = (DWORD)(ptr - nowPtr->data);
+#if 0
                     DebugWndPrintf("EditWndBuffFindDataSet,Found:%s\r\n",(TCHAR *)ptr);
+#endif
                     rtn = (BOOL)TRUE;
                     break;
                 }
@@ -1396,11 +1407,12 @@ EditWndBuffUndo( H_EDITWND_BUFF hEditWndBuff )
     H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
     BOOL rtn = (BOOL)FALSE;
 
-    DebugWndPrintf("EditWndBuffUndo,");
-//    setSelectPosNowPosToFar(h,TRUE,3);
+//    setSelectPosNowPosToFar(h,TRUE,20);
     setSelectPosNowPosToFar(h,FALSE,3);
     rtn = (BOOL)TRUE;
-
+#if 0
+    DebugWndPrintf("EditWndBuffUndo,%d\r\n",rtn);
+#endif
     return (BOOL)rtn;
 }
 
@@ -1838,7 +1850,9 @@ setSelectPosNowPosToFar( H_EDITWND_BUFF_LOCAL h, BOOL bMinus, DWORD offset )
     if( (h->lineData.nowPtr) != NULL )
     {
         nowOffset = offset;
-
+#if 0
+        DebugWndPrintf("setSelectPosNowPosToFar,%d\r\n",bMinus);
+#endif
         if( bMinus )
         { /* 上方向 */
             if( nowOffset <= (h->lineData.nowPtr)->caretDataPos )
