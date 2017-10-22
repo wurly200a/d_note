@@ -12,6 +12,13 @@
 /* 内部関数定義 */
 #include "EditWndBuffer.h"
 
+typedef enum
+{
+    UNDO_TYPE_NONE  ,
+    UNDO_TYPE_SET   ,
+    UNDO_TYPE_REMOVE,
+} UNDO_TYPE;
+
 typedef struct tagS_EDITWND_BUFF_LOCAL
 {
     struct
@@ -28,10 +35,11 @@ typedef struct tagS_EDITWND_BUFF_LOCAL
     INT   tabSize    ;
     struct
     {
-        BOOL             bExist  ;
-        S_BUFF_LINE_DATA *lastPtr;
-        DWORD            caretPos;
-        DWORD            size    ;
+        UNDO_TYPE        undoType        ;
+        S_BUFF_LINE_DATA *lastLineDataPtr;
+        DWORD            caretPos        ;
+        DWORD            size            ;
+        TCHAR            *undoDataPtr    ;
     } undoInfo;
 } S_EDITWND_BUFF_LOCAL;
 typedef S_EDITWND_BUFF_LOCAL * H_EDITWND_BUFF_LOCAL;
@@ -362,12 +370,12 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
         nop();
     }
 
-    h->undoInfo.bExist   = TRUE;
-    h->undoInfo.lastPtr  = h->lineData.nowPtr;
+    h->undoInfo.undoType   = UNDO_TYPE_SET;
+    h->undoInfo.lastLineDataPtr  = h->lineData.nowPtr;
     h->undoInfo.caretPos = (h->lineData.nowPtr)->caretDataPos;
     h->undoInfo.size     = length;
 
-    DebugWndPrintf("0x%08lX,0x%08lX,0x%08lX\r\n",h->undoInfo.lastPtr,h->undoInfo.caretPos,h->undoInfo.size);
+    DebugWndPrintf("0x%08lX,0x%08lX,0x%08lX\r\n",h->undoInfo.lastLineDataPtr,h->undoInfo.caretPos,h->undoInfo.size);
 }
 
 /********************************************************************************
@@ -954,6 +962,17 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
 #endif
     if( (h->lineData.nowPtr) != NULL )
     {
+#if 0
+        DWORD dwSizeForUndo;
+        TCHAR *dataPtrForUndo;
+
+        /*------------ undo用(ここから) ------------*/
+        dwSizeForUndo = EditWndBuffGetDataSize(h,BUFF_SELECTED);
+        dataPtrForUndo = malloc( sizeof(TCHAR) * dwSizeForUndo );
+        EditWndBuffDataGet(h, dataPtrForUndo, dwSizeForUndo, BUFF_SELECTED);
+        /*------------ undo用(ここまで) ------------*/
+#endif
+
         if( (h->lineData.selectPtr) != NULL )
         { /* 選択開始位置有り */
             if( ((h->lineData.nowPtr) == (h->lineData.selectPtr)) &&
@@ -1424,14 +1443,14 @@ EditWndBuffUndo( H_EDITWND_BUFF hEditWndBuff )
 #if 0
     DebugWndPrintf("EditWndBuffUndo,%d\r\n",rtn);
 #endif
-    if( h->undoInfo.bExist )
+    if( h->undoInfo.undoType )
     {
         DebugWndPrintf("EditWndBuffUndo,0x%08lX\r\n",h->undoInfo.size);
 
         setSelectPosNowPosToFar(h,TRUE,h->undoInfo.size);
         EditWndBuffRemoveData(h,TRUE);
 
-        h->undoInfo.bExist = (BOOL)FALSE;
+        h->undoInfo.undoType = UNDO_TYPE_NONE;
         rtn = (BOOL)TRUE;
     }
     else
