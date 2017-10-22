@@ -26,6 +26,13 @@ typedef struct tagS_EDITWND_BUFF_LOCAL
     DWORD xCaret     ;
     DWORD yCaret     ;
     INT   tabSize    ;
+    struct
+    {
+        BOOL             bExist  ;
+        S_BUFF_LINE_DATA *lastPtr;
+        DWORD            caretPos;
+        DWORD            size    ;
+    } undoInfo;
 } S_EDITWND_BUFF_LOCAL;
 typedef S_EDITWND_BUFF_LOCAL * H_EDITWND_BUFF_LOCAL;
 
@@ -354,6 +361,13 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
     {
         nop();
     }
+
+    h->undoInfo.bExist   = TRUE;
+    h->undoInfo.lastPtr  = h->lineData.nowPtr;
+    h->undoInfo.caretPos = (h->lineData.nowPtr)->caretDataPos;
+    h->undoInfo.size     = length;
+
+    DebugWndPrintf("0x%08lX,0x%08lX,0x%08lX\r\n",h->undoInfo.lastPtr,h->undoInfo.caretPos,h->undoInfo.size);
 }
 
 /********************************************************************************
@@ -1407,12 +1421,23 @@ EditWndBuffUndo( H_EDITWND_BUFF hEditWndBuff )
     H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
     BOOL rtn = (BOOL)FALSE;
 
-//    setSelectPosNowPosToFar(h,TRUE,20);
-    setSelectPosNowPosToFar(h,FALSE,3);
-    rtn = (BOOL)TRUE;
 #if 0
     DebugWndPrintf("EditWndBuffUndo,%d\r\n",rtn);
 #endif
+    if( h->undoInfo.bExist )
+    {
+        DebugWndPrintf("EditWndBuffUndo,0x%08lX\r\n",h->undoInfo.size);
+
+        setSelectPosNowPosToFar(h,TRUE,h->undoInfo.size);
+        EditWndBuffRemoveData(h,TRUE);
+
+        h->undoInfo.bExist = (BOOL)FALSE;
+        rtn = (BOOL)TRUE;
+    }
+    else
+    {
+    }
+
     return (BOOL)rtn;
 }
 
@@ -1855,6 +1880,8 @@ setSelectPosNowPosToFar( H_EDITWND_BUFF_LOCAL h, BOOL bMinus, DWORD offset )
 #endif
         if( bMinus )
         { /* ã•ûŒü */
+            DebugWndPrintf("nowOffset=%d,caretDataPos=%d\r\n",nowOffset,(h->lineData.nowPtr)->caretDataPos);
+
             if( nowOffset <= (h->lineData.nowPtr)->caretDataPos )
             { /* “¯ˆês‚ÉŠÜ‚Ü‚ê‚é*/
                 (h->lineData.selectPtr) = (h->lineData.nowPtr);
@@ -1866,15 +1893,15 @@ setSelectPosNowPosToFar( H_EDITWND_BUFF_LOCAL h, BOOL bMinus, DWORD offset )
 
                 for( nowPtr = (h->lineData.nowPtr)->header.prevPtr; nowPtr != NULL; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.prevPtr )
                 {
-                    if( nowOffset <= (nowPtr->dataSize-nowPtr->newLineCodeSize) )
+                    if( nowOffset <= nowPtr->dataSize )
                     { /* ‚±‚Ìs‚ÉŠÜ‚Ü‚ê‚é*/
                         (h->lineData.selectPtr) = nowPtr;
-                        h->lineData.selectCaretPos = (nowPtr->dataSize-nowPtr->newLineCodeSize) - nowOffset;
+                        h->lineData.selectCaretPos = nowPtr->dataSize - nowOffset;
                         break;
                     }
                     else
                     {
-                        nowOffset -= (nowPtr->dataSize-nowPtr->newLineCodeSize);
+                        nowOffset -= nowPtr->dataSize;
                     }
                 }
             }
