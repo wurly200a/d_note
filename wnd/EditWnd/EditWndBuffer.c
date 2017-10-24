@@ -957,6 +957,8 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
     S_BUFF_LINE_DATA *dividePrePtr,*dividePostPtr;
     BOOL bNormalDelete = FALSE;
     H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
+    INT joinPattern = (INT)0;
+
 #if 0
     DebugWndPrintf("EditWndBuffRemoveData,");
 #endif
@@ -972,6 +974,66 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
         EditWndBuffDataGet(h, dataPtrForUndo, dwSizeForUndo, BUFF_SELECTED);
         /*------------ undo用(ここまで) ------------*/
 #endif
+
+        if( (h->lineData.selectPtr) != NULL )
+        { /* 選択開始位置有り */
+            nop();
+        }
+        else
+        {
+            /* 選択位置を設定する */
+
+            if( bBackSpace )
+            { /* BSキー */
+                if( (h->lineData.nowPtr)->caretDataPos > 0  )
+                {
+                    if( detectCharSet((h->lineData.nowPtr),(h->lineData.nowPtr)->caretDataPos-1) == DOUBLE_CHAR_LOW )
+                    { /* 次の文字で削除量を判断 */
+                        setSelectPosNowPosToFar(h,TRUE,2);
+                    }
+                    else
+                    {
+                        setSelectPosNowPosToFar(h,TRUE,1);
+                    }
+                }
+                else
+                { /* キャレットが行の先頭位置。つまり、前行との結合。*/
+                    if( (h->lineData.nowPtr)->header.prevPtr != NULL )
+                    {
+                        joinPattern = (INT)1;
+                    }
+                    else
+                    {
+                        DebugWndPrintf("No Action(Position 0,0)\r\n");
+                    }
+                }
+            }
+            else
+            { /* DELキー */
+                if( (h->lineData.nowPtr)->caretDataPos != ((h->lineData.nowPtr)->dataSize - (h->lineData.nowPtr)->newLineCodeSize) )
+                { /* キャレットが行の最終位置でない */
+                    if( detectCharSet((h->lineData.nowPtr),(h->lineData.nowPtr)->caretDataPos) == DOUBLE_CHAR_HIGH )
+                    { /* キャレット位置の文字で削除量を判断 */
+                        setSelectPosNowPosToFar(h,FALSE,2);
+                    }
+                    else
+                    {
+                        setSelectPosNowPosToFar(h,FALSE,1);
+                    }
+                }
+                else
+                { /* キャレットが行の最終位置。つまり、次行との結合。*/
+                    if( (h->lineData.nowPtr)->header.nextPtr != NULL )
+                    { /* 次行有り */
+                        joinPattern = (INT)2;
+                    }
+                    else
+                    { /* 次行無し */
+                        DebugWndPrintf("No Action(DEL at LastPos)\r\n");
+                    }
+                }
+            }
+        }
 
         if( (h->lineData.selectPtr) != NULL )
         { /* 選択開始位置有り */
@@ -1067,128 +1129,73 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
         }
         else
         { /* 選択無し */
-            if( bBackSpace )
-            { /* BSキー */
-                if( (h->lineData.nowPtr)->caretDataPos > 0  )
+            if( joinPattern == 1 )
+            { /* キャレットが行の先頭位置。つまり、前行との結合。*/
+                if( (h->lineData.nowPtr)->header.prevPtr != NULL )
                 {
-                    bNormalDelete = TRUE;
+                    prevPtr = (S_BUFF_LINE_DATA *)(h->lineData.nowPtr)->header.prevPtr;
+                    newPtr = BuffLineDataJoin( prevPtr,(h->lineData.nowPtr) ); /* 前行と本行を結合した新しい行データを生成 */
 
-                    if( detectCharSet((h->lineData.nowPtr),(h->lineData.nowPtr)->caretDataPos-1) == DOUBLE_CHAR_LOW )
-                    { /* 次の文字で削除量を判断 */
-                        removeSize = 2;
+                    if( newPtr != NULL )
+                    {
+                        /* 行番号、キャレット位置を前行データによって決まる */
+                        newPtr->lineNum  = prevPtr->lineNum;
+                        newPtr->caretDataPos = prevPtr->dataSize - prevPtr->newLineCodeSize;
+
+                        EditWndBufferRemoveLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr) ); /* 本行は削除 */
+                        EditWndBufferReplaceLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),prevPtr,newPtr );    /* 前行は新しい行データに置き換える */
+
+                        BuffLineDataDestroy( (h->lineData.nowPtr) );
+                        BuffLineDataDestroy( prevPtr );
+                        (h->lineData.nowPtr) = newPtr;
+
+                        BuffLineDataUpdateLineNumAfter( (h->lineData.nowPtr) );
                     }
                     else
                     {
-                        removeSize = 1;
+                        DebugWndPrintf("Bug!!!\r\n");
                     }
                 }
                 else
-                { /* キャレットが行の先頭位置。つまり、前行との結合。*/
-                    if( (h->lineData.nowPtr)->header.prevPtr != NULL )
-                    {
-                        prevPtr = (S_BUFF_LINE_DATA *)(h->lineData.nowPtr)->header.prevPtr;
-                        newPtr = BuffLineDataJoin( prevPtr,(h->lineData.nowPtr) ); /* 前行と本行を結合した新しい行データを生成 */
-
-                        if( newPtr != NULL )
-                        {
-                            /* 行番号、キャレット位置を前行データによって決まる */
-                            newPtr->lineNum  = prevPtr->lineNum;
-                            newPtr->caretDataPos = prevPtr->dataSize - prevPtr->newLineCodeSize;
-
-                            EditWndBufferRemoveLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr) ); /* 本行は削除 */
-                            EditWndBufferReplaceLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),prevPtr,newPtr );    /* 前行は新しい行データに置き換える */
-
-                            BuffLineDataDestroy( (h->lineData.nowPtr) );
-                            BuffLineDataDestroy( prevPtr );
-                            (h->lineData.nowPtr) = newPtr;
-
-                            BuffLineDataUpdateLineNumAfter( (h->lineData.nowPtr) );
-                        }
-                        else
-                        {
-                            DebugWndPrintf("Bug!!!\r\n");
-                        }
-                    }
-                    else
-                    {
-                        DebugWndPrintf("No Action(Position 0,0)\r\n");
-                    }
+                {
+                    DebugWndPrintf("arienai\r\n");
                 }
             }
-            else
-            { /* DELキー */
-                if( (h->lineData.nowPtr)->caretDataPos != ((h->lineData.nowPtr)->dataSize - (h->lineData.nowPtr)->newLineCodeSize) )
-                { /* キャレットが行の最終位置でない */
-                    bNormalDelete = TRUE;
+            else if( joinPattern == 2 )
+            { /* キャレットが行の最終位置。つまり、次行との結合。*/
+                if( (h->lineData.nowPtr)->header.nextPtr != NULL )
+                { /* 次行有り */
+                    nextPtr = (S_BUFF_LINE_DATA *)(h->lineData.nowPtr)->header.nextPtr;
+                    newPtr = BuffLineDataJoin( (h->lineData.nowPtr),nextPtr ); /* 本行と次行を結合した新しい行データを生成 */
 
-                    if( detectCharSet((h->lineData.nowPtr),(h->lineData.nowPtr)->caretDataPos) == DOUBLE_CHAR_HIGH )
-                    { /* キャレット位置の文字で削除量を判断 */
-                        removeSize = 2;
+                    if( newPtr != NULL )
+                    {
+                        /* 行番号、キャレット位置は本行データによって決まる */
+                        newPtr->lineNum  = (h->lineData.nowPtr)->lineNum;
+                        newPtr->caretDataPos = (h->lineData.nowPtr)->caretDataPos;
+
+                        EditWndBufferRemoveLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),nextPtr );         /* 次行は削除 */
+                        EditWndBufferReplaceLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr),newPtr ); /* 本行は新しい行データに置き換える */
+
+                        BuffLineDataDestroy( (h->lineData.nowPtr) );
+                        BuffLineDataDestroy( nextPtr );
+                        (h->lineData.nowPtr) = newPtr;
+
+                        BuffLineDataUpdateLineNumAfter( (h->lineData.nowPtr) );
                     }
                     else
                     {
-                        removeSize = 1;
+                        DebugWndPrintf("Bug!!!\r\n");
                     }
-                    (h->lineData.nowPtr)->caretDataPos += removeSize;
                 }
                 else
-                { /* キャレットが行の最終位置。つまり、次行との結合。*/
-                    if( (h->lineData.nowPtr)->header.nextPtr != NULL )
-                    { /* 次行有り */
-                        nextPtr = (S_BUFF_LINE_DATA *)(h->lineData.nowPtr)->header.nextPtr;
-                        newPtr = BuffLineDataJoin( (h->lineData.nowPtr),nextPtr ); /* 本行と次行を結合した新しい行データを生成 */
-
-                        if( newPtr != NULL )
-                        {
-                            /* 行番号、キャレット位置は本行データによって決まる */
-                            newPtr->lineNum  = (h->lineData.nowPtr)->lineNum;
-                            newPtr->caretDataPos = (h->lineData.nowPtr)->caretDataPos;
-
-                            EditWndBufferRemoveLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),nextPtr );         /* 次行は削除 */
-                            EditWndBufferReplaceLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr),newPtr ); /* 本行は新しい行データに置き換える */
-
-                            BuffLineDataDestroy( (h->lineData.nowPtr) );
-                            BuffLineDataDestroy( nextPtr );
-                            (h->lineData.nowPtr) = newPtr;
-
-                            BuffLineDataUpdateLineNumAfter( (h->lineData.nowPtr) );
-                        }
-                        else
-                        {
-                            nop();
-                        }
-                    }
-                    else
-                    { /* 次行無し */
-                        DebugWndPrintf("No Action(DEL at LastPos)\r\n");
-                    }
+                {
+                    DebugWndPrintf("arienai\r\n");
                 }
-            }
-
-            if( bNormalDelete )
-            { /* 削除有効 */
-#if 0
-                DebugWndPrintf("0x%02X,%d\r\n",(BYTE)(h->lineData.nowPtr)->data[(h->lineData.nowPtr)->caretDataPos-removeSize],removeSize);
-#endif
-                BuffLineDataDivide( (h->lineData.nowPtr), &dividePrePtr, &dividePostPtr ); /* キャレット位置で分割 */
-                newPtr = BuffLineDataShorten( dividePrePtr, removeSize );                 /* 分割後の前方データの末尾から所定量削除 */
-                BuffLineDataDestroy( dividePrePtr );                                 /* 前方データを */
-                dividePrePtr = newPtr;                                            /* 書き換え     */
-
-                newPtr = BuffLineDataJoin( dividePrePtr, dividePostPtr );                 /* 再結合 */
-                newPtr->lineNum = (h->lineData.nowPtr)->lineNum;                   /* 行番号は同じ */
-                newPtr->caretDataPos = (h->lineData.nowPtr)->caretDataPos - removeSize;    /* キャレット位置は削除量分前方になる */
-                BuffLineDataDestroy( dividePrePtr );                                 /* 作業データを削除 */
-                BuffLineDataDestroy( dividePostPtr );                                /* 作業データを削除 */
-
-                /* 古い行データと置き換える */
-                EditWndBufferReplaceLinkedList( &(h->lineData.topPtr),&(h->lineData.endPtr),(h->lineData.nowPtr),newPtr );
-                BuffLineDataDestroy( (h->lineData.nowPtr) );
-                (h->lineData.nowPtr) = newPtr;
             }
             else
             {
-                nop();
+                DebugWndPrintf("Select None\r\n");
             }
         }
     }
@@ -1888,7 +1895,7 @@ getDispCharData( H_EDITWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dispPo
 static void
 setSelectPosNowPosToFar( H_EDITWND_BUFF_LOCAL h, BOOL bMinus, DWORD offset )
 {
-    S_BUFF_LINE_DATA *nowPtr;
+    S_BUFF_LINE_DATA *nowPtr,*prevPtr;
     DWORD nowOffset;
 
     if( (h->lineData.nowPtr) != NULL )
@@ -1899,10 +1906,19 @@ setSelectPosNowPosToFar( H_EDITWND_BUFF_LOCAL h, BOOL bMinus, DWORD offset )
 #endif
         if( bMinus )
         { /* 上方向 */
-            DebugWndPrintf("nowOffset=%d,caretDataPos=%d\r\n",nowOffset,(h->lineData.nowPtr)->caretDataPos);
+            prevPtr = (h->lineData.nowPtr)->header.prevPtr;
 
-            if( nowOffset <= (h->lineData.nowPtr)->caretDataPos )
+            DebugWndPrintf("(Minus)nowOffset=%d,caretDataPos=%d\r\n",nowOffset,(h->lineData.nowPtr)->caretDataPos);
+
+            if( (prevPtr != NULL) &&
+                (0 < (nowOffset - ((h->lineData.nowPtr)->caretDataPos))) &&
+                ((nowOffset - ((h->lineData.nowPtr)->caretDataPos)) <= (prevPtr->newLineCodeSize)) )
+            {
+                DebugWndPrintf("top\r\n");
+            }
+            else if( nowOffset <= (h->lineData.nowPtr)->caretDataPos )
             { /* 同一行に含まれる*/
+                DebugWndPrintf("include\r\n");
                 (h->lineData.selectPtr) = (h->lineData.nowPtr);
                 h->lineData.selectCaretPos = (h->lineData.nowPtr)->caretDataPos - nowOffset;
             }
@@ -1927,18 +1943,26 @@ setSelectPosNowPosToFar( H_EDITWND_BUFF_LOCAL h, BOOL bMinus, DWORD offset )
         }
         else
         { /* 下方向 */
-            if( (h->lineData.nowPtr)->caretDataPos + nowOffset <= ((h->lineData.nowPtr)->dataSize-(h->lineData.nowPtr)->newLineCodeSize)  )
+            DebugWndPrintf("(Plus)nowOffset=%d,caretDataPos=%d\r\n",nowOffset,(h->lineData.nowPtr)->caretDataPos);
+
+            if( (((h->lineData.nowPtr)->dataSize - (h->lineData.nowPtr)->newLineCodeSize) < ((h->lineData.nowPtr)->caretDataPos + nowOffset)) &&
+                (((h->lineData.nowPtr)->caretDataPos + nowOffset) <= (h->lineData.nowPtr)->dataSize) )
+            {
+                DebugWndPrintf("end\r\n");
+            }
+            else if( (h->lineData.nowPtr)->caretDataPos + nowOffset <= (h->lineData.nowPtr)->dataSize - (h->lineData.nowPtr)->newLineCodeSize )
             { /* 同一行に含まれる*/
+                DebugWndPrintf("include\r\n");
                 (h->lineData.selectPtr) = (h->lineData.nowPtr);
                 h->lineData.selectCaretPos = (h->lineData.nowPtr)->caretDataPos + nowOffset;
             }
             else
             { /* 同一行に含まれない */
-                nowOffset -= ((h->lineData.nowPtr)->dataSize-(h->lineData.nowPtr)->newLineCodeSize) - (h->lineData.nowPtr)->caretDataPos;
+                nowOffset -= (h->lineData.nowPtr)->dataSize - (h->lineData.nowPtr)->caretDataPos;
 
                 for( nowPtr = (h->lineData.nowPtr)->header.nextPtr; nowPtr != NULL; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr )
                 {
-                    if( nowOffset <= (nowPtr->dataSize-nowPtr->newLineCodeSize) )
+                    if( nowOffset <= nowPtr->dataSize )
                     { /* この行に含まれる*/
                         (h->lineData.selectPtr) = nowPtr;
                         h->lineData.selectCaretPos = nowOffset;
@@ -1946,7 +1970,7 @@ setSelectPosNowPosToFar( H_EDITWND_BUFF_LOCAL h, BOOL bMinus, DWORD offset )
                     }
                     else
                     {
-                        nowOffset -= (nowPtr->dataSize-nowPtr->newLineCodeSize);
+                        nowOffset -= nowPtr->dataSize;
                     }
                 }
             }
