@@ -11,6 +11,27 @@
 
 /* 内部関数定義 */
 #include "EditWnd.h"
+
+typedef struct
+{
+    int    cxChar;    /* 文字サイズ(X)             */
+    int    cyChar;    /* 文字サイズ(Y)             */
+    int    cxClient;  /* クライアント領域サイズ(X) */
+    int    cyClient;  /* クライアント領域サイズ(Y) */
+    int    cxBuffer;  /* 表示可能な文字数(X)       */
+    int    cyBuffer;  /* 表示可能な文字数(Y)       */
+    DWORD  dwCharSet;
+    int    cxCaps;    /*  */
+    int    iAccumDelta;
+    int    iDeltaPerLine;
+    int    iHorzPos;     /* スクロールバーの横位置  */
+    int    iVertPos;     /* スクロールバーの縦位置  */
+    HFONT  hFont;
+    BOOL   bShiftKeyOn;
+    H_EDITWND_BUFF hEditWndBuff;
+    LONG   csStyle;
+} S_EDITWND_DATA;
+
 LRESULT CALLBACK EditWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static EDITWND_INDEX editWndConvertMSGtoINDEX( UINT message );
 static LRESULT editOnCreate             ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
@@ -48,6 +69,7 @@ static LRESULT editOnLineFromChar       ( HWND hwnd, UINT message, WPARAM wParam
 static LRESULT editOnDefault            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
 static void editWndRemoveData( HWND hwnd, BOOL bBackSpace );
+static void editWndCaretPosUpdate( S_EDITWND_DATA *editWndDataPtr );
 static void updateTextMetrics( HWND hwnd );
 static void setAllScrollInfo( HWND hwnd );
 static void getAllScrollInfo( HWND hwnd );
@@ -55,25 +77,6 @@ static void setScrollPos( HWND hwnd, int fnBar, DWORD nPos );
 static void editWndInvalidateRect( HWND hWnd, RECT *rectPtr, BOOL bErase );
 
 /* 内部変数定義 */
-typedef struct
-{
-    int    cxChar;    /* 文字サイズ(X)             */
-    int    cyChar;    /* 文字サイズ(Y)             */
-    int    cxClient;  /* クライアント領域サイズ(X) */
-    int    cyClient;  /* クライアント領域サイズ(Y) */
-    int    cxBuffer;  /* 表示可能な文字数(X)       */
-    int    cyBuffer;  /* 表示可能な文字数(Y)       */
-    DWORD  dwCharSet;
-    int    cxCaps;    /*  */
-    int    iAccumDelta;
-    int    iDeltaPerLine;
-    int    iHorzPos;     /* スクロールバーの横位置  */
-    int    iVertPos;     /* スクロールバーの縦位置  */
-    HFONT  hFont;
-    BOOL   bShiftKeyOn;
-    H_EDITWND_BUFF hEditWndBuff;
-    LONG   csStyle;
-} S_EDITWND_DATA;
 
 /* *INDENT-OFF* */
 static LRESULT (*editWndProcTbl[EDITWND_MAX])( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam ) =
@@ -614,7 +617,7 @@ editOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     if( hwnd == GetFocus() )
     {
-        SetCaretPos( (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar, (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar);
+        editWndCaretPosUpdate(editWndDataPtr);
         SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_UPDATE), (LPARAM)hwnd);
     }
     else
@@ -850,7 +853,25 @@ editOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                 editWndRemoveData( hwnd, TRUE );
             }
             break;
+
+        case VK_HOME:
+            bProc = FALSE;
+            break;
+
+        case VK_END :
+            bProc = FALSE;
+            break;
+
+        case VK_PRIOR: /* Pg Up */
+            bProc = FALSE;
+            break;
+
+        case VK_NEXT : /* Pg Dn */
+            bProc = FALSE;
+            break;
+
         default:
+//            DebugWndPrintf("0x%04X\r\n",wParam);
             bProc = FALSE;
             break;
         }
@@ -900,7 +921,7 @@ editOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
             HideCaret(hwnd);
             editWndInvalidateRect( hwnd, NULL, bErase );
-            SetCaretPos( (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar, (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar);
+            editWndCaretPosUpdate(editWndDataPtr);
             ShowCaret(hwnd);
         }
         else
@@ -1033,7 +1054,7 @@ editOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
         editOnImeStartComposition( hwnd, message, wParam, lParam );
 
-        SetCaretPos( (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar, (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar);
+        editWndCaretPosUpdate(editWndDataPtr);
         setAllScrollInfo(hwnd);
     }
 
@@ -1288,7 +1309,7 @@ editOnMouseMove( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         bCaretPosChange = EditWndBuffSetCaretPos( editWndDataPtr->hEditWndBuff, ((x + (editWndDataPtr->iHorzPos*editWndDataPtr->cxChar))/editWndDataPtr->cxChar), ((y + (editWndDataPtr->iVertPos*editWndDataPtr->cyChar))/editWndDataPtr->cyChar) );
         if( bCaretPosChange )
         {
-            SetCaretPos( (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar, (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar);
+            editWndCaretPosUpdate(editWndDataPtr);
             editWndInvalidateRect( hwnd, NULL, FALSE );
         }
         else
@@ -1336,7 +1357,7 @@ editOnLbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     EditWndBuffSetCaretPos( editWndDataPtr->hEditWndBuff, ((x + (editWndDataPtr->iHorzPos*editWndDataPtr->cxChar))/editWndDataPtr->cxChar), ((y + (editWndDataPtr->iVertPos*editWndDataPtr->cyChar))/editWndDataPtr->cyChar) );
 
-    SetCaretPos( (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar, (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar);
+    editWndCaretPosUpdate(editWndDataPtr);
 
     if( wParam & MK_SHIFT )
     {
@@ -1763,7 +1784,7 @@ editOnSetSel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         EditWndBuffSetCaretPos(editWndDataPtr->hEditWndBuff,0xffffffff,EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff));
         setScrollPos( hwnd, SB_VERT, EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff) );
         editWndInvalidateRect( hwnd, NULL, TRUE );
-        SetCaretPos( (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar, (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar);
+        editWndCaretPosUpdate(editWndDataPtr);
         ShowCaret(hwnd);
     }
 
@@ -1870,6 +1891,25 @@ editWndRemoveData( HWND hwnd, BOOL bBackSpace )
     EditWndBuffRemoveData( editWndDataPtr->hEditWndBuff, bBackSpace );
     SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_CHANGE), (LPARAM)hwnd);
 }
+
+/********************************************************************************
+ * 内容  : キャレット位置の更新
+ * 引数  : S_EDITWND_DATA *editWndDataPtr
+ * 戻り値: なし
+ ***************************************/
+static void
+editWndCaretPosUpdate( S_EDITWND_DATA *editWndDataPtr )
+{
+    if( editWndDataPtr != NULL )
+    {
+        SetCaretPos( (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar, (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar);
+    }
+    else
+    {
+        nop();
+    }
+}
+
 
 /********************************************************************************
  * 内容  : テキストメトリクスの更新
