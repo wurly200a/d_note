@@ -868,10 +868,12 @@ editOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
         case VK_PRIOR: /* Pg Up */
             bProc = FALSE;
+            SendMessage(hwnd, WM_VSCROLL, SB_PAGEUP, (LPARAM)0);
             break;
 
         case VK_NEXT : /* Pg Dn */
             bProc = FALSE;
+            SendMessage(hwnd, WM_VSCROLL, SB_PAGEDOWN, (LPARAM)0);
             break;
 
         default:
