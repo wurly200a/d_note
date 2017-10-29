@@ -226,9 +226,9 @@ BOOL EditWndBuffSetTabSize( H_EDITWND_BUFF hEditWndBuff, INT tabSize );
 /********************************************************************************
  * 内容  : EDITウィンドウバッファの範囲選択ON
  * 引数  : H_EDITWND_BUFF hEditWndBuff
- * 戻り値: なし
+ * 戻り値: BOOL (TRUE:変更された)
  ***************************************/
-void EditWndBuffSelectOn( H_EDITWND_BUFF hEditWndBuff );
+BOOL EditWndBuffSelectOn( H_EDITWND_BUFF hEditWndBuff );
 
 /********************************************************************************
  * 内容  : EDITウィンドウバッファの範囲選択OFF

@@ -1278,11 +1278,12 @@ EditWndBuffSetTabSize( H_EDITWND_BUFF hEditWndBuff, INT tabSize )
 /********************************************************************************
  * 内容  : EDITウィンドウバッファの範囲選択ON
  * 引数  : H_EDITWND_BUFF hEditWndBuff
- * 戻り値: なし
+ * 戻り値: BOOL (TRUE:変更された)
  ***************************************/
-void
+BOOL
 EditWndBuffSelectOn( H_EDITWND_BUFF hEditWndBuff )
 {
+    BOOL bRtn = FALSE;
     H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
 
     if( (h->lineData.selectPtr) )
@@ -1291,9 +1292,21 @@ EditWndBuffSelectOn( H_EDITWND_BUFF hEditWndBuff )
     }
     else
     {
+        if( (h->lineData.selectPtr) != (h->lineData.nowPtr) ||
+            (h->lineData.selectCaretPos) != (h->lineData.nowPtr)->caretDataPos )
+        {
+            bRtn = TRUE;
+        }
+        else
+        {
+            nop();
+        }
+
         (h->lineData.selectPtr) = (h->lineData.nowPtr);
         (h->lineData.selectCaretPos) = (h->lineData.nowPtr)->caretDataPos;
     }
+
+    return bRtn;
 }
 
 /********************************************************************************
@@ -1321,8 +1334,13 @@ EditWndBuffSelectOff( H_EDITWND_BUFF hEditWndBuff )
         bRtn = TRUE;
     }
 
+#if 1
     (h->lineData.selectPtr) = NULL;
     (h->lineData.selectCaretPos) = 0;
+#else /* こっちが本当だと思うのだが。今は上手く動かないので */
+    (h->lineData.selectPtr) = h->lineData.nowPtr;
+    (h->lineData.selectCaretPos) = (h->lineData.nowPtr)->caretDataPos;
+#endif
 
     return bRtn;
 }
