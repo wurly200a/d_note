@@ -855,6 +855,7 @@ editOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break;
 
         case VK_HOME:
+            DebugWndPrintf("VK_HOME\r\n");
             bProc = FALSE;
             break;
 
@@ -871,7 +872,7 @@ editOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break;
 
         default:
-//            DebugWndPrintf("0x%04X\r\n",wParam);
+//            DebugWndPrintf("WM_KEYDOWN:0x%04X\r\n",wParam);
             bProc = FALSE;
             break;
         }
@@ -979,6 +980,7 @@ editOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                 break;
             case '\t':  /* tab */
             default:
+//                DebugWndPrintf("WM_CHAR:0x%04X\r\n",wParam);
                 /* •¶Žš“ü—Í */
                 bLiteralFix = (BOOL)TRUE;
 
@@ -999,6 +1001,10 @@ editOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                     { /* TAB */
                         data[0] = (TCHAR)wParam;
                         size = 1;
+                    }
+                    else if( (BYTE)wParam < (BYTE)0x20 )
+                    { /* ‚»‚Ì‘¼‚ÌASCII§ŒäƒR[ƒh */
+                        bLiteralFix = (BOOL)FALSE;
                     }
                     else if( ( (BYTE)wParam <= (BYTE)0x80) ||
                              (((BYTE)0xA0 <= (BYTE)wParam) && ((BYTE)wParam <= (BYTE)0xDF)) ||

@@ -375,7 +375,7 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
     h->undoInfo.caretPos = (h->lineData.nowPtr)->caretDataPos;
     h->undoInfo.size     = length;
 
-    DebugWndPrintf("0x%08lX,0x%08lX,0x%08lX\r\n",h->undoInfo.lastLineDataPtr,h->undoInfo.caretPos,h->undoInfo.size);
+//    DebugWndPrintf("0x%08lX,0x%08lX,0x%08lX\r\n",h->undoInfo.lastLineDataPtr,h->undoInfo.caretPos,h->undoInfo.size);
 }
 
 /********************************************************************************
@@ -1936,17 +1936,16 @@ setSelectPosNowPosToFar( H_EDITWND_BUFF_LOCAL h, BOOL bMinus, DWORD offset )
         { /* ã•ûŒü */
             prevPtr = (h->lineData.nowPtr)->header.prevPtr;
 
-            DebugWndPrintf("(Minus)nowOffset=%d,caretDataPos=%d\r\n",nowOffset,(h->lineData.nowPtr)->caretDataPos);
+//            DebugWndPrintf("(Minus)nowOffset=%d,caretDataPos=%d\r\n",nowOffset,(h->lineData.nowPtr)->caretDataPos);
 
             if( (prevPtr != NULL) &&
                 (0 < (nowOffset - ((h->lineData.nowPtr)->caretDataPos))) &&
                 ((nowOffset - ((h->lineData.nowPtr)->caretDataPos)) <= (prevPtr->newLineCodeSize)) )
             {
-                DebugWndPrintf("top\r\n");
+                nop();
             }
             else if( nowOffset <= (h->lineData.nowPtr)->caretDataPos )
             { /* “¯ˆês‚ÉŠÜ‚Ü‚ê‚é*/
-                DebugWndPrintf("include\r\n");
                 (h->lineData.selectPtr) = (h->lineData.nowPtr);
                 h->lineData.selectCaretPos = (h->lineData.nowPtr)->caretDataPos - nowOffset;
             }
@@ -1971,16 +1970,15 @@ setSelectPosNowPosToFar( H_EDITWND_BUFF_LOCAL h, BOOL bMinus, DWORD offset )
         }
         else
         { /* ‰º•ûŒü */
-            DebugWndPrintf("(Plus)nowOffset=%d,caretDataPos=%d\r\n",nowOffset,(h->lineData.nowPtr)->caretDataPos);
+//            DebugWndPrintf("(Plus)nowOffset=%d,caretDataPos=%d\r\n",nowOffset,(h->lineData.nowPtr)->caretDataPos);
 
             if( (((h->lineData.nowPtr)->dataSize - (h->lineData.nowPtr)->newLineCodeSize) < ((h->lineData.nowPtr)->caretDataPos + nowOffset)) &&
                 (((h->lineData.nowPtr)->caretDataPos + nowOffset) <= (h->lineData.nowPtr)->dataSize) )
             {
-                DebugWndPrintf("end\r\n");
+                nop();
             }
             else if( (h->lineData.nowPtr)->caretDataPos + nowOffset <= (h->lineData.nowPtr)->dataSize - (h->lineData.nowPtr)->newLineCodeSize )
             { /* “¯ˆês‚ÉŠÜ‚Ü‚ê‚é*/
-                DebugWndPrintf("include\r\n");
                 (h->lineData.selectPtr) = (h->lineData.nowPtr);
                 h->lineData.selectCaretPos = (h->lineData.nowPtr)->caretDataPos + nowOffset;
             }
