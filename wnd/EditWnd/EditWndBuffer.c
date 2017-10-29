@@ -687,7 +687,7 @@ EditWndBuffSetCaretPos( H_EDITWND_BUFF hEditWndBuff, DWORD xPos, DWORD lineNum )
     if( nowPtr != NULL )
     {
         if( (h->lineData.nowPtr) != nowPtr )
-        {
+        { /* キャレットのある行が変わった */
             (h->lineData.nowPtr) = nowPtr;
             bCaretPosChange = TRUE;
         }
@@ -975,7 +975,8 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
         /*------------ undo用(ここまで) ------------*/
 #endif
 
-        if( (h->lineData.selectPtr) != NULL )
+        if( ((h->lineData.selectPtr != NULL) && (h->lineData.nowPtr != h->lineData.selectPtr)) ||
+            ((h->lineData.nowPtr == h->lineData.selectPtr) && ((h->lineData.nowPtr)->caretDataPos != (h->lineData.selectPtr)->caretDataPos)) )
         { /* 選択開始位置有り */
             nop();
         }
