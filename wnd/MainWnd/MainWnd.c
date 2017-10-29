@@ -622,6 +622,10 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         case IDM_EDIT_FIND_NEXT:
             break;
 
+        case IDM_EDIT_GOTO_LINE:
+            ModalDlg( MODAL_DLG_ID_GO_TO_LINE, &modalDlgData, hwnd, mainWndData.xPos, mainWndData.yPos );
+            break;
+
         case IDM_EDIT_SELECT_ALL:
             SendMessage( mainWndData.hWndIo, EM_SETSEL, 0, -1 );
             break;

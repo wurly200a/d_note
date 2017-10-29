@@ -77,7 +77,6 @@ MenuCreate( void )
     EnableMenuItem( hMenu, IDM_EDIT_FIND_NEXT  , MF_GRAYED );
     EnableMenuItem( hMenu, IDM_EDIT_REPLACE    , MF_GRAYED );
 #endif
-    EnableMenuItem( hMenu, IDM_EDIT_GOTO_LINE  , MF_GRAYED );
 
     hMenuPopup = CreateMenu();
     AppendMenu( hMenuPopup, MF_STRING, IDM_FORMAT_WRAP     , TEXT("âEí[Ç≈ê‹ÇËï‘Ç∑(&W)") );

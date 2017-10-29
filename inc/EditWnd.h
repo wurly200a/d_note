@@ -51,6 +51,8 @@
 /* SetWindowText(HWND hWnd,LPCTSTR lpString)                ×                  */
 /*                                                                              */
 
+#define WM_GOTOLINE WM_USER+1
+
 /********************************************************************************
  * 内容  : EDITウィンドウクラスの登録
  * 引数  : HINSTANCE hInst

@@ -4,6 +4,7 @@
 typedef enum
 {
     MODAL_DLG_ID_ABOUT,
+    MODAL_DLG_ID_GO_TO_LINE,
     MODAL_DLG_ID_MAX
 }MODAL_DLG_ID;
 

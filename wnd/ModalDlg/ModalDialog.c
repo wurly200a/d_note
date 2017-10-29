@@ -12,6 +12,7 @@
 #include "ModalDlg.h"
 
 LRESULT CALLBACK AboutDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+LRESULT CALLBACK GoToLineDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
 /* 内部変数定義 */
 static TCHAR szAboutTitleName[64];
@@ -37,8 +38,9 @@ typedef struct
 
 S_MODAL_DLG_INFO modalDlgInfoTbl[MODAL_DLG_ID_MAX] =
 {
-    /* className      , titleName             , wndPrc  */
-    { TEXT("AboutDlg"), TEXT("バージョン情報"), AboutDlgProc, 25, 25, 487, 327 },
+    /* className      , titleName             , wndPrc         , x , y , w  , h*/
+    { TEXT("AboutDlg"), TEXT("バージョン情報"), AboutDlgProc   , 25, 25, 487, 327 },
+    { TEXT("GoToLine"), TEXT("行へ移動")      , GoToLineDlgProc, 25, 25, 297, 147 },
 };
 
 /********************************************************************************
@@ -245,6 +247,75 @@ AboutDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         break;
     default:
         rtn = DefWindowProc( hwnd, message, wParam, lParam );
+    }
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : 「行へ移動」のモーダルダイアログボックス
+ * 引数  : HWND   hwnd
+ * 引数  : UINT   message
+ * 引数  : WPARAM wParam
+ * 引数  : LPARAM lParam
+ * 戻り値: LRESULT
+ ***************************************/
+LRESULT CALLBACK
+GoToLineDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+    HWND hCtrl;
+    static HICON hIcon;
+    HINSTANCE hInst = modalDlgData.hInstance;
+
+    switch( message )
+    {
+    case WM_CREATE:
+        /* 文字列 */
+        hCtrl = CreateWindow( TEXT("static"), TEXT("行番号(L):"), WS_CHILD|WS_VISIBLE, 10, 10, 100,20, hwnd, (HMENU)-1, hInst, NULL );
+        SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
+
+        /* テキストボックス */
+        hCtrl = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW|WS_EX_CONTROLPARENT, TEXT("edit"), TEXT(""), WS_CHILD|WS_VISIBLE, 10, 35, 270,25, hwnd, (HMENU)2, hInst, NULL );
+        SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
+
+        /* 「移動」ボタン */
+        hCtrl = CreateWindow( TEXT("Button"), TEXT("移動"), WS_CHILD|WS_VISIBLE, 95,80,90,25, hwnd, (HMENU)1, hInst, NULL );
+        SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
+        SetFocus( hCtrl );
+
+        /* 「キャンセル」ボタン */
+        hCtrl = CreateWindow( TEXT("Button"), TEXT("キャンセル"), WS_CHILD|WS_VISIBLE, 190,80,90,25, hwnd, (HMENU)0, hInst, NULL );
+        SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
+        break;
+    case WM_KEYDOWN:
+        switch(wParam)
+        {
+        default:
+//            DebugWndPrintf("WM_KEYDOWN:0x%04X\r\n",wParam);
+            break;
+        }
+        break;
+    case WM_DESTROY:
+        PostQuitMessage(0); /* WM_QUITメッセージをポストする */
+        break;
+    case WM_COMMAND:
+        switch( LOWORD(wParam) )
+        {
+        case 0:
+            DestroyWindow( hwnd );
+            break;
+        case 1:
+            DestroyWindow( hwnd );
+            break;
+        default:
+            break;
+        }
+        break;
+    default:
+//        DebugWndPrintf("message=0x%04X\r\n",message);
+        rtn = DefWindowProc( hwnd, message, wParam, lParam );
+        break;
     }
 
     return rtn;

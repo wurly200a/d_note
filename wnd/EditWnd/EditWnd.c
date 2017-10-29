@@ -66,6 +66,7 @@ static LRESULT editOnSetSel             ( HWND hwnd, UINT message, WPARAM wParam
 static LRESULT editOnSetFont            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT editOnGetLineCount       ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT editOnLineFromChar       ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnGoToLine           ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT editOnDefault            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
 static void editWndRemoveData( HWND hwnd, BOOL bBackSpace );
@@ -113,6 +114,7 @@ static LRESULT (*editWndProcTbl[EDITWND_MAX])( HWND hwnd, UINT message, WPARAM w
     editOnSetFont            , /* WM_SETFONT             */
     editOnGetLineCount       , /* EM_GETLINECOUNT        */
     editOnLineFromChar       , /* EM_LINEFROMCHAR        */
+    editOnGoToLine           , /* WM_GOTOLINE            */
     editOnDefault              /* default                */
 };
 /* *INDENT-ON* */
@@ -415,6 +417,7 @@ editWndConvertMSGtoINDEX( UINT message )
     case WM_SETFONT             :rtn = EDITWND_ON_SETFONT             ;break;
     case EM_GETLINECOUNT        :rtn = EDITWND_ON_GETLINECOUNT        ;break;
     case EM_LINEFROMCHAR        :rtn = EDITWND_ON_LINEFROMCHAR        ;break;
+    case WM_GOTOLINE            :rtn = EDITWND_ON_GOTOLINE            ;break;
 
     case WM_NCMOUSEMOVE         :rtn = EDITWND_ON_DEFAULT             ;break;
     case WM_SETCURSOR           :rtn = EDITWND_ON_DEFAULT             ;break;
@@ -1874,6 +1877,25 @@ editOnLineFromChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     {
         nop();
     }
+
+    return (LRESULT)result;
+}
+
+/********************************************************************************
+ * “à—e  : WM_GOTOLINE ‚ðˆ—‚·‚é
+ * ˆø”  : HWND hwnd
+ * ˆø”  : UINT message
+ * ˆø”  : WPARAM wParam
+ * ˆø”  : LPARAM lParam
+ * –ß‚è’l: LRESULT
+ ***************************************/
+static LRESULT
+editOnGoToLine( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    DWORD result = (DWORD)0;
+
+    EditWndBuffSetCaretPos(editWndDataPtr->hEditWndBuff,0xffffffff,EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff));
 
     return (LRESULT)result;
 }
