@@ -11,11 +11,10 @@
 /* 内部関数定義 */
 #include "ModalDlg.h"
 
-LRESULT CALLBACK AboutDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-LRESULT CALLBACK GoToLineDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+BOOL CALLBACK AboutDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam );
+BOOL CALLBACK GoToLineDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam );
 
 /* 内部変数定義 */
-static TCHAR szAboutTitleName[64];
 
 typedef struct
 {
@@ -38,9 +37,9 @@ typedef struct
 
 S_MODAL_DLG_INFO modalDlgInfoTbl[MODAL_DLG_ID_MAX] =
 {
-    /* className      , titleName             , wndPrc         , x , y , w  , h*/
-    { TEXT("AboutDlg"), TEXT("バージョン情報"), AboutDlgProc   , 25, 25, 487, 327 },
-    { TEXT("GoToLine"), TEXT("行へ移動")      , GoToLineDlgProc, 25, 25, 297, 147 },
+    /* className         , titleName             , wndPrc         , x , y , w  , h*/
+    { TEXT("ABOUTDLG")   , TEXT("バージョン情報"), AboutDlgProc   , 25, 25, 487, 327 },
+    { TEXT("GOTOLINEDLG"), TEXT("行へ移動")      , GoToLineDlgProc, 25, 25, 297, 147 },
 };
 
 /********************************************************************************
@@ -57,32 +56,6 @@ ModalDlgInit( HINSTANCE hInst, PTSTR szAppName )
 
     modalDlgData.hInstance = hInst;
     modalDlgData.szAppName = szAppName;
-
-    for( i=0; i<MODAL_DLG_ID_MAX; i++ )
-    {
-        wc.style         = CS_HREDRAW | CS_VREDRAW;
-        wc.lpfnWndProc   = modalDlgInfoTbl[i].wndPrc;
-        wc.cbClsExtra    = 0;
-        wc.cbWndExtra    = 0;
-        wc.hInstance     = modalDlgData.hInstance;
-        wc.hIcon         = NULL;
-        wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
-        wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE+1);
-        wc.lpszMenuName  = NULL;
-        wc.lpszClassName = modalDlgInfoTbl[i].className;
-
-        switch( i )
-        {
-        case MODAL_DLG_ID_ABOUT:
-            wsprintf( szAboutTitleName, "%s のバージョン情報",modalDlgData.szAppName );
-            modalDlgInfoTbl[i].titleName = szAboutTitleName;
-            break;
-        default:
-            break;
-        }
-
-        RegisterClass(&wc); /* ウインドウクラス登録 */
-    }
 
     return TRUE;
 }
@@ -106,23 +79,7 @@ ModalDlg( MODAL_DLG_ID id, S_MODAL_DLG_DATA *dataPtr, HWND hwnd, int x, int y )
     if( id < MODAL_DLG_ID_MAX )
     {
         /* ダイアログボックス作成 */
-        hDlg = CreateWindowEx( WS_EX_DLGMODALFRAME,
-                               modalDlgInfoTbl[id].className,modalDlgInfoTbl[id].titleName,
-                               WS_VISIBLE | (WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU/*|WS_THICKFRAME|WS_MINIMIZEBOX|WS_MAXIMIZEBOX */),
-                               x+modalDlgInfoTbl[id].xOffset, y+modalDlgInfoTbl[id].yOffset,
-                               modalDlgInfoTbl[id].nWidth   , modalDlgInfoTbl[id].nHeight  ,
-                               hwnd , NULL, modalDlgData.hInstance, NULL );
-
-        EnableWindow(hwnd,FALSE); /* メインウインドウを無効化してモーダルに */
-
-        while( GetMessage(&msg,NULL,0,0) )
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-
-        EnableWindow(hwnd,TRUE); /* メインウインドウを有効にしてモーダル解除 */
-        BringWindowToTop(hwnd);
+        DialogBox(modalDlgData.hInstance, modalDlgInfoTbl[id].className, hwnd, (DLGPROC)modalDlgInfoTbl[id].wndPrc);
     }
     else
     {
@@ -134,16 +91,16 @@ ModalDlg( MODAL_DLG_ID id, S_MODAL_DLG_DATA *dataPtr, HWND hwnd, int x, int y )
 
 /********************************************************************************
  * 内容  : バージョン情報のモーダルダイアログボックス
- * 引数  : HWND   hwnd
+ * 引数  : HWND   hDlg
  * 引数  : UINT   message
  * 引数  : WPARAM wParam
  * 引数  : LPARAM lParam
- * 戻り値: LRESULT
+ * 戻り値: BOOL
  ***************************************/
-LRESULT CALLBACK
-AboutDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+BOOL CALLBACK
+AboutDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam )
 {
-    LRESULT rtn = 0;
+    BOOL rtn = FALSE;
     HWND hCtrl;
     MEMORYSTATUSEX memSts;
     TCHAR szTemp[256];
@@ -164,54 +121,58 @@ AboutDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     numberFormat.lpThousandSep = ",";
     numberFormat.NegativeOrder = 1;
 
+#if 0
+    DebugWndPrintf("message=:0x%04X\r\n",message);
+#endif
+
     switch( message )
     {
-    case WM_CREATE:
+    case WM_INITDIALOG:
 #if 0
         /* 白矩形 */
-        CreateWindow(TEXT("static"),TEXT(""),WS_CHILD|WS_VISIBLE|SS_WHITERECT,0,0,481,90,hwnd,(HMENU)-1,hInst,NULL);
+        CreateWindow(TEXT("static"),TEXT(""),WS_CHILD|WS_VISIBLE|SS_WHITERECT,0,0,481,90,hDlg,(HMENU)-1,hInst,NULL);
 #endif
 #if 0
         /* bar画像 */
-        hCtrl = CreateWindow( TEXT("Static"), TEXT(""), WS_CHILD|WS_VISIBLE|SS_BITMAP,0,0,481,90, hwnd, (HMENU)-1, hInst, NULL);
+        hCtrl = CreateWindow( TEXT("Static"), TEXT(""), WS_CHILD|WS_VISIBLE|SS_BITMAP,0,0,481,90, hDlg, (HMENU)-1, hInst, NULL);
         hBitmap = (HBITMAP)LoadImage(hInst, TEXT("BAR"), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR );
         SendMessage(hCtrl, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBitmap);
 #endif
         /* アイコン画像 */
-        hCtrl = CreateWindow( TEXT("Static"), TEXT(""), WS_CHILD|WS_VISIBLE|SS_ICON,55,60,0,0, hwnd, (HMENU)-1, hInst, NULL);
+        hCtrl = CreateWindow( TEXT("Static"), TEXT(""), WS_CHILD|WS_VISIBLE|SS_ICON,55,60,0,0, hDlg, (HMENU)-1, hInst, NULL);
         hIcon = (HICON)LoadImage(hInst, modalDlgData.szAppName, IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR );
         SendMessage(hCtrl, STM_SETIMAGE, IMAGE_ICON, (LPARAM)hIcon);
 
         x = 60;
         y = 100;
         /* アプリケーション名 */
-        hCtrl = CreateWindow( TEXT("static"), modalDlgData.szAppName, WS_CHILD|WS_VISIBLE, x, y, 400,19, hwnd, (HMENU)-1, hInst, NULL );
+        hCtrl = CreateWindow( TEXT("static"), modalDlgData.szAppName, WS_CHILD|WS_VISIBLE, x, y, 400,19, hDlg, (HMENU)-1, hInst, NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
 
 #if 0
         /* アプリケーション名(補足) */
-        hCtrl = CreateWindow( TEXT("static"), TEXT("(Text EDitor for Developers)"), WS_CHILD|WS_VISIBLE, x+35, y, 400,19, hwnd, (HMENU)-1, hInst, NULL );
+        hCtrl = CreateWindow( TEXT("static"), TEXT("(Text EDitor for Developers)"), WS_CHILD|WS_VISIBLE, x+35, y, 400,19, hDlg, (HMENU)-1, hInst, NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
 #endif
 
         /* バージョン */
         y += 15;
         wsprintf( szTemp, TEXT("Version %s"),VersionStringGet() );
-        hCtrl = CreateWindow( TEXT("static"), szTemp, WS_CHILD|WS_VISIBLE, x, y, 400,19, hwnd, (HMENU)-1, hInst, NULL );
+        hCtrl = CreateWindow( TEXT("static"), szTemp, WS_CHILD|WS_VISIBLE, x, y, 400,19, hDlg, (HMENU)-1, hInst, NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
 
         /* Copyright */
         y += 15;
-        hCtrl = CreateWindow( TEXT("static"), TEXT("Copyright (C) 2009-2017 Wurly"), WS_CHILD|WS_VISIBLE, x, y, 400,19, hwnd, (HMENU)-1, hInst, NULL );
+        hCtrl = CreateWindow( TEXT("static"), TEXT("Copyright (C) 2009-2017 Wurly"), WS_CHILD|WS_VISIBLE, x, y, 400,19, hDlg, (HMENU)-1, hInst, NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
 
         /* ライセンス */
         y = 180;
-        hCtrl = CreateWindow( TEXT("static"), TEXT("この製品はフリーソフトウェアです。"), WS_CHILD|WS_VISIBLE, x, y, 400,19, hwnd, (HMENU)-1, hInst, NULL );
+        hCtrl = CreateWindow( TEXT("static"), TEXT("この製品はフリーソフトウェアです。"), WS_CHILD|WS_VISIBLE, x, y, 400,19, hDlg, (HMENU)-1, hInst, NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
 
         /* 線 */
-        hCtrl = CreateWindow( TEXT("static"), TEXT(""), WS_CHILD|WS_VISIBLE|SS_SUNKEN, 60, 242,410,2, hwnd, (HMENU)-1, hInst, NULL );
+        hCtrl = CreateWindow( TEXT("static"), TEXT(""), WS_CHILD|WS_VISIBLE|SS_SUNKEN, 60, 242,410,2, hDlg, (HMENU)-1, hInst, NULL );
 
         /* 物理メモリサイズ */
         memSts.dwLength = sizeof(MEMORYSTATUSEX);
@@ -219,34 +180,29 @@ AboutDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         wsprintf( szTemp3, TEXT("%ld"),(memSts.ullTotalPhys/1024) );
         GetNumberFormat( LOCALE_SYSTEM_DEFAULT, 0, szTemp3, &numberFormat, szTemp2, 256 );
         wsprintf( szTemp, TEXT("Windows が使用できる物理メモリ:\t        %s KB"),szTemp2 );
-        hCtrl = CreateWindow( TEXT("static"), szTemp, WS_CHILD|WS_VISIBLE, 60, 252,400,19, hwnd, (HMENU)-1, hInst, NULL );
+        hCtrl = CreateWindow( TEXT("static"), szTemp, WS_CHILD|WS_VISIBLE, 60, 252,400,19, hDlg, (HMENU)-1, hInst, NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
-
-        /* OKボタン */
-        hCtrl = CreateWindow( TEXT("Button"), TEXT("OK"), WS_CHILD|WS_VISIBLE, 382,270,90,19, hwnd, (HMENU)0, hInst, NULL );
-        SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
-
-        SetFocus( hCtrl );
         break;
-    case WM_DESTROY:
-#if 0
-        DeleteObject( hBitmap );
-#endif
-        DeleteObject( hIcon );
-        PostQuitMessage(0); /* WM_QUITメッセージをポストする */
-        break;
+
     case WM_COMMAND:
         switch( LOWORD(wParam) )
         {
-        case 0:
-            DestroyWindow( hwnd );
+        case IDOK:
+            EndDialog(hDlg,TRUE);
+            rtn = TRUE;
+            break;
+        case IDCANCEL:
+            EndDialog(hDlg,FALSE);
+            rtn = TRUE;
             break;
         default:
+            nop();
             break;
         }
         break;
     default:
-        rtn = DefWindowProc( hwnd, message, wParam, lParam );
+        nop();
+        break;
     }
 
     return rtn;
@@ -254,67 +210,50 @@ AboutDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
 /********************************************************************************
  * 内容  : 「行へ移動」のモーダルダイアログボックス
- * 引数  : HWND   hwnd
+ * 引数  : HWND   hDlg
  * 引数  : UINT   message
  * 引数  : WPARAM wParam
  * 引数  : LPARAM lParam
- * 戻り値: LRESULT
+ * 戻り値: BOOL
  ***************************************/
-LRESULT CALLBACK
-GoToLineDlgProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+BOOL CALLBACK
+GoToLineDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam )
 {
-    LRESULT rtn = 0;
+    BOOL rtn = FALSE;
     HWND hCtrl;
-    static HICON hIcon;
     HINSTANCE hInst = modalDlgData.hInstance;
 
     switch( message )
     {
-    case WM_CREATE:
+    case WM_INITDIALOG:
         /* 文字列 */
-        hCtrl = CreateWindow( TEXT("static"), TEXT("行番号(L):"), WS_CHILD|WS_VISIBLE, 10, 10, 100,20, hwnd, (HMENU)-1, hInst, NULL );
+        hCtrl = CreateWindow( TEXT("static"), TEXT("行番号(L):"), WS_CHILD|WS_VISIBLE, 10, 10, 100,20, hDlg, (HMENU)-1, hInst, NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
 
         /* テキストボックス */
-        hCtrl = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW|WS_EX_CONTROLPARENT, TEXT("edit"), TEXT(""), WS_CHILD|WS_VISIBLE, 10, 35, 270,25, hwnd, (HMENU)2, hInst, NULL );
+        hCtrl = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW|WS_EX_CONTROLPARENT, TEXT("edit"), TEXT(""), WS_CHILD|WS_VISIBLE, 10, 35, 270,25, hDlg, (HMENU)2, hInst, NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
+        break;
 
-        /* 「移動」ボタン */
-        hCtrl = CreateWindow( TEXT("Button"), TEXT("移動"), WS_CHILD|WS_VISIBLE, 95,80,90,25, hwnd, (HMENU)1, hInst, NULL );
-        SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
-        SetFocus( hCtrl );
-
-        /* 「キャンセル」ボタン */
-        hCtrl = CreateWindow( TEXT("Button"), TEXT("キャンセル"), WS_CHILD|WS_VISIBLE, 190,80,90,25, hwnd, (HMENU)0, hInst, NULL );
-        SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
-        break;
-    case WM_KEYDOWN:
-        switch(wParam)
-        {
-        default:
-//            DebugWndPrintf("WM_KEYDOWN:0x%04X\r\n",wParam);
-            break;
-        }
-        break;
-    case WM_DESTROY:
-        PostQuitMessage(0); /* WM_QUITメッセージをポストする */
-        break;
     case WM_COMMAND:
         switch( LOWORD(wParam) )
         {
-        case 0:
-            DestroyWindow( hwnd );
+        case IDOK:
+            EndDialog(hDlg,TRUE);
+            rtn = TRUE;
             break;
-        case 1:
-            DestroyWindow( hwnd );
+        case IDCANCEL:
+            EndDialog(hDlg,FALSE);
+            rtn = TRUE;
             break;
         default:
+            nop();
             break;
         }
         break;
+
     default:
-//        DebugWndPrintf("message=0x%04X\r\n",message);
-        rtn = DefWindowProc( hwnd, message, wParam, lParam );
+        nop();
         break;
     }
 

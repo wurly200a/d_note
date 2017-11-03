@@ -34,6 +34,7 @@ OBJECTS = \
           ..\\wnd\\MainWnd\\MainWnd.o			  \
           ..\\wnd\\MainWnd\\MainWndMenu.o		  \
           ..\\wnd\\ModalDlg\\ModalDialog.o		  \
+          ../wnd/ModalDlg/ModalDialogResource.o	  \
           ..\\wnd\\SomeCtrl\\SomeCtrl.o			  \
           ..\\wnd\\StsBar\\StsBar.o               \
                                                   \
