@@ -182,6 +182,7 @@ AboutDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam )
         wsprintf( szTemp, TEXT("Windows が使用できる物理メモリ:\t        %s KB"),szTemp2 );
         hCtrl = CreateWindow( TEXT("static"), szTemp, WS_CHILD|WS_VISIBLE, 60, 252,400,19, hDlg, (HMENU)-1, hInst, NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
+        rtn = TRUE;
         break;
 
     case WM_COMMAND:
@@ -226,13 +227,7 @@ GoToLineDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam )
     switch( message )
     {
     case WM_INITDIALOG:
-        /* 文字列 */
-        hCtrl = CreateWindow( TEXT("static"), TEXT("行番号(L):"), WS_CHILD|WS_VISIBLE, 10, 10, 100,20, hDlg, (HMENU)-1, hInst, NULL );
-        SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
-
-        /* テキストボックス */
-        hCtrl = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW|WS_EX_CONTROLPARENT, TEXT("edit"), TEXT(""), WS_CHILD|WS_VISIBLE, 10, 35, 270,25, hDlg, (HMENU)2, hInst, NULL );
-        SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
+        rtn = TRUE;
         break;
 
     case WM_COMMAND:
