@@ -18,11 +18,12 @@ BOOL CALLBACK GoToLineDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 
 typedef struct
 {
-    HINSTANCE hInstance;
-    PTSTR     szAppName;
-} S_MODAL_DLG__DATA;
+    HINSTANCE         hInstance;
+    PTSTR             szAppName;
+    S_MODAL_DLG_PARAM *paramPtr[MODAL_DLG_ID_MAX];
+} S_MODAL_DLG_DATA;
 
-static S_MODAL_DLG__DATA modalDlgData;
+static S_MODAL_DLG_DATA modalDlgData;
 
 typedef struct
 {
@@ -63,14 +64,14 @@ ModalDlgInit( HINSTANCE hInst, PTSTR szAppName )
 /********************************************************************************
  * 内容  : モーダルダイアログボックス
  * 引数  : MODAL_DLG_ID      id
- * 引数  : S_MODAL_DLG_DATA *dataPtr
+ * 引数  : S_MODAL_DLG_PARAM *dataPtr
  * 引数  : HWND              hwnd
  * 引数  : int               x
  * 引数  : int               y
  * 戻り値: BOOL
  ***************************************/
 BOOL
-ModalDlg( MODAL_DLG_ID id, S_MODAL_DLG_DATA *dataPtr, HWND hwnd, int x, int y )
+ModalDlg( MODAL_DLG_ID id, S_MODAL_DLG_PARAM *dataPtr, HWND hwnd, int x, int y )
 {
     BOOL rtn = TRUE;
     HWND hDlg;
@@ -78,8 +79,10 @@ ModalDlg( MODAL_DLG_ID id, S_MODAL_DLG_DATA *dataPtr, HWND hwnd, int x, int y )
 
     if( id < MODAL_DLG_ID_MAX )
     {
+        modalDlgData.paramPtr[id] = dataPtr;
+
         /* ダイアログボックス作成 */
-        DialogBox(modalDlgData.hInstance, modalDlgInfoTbl[id].className, hwnd, (DLGPROC)modalDlgInfoTbl[id].wndPrc);
+        DialogBoxParam(modalDlgData.hInstance, modalDlgInfoTbl[id].className, hwnd, (DLGPROC)modalDlgInfoTbl[id].wndPrc,id);
     }
     else
     {
@@ -101,6 +104,7 @@ BOOL CALLBACK
 AboutDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam )
 {
     BOOL rtn = FALSE;
+    static  MODAL_DLG_ID modalDlgId;
     HWND hCtrl;
     MEMORYSTATUSEX memSts;
     TCHAR szTemp[256];
@@ -128,6 +132,7 @@ AboutDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam )
     switch( message )
     {
     case WM_INITDIALOG:
+        modalDlgId = lParam;
 #if 0
         /* 白矩形 */
         CreateWindow(TEXT("static"),TEXT(""),WS_CHILD|WS_VISIBLE|SS_WHITERECT,0,0,481,90,hDlg,(HMENU)-1,hInst,NULL);
@@ -221,12 +226,17 @@ BOOL CALLBACK
 GoToLineDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam )
 {
     BOOL rtn = FALSE;
+    static  MODAL_DLG_ID modalDlgId;
     HWND hCtrl;
     HINSTANCE hInst = modalDlgData.hInstance;
+    BOOL bTranslated;
+    UINT uintData;
 
     switch( message )
     {
     case WM_INITDIALOG:
+        modalDlgId = lParam;
+        SetDlgItemInt( hDlg, 1001, (modalDlgData.paramPtr[modalDlgId])->dwData1, FALSE );
         rtn = TRUE;
         break;
 
@@ -234,8 +244,26 @@ GoToLineDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam )
         switch( LOWORD(wParam) )
         {
         case IDOK:
-            EndDialog(hDlg,TRUE);
-            rtn = TRUE;
+            uintData = GetDlgItemInt( hDlg, 1001, &bTranslated, FALSE );
+            if( bTranslated )
+            {
+                (modalDlgData.paramPtr[modalDlgId])->dwData1 = uintData;
+
+                if( (modalDlgData.paramPtr[modalDlgId])->dwData1 > (modalDlgData.paramPtr[modalDlgId])->dwData2 )
+                {
+                    (modalDlgData.paramPtr[modalDlgId])->dwData2 = (modalDlgData.paramPtr[modalDlgId])->dwData1;
+                    MessageBox( hDlg, "指定した行番号は行の総数を超えています", modalDlgInfoTbl[modalDlgId].titleName, MB_OK | MB_ICONINFORMATION );
+                }
+                else
+                {
+                    EndDialog(hDlg,TRUE);
+                    rtn = TRUE;
+                }
+            }
+            else
+            {
+                MessageBox( hDlg, "数字を入力してください", modalDlgInfoTbl[modalDlgId].titleName, MB_OK | MB_ICONINFORMATION );
+            }
             break;
         case IDCANCEL:
             EndDialog(hDlg,FALSE);

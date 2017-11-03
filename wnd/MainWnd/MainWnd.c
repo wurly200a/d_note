@@ -441,7 +441,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     DWORD dwSize;
     PBYTE dataPtr;
     PTSTR strPtr;
-    S_MODAL_DLG_DATA modalDlgData;
+    S_MODAL_DLG_PARAM modalDlgParam;
     static FINDREPLACE fr;
     static TCHAR strFind[80],strRep[80],strMsg[1024];
     HFONT hFontOld;
@@ -623,7 +623,10 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break;
 
         case IDM_EDIT_GOTO_LINE:
-            ModalDlg( MODAL_DLG_ID_GO_TO_LINE, &modalDlgData, hwnd, mainWndData.xPos, mainWndData.yPos );
+            modalDlgParam.dwData1 = (DWORD)(SendMessage(mainWndData.hWndIo,EM_LINEFROMCHAR,-1,0))+1;
+            modalDlgParam.dwData2 = (DWORD)SendMessage(mainWndData.hWndIo,EM_GETLINECOUNT,0,0);
+            ModalDlg( MODAL_DLG_ID_GO_TO_LINE, &modalDlgParam, hwnd, mainWndData.xPos, mainWndData.yPos );
+            SendMessage( mainWndData.hWndIo, WM_GOTOLINE, 0, modalDlgParam.dwData1-1 );
             break;
 
         case IDM_EDIT_SELECT_ALL:
@@ -704,7 +707,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break;
 
         case IDM_HELP_ABOUT:
-            ModalDlg( MODAL_DLG_ID_ABOUT, &modalDlgData, hwnd, mainWndData.xPos, mainWndData.yPos );
+            ModalDlg( MODAL_DLG_ID_ABOUT, &modalDlgParam, hwnd, mainWndData.xPos, mainWndData.yPos );
             break;
 
         default:

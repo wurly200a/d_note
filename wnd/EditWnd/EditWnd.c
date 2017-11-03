@@ -1895,7 +1895,9 @@ editOnGoToLine( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
     DWORD result = (DWORD)0;
 
-    EditWndBuffSetCaretPos(editWndDataPtr->hEditWndBuff,0xffffffff,EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff));
+    EditWndBuffSelectOff(editWndDataPtr->hEditWndBuff);
+    EditWndBuffSetCaretPos(editWndDataPtr->hEditWndBuff,0,lParam);
+    editWndInvalidateRect( hwnd, NULL, TRUE );
 
     return (LRESULT)result;
 }
