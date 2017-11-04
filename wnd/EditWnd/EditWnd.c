@@ -71,6 +71,7 @@ static LRESULT editOnDefault            ( HWND hwnd, UINT message, WPARAM wParam
 
 static void editWndRemoveData( HWND hwnd, BOOL bBackSpace );
 static void editWndCaretPosUpdate( S_EDITWND_DATA *editWndDataPtr );
+static void editWndCaretPosOutScroll( HWND hwnd, S_EDITWND_DATA *editWndDataPtr );
 static void updateTextMetrics( HWND hwnd );
 static void setAllScrollInfo( HWND hwnd );
 static void getAllScrollInfo( HWND hwnd );
@@ -309,35 +310,7 @@ EditWndFindDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp, 
 
     setAllScrollInfo(hwnd);
 
-#if 1 /* editOnKeyDown()の処理からコピーしてきたもの。できれば関数化  */
-    /* キャレットが表示範囲外に有った場合の処理(横方向) */
-    if( EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) < editWndDataPtr->iHorzPos )
-    {
-        setScrollPos( hwnd, SB_HORZ, EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) );
-    }
-    else if( (editWndDataPtr->iHorzPos+editWndDataPtr->cxBuffer-1) < EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) )
-    {
-        setScrollPos( hwnd, SB_HORZ, (editWndDataPtr->iHorzPos+editWndDataPtr->cxBuffer-1) );
-    }
-    else
-    {
-        nop();
-    }
-
-    /* キャレットが表示範囲外に有った場合の処理(縦方向) */
-    if( EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) < editWndDataPtr->iVertPos )
-    {
-        setScrollPos( hwnd, SB_VERT, EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) );
-    }
-    else if( (editWndDataPtr->iVertPos+editWndDataPtr->cyBuffer-1) < EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) )
-    {
-        setScrollPos( hwnd, SB_VERT, EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) - (editWndDataPtr->cyBuffer-1) );
-    }
-    else
-    {
-        nop();
-    }
-#endif
+    editWndCaretPosOutScroll(hwnd,editWndDataPtr);
 
     editWndInvalidateRect( hwnd, NULL, TRUE );
 
@@ -896,37 +869,7 @@ editOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                 EditWndBuffSelectOff(editWndDataPtr->hEditWndBuff);
             }
 
-            /* キャレットが表示範囲外に有った場合の処理(横方向) */
-            if( EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) < editWndDataPtr->iHorzPos )
-            {
-                setScrollPos( hwnd, SB_HORZ, EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) );
-                bErase = TRUE;
-            }
-            else if( (editWndDataPtr->iHorzPos+editWndDataPtr->cxBuffer-1) < EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) )
-            {
-                setScrollPos( hwnd, SB_HORZ, (editWndDataPtr->iHorzPos+editWndDataPtr->cxBuffer-1) );
-                bErase = TRUE;
-            }
-            else
-            {
-                nop();
-            }
-
-            /* キャレットが表示範囲外に有った場合の処理(縦方向) */
-            if( EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) < editWndDataPtr->iVertPos )
-            {
-                setScrollPos( hwnd, SB_VERT, EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) );
-                bErase = TRUE;
-            }
-            else if( (editWndDataPtr->iVertPos+editWndDataPtr->cyBuffer-1) < EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) )
-            {
-                setScrollPos( hwnd, SB_VERT, EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) - (editWndDataPtr->cyBuffer-1) );
-                bErase = TRUE;
-            }
-            else
-            {
-                nop();
-            }
+            editWndCaretPosOutScroll(hwnd,editWndDataPtr);
 
             HideCaret(hwnd);
             editWndInvalidateRect( hwnd, NULL, bErase );
@@ -1705,6 +1648,8 @@ editOnPaste( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             }
             EditWndDataSet( hwnd, dataPtr,dwSize,FALSE );
             free( dataPtr );
+
+            editWndCaretPosOutScroll(hwnd,editWndDataPtr);
         }
         else
         {
@@ -1897,6 +1842,9 @@ editOnGoToLine( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     EditWndBuffSelectOff(editWndDataPtr->hEditWndBuff);
     EditWndBuffSetCaretPos(editWndDataPtr->hEditWndBuff,0,lParam);
+
+    editWndCaretPosOutScroll(hwnd,editWndDataPtr);
+
     editWndInvalidateRect( hwnd, NULL, TRUE );
 
     return (LRESULT)result;
@@ -1949,6 +1897,50 @@ editWndCaretPosUpdate( S_EDITWND_DATA *editWndDataPtr )
     }
 }
 
+/********************************************************************************
+ * 内容  : キャレットが表示範囲外に有った場合のスクロール処理
+ * 引数  : HWND hwnd
+ * 引数  : S_EDITWND_DATA *editWndDataPtr
+ * 戻り値: なし
+ ***************************************/
+static void
+editWndCaretPosOutScroll( HWND hwnd, S_EDITWND_DATA *editWndDataPtr )
+{
+    if( editWndDataPtr != NULL )
+    {
+        /* キャレットが表示範囲外に有った場合の処理(横方向) */
+        if( EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) < editWndDataPtr->iHorzPos )
+        {
+            setScrollPos( hwnd, SB_HORZ, EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) );
+        }
+        else if( (editWndDataPtr->iHorzPos+editWndDataPtr->cxBuffer-1) < EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) )
+        {
+            setScrollPos( hwnd, SB_HORZ, (editWndDataPtr->iHorzPos+editWndDataPtr->cxBuffer-1) );
+        }
+        else
+        {
+            nop();
+        }
+
+        /* キャレットが表示範囲外に有った場合の処理(縦方向) */
+        if( EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) < editWndDataPtr->iVertPos )
+        {
+            setScrollPos( hwnd, SB_VERT, EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) );
+        }
+        else if( (editWndDataPtr->iVertPos+editWndDataPtr->cyBuffer-1) < EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) )
+        {
+            setScrollPos( hwnd, SB_VERT, EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) - (editWndDataPtr->cyBuffer-1) );
+        }
+        else
+        {
+            nop();
+        }
+    }
+    else
+    {
+        nop();
+    }
+}
 
 /********************************************************************************
  * 内容  : テキストメトリクスの更新
