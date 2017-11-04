@@ -187,6 +187,29 @@ AboutDlgProc( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam )
         wsprintf( szTemp, TEXT("Windows Ç™égópÇ≈Ç´ÇÈï®óùÉÅÉÇÉä:\t        %s KB"),szTemp2 );
         hCtrl = CreateWindow( TEXT("static"), szTemp, WS_CHILD|WS_VISIBLE, 60, 252,400,19, hDlg, (HMENU)-1, hInst, NULL );
         SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
+
+        y = 280;
+#ifdef _MSC_VER
+        wsprintf( szTemp, TEXT("_MSC_VER = %d(%d.%d)"),_MSC_VER, _MSC_VER/100,_MSC_VER%100 );
+        hCtrl = CreateWindow( TEXT("static"), szTemp, WS_CHILD|WS_VISIBLE, x, y, 400,19, hDlg, (HMENU)-1, hInst, NULL );
+        SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
+
+        y += 15;
+        wsprintf( szTemp, TEXT("_MSC_FULL_VER = %d(%d.%d.%d)"),_MSC_FULL_VER, _MSC_FULL_VER/10000000,(_MSC_FULL_VER%10000000)/100000,(_MSC_FULL_VER%10000000)%100000 );
+        hCtrl = CreateWindow( TEXT("static"), szTemp, WS_CHILD|WS_VISIBLE, x, y, 400,19, hDlg, (HMENU)-1, hInst, NULL );
+        SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
+#elif defined(__GNUC__)
+        wsprintf( szTemp, TEXT("__GNUC__ = %d"),__GNUC__ );
+        hCtrl = CreateWindow( TEXT("static"), szTemp, WS_CHILD|WS_VISIBLE, x, y, 400,19, hDlg, (HMENU)-1, hInst, NULL );
+        SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
+
+        y += 15;
+        wsprintf( szTemp, TEXT("__VERSION__ = %s"),__VERSION__ );
+        hCtrl = CreateWindow( TEXT("static"), szTemp, WS_CHILD|WS_VISIBLE, x, y, 400,19, hDlg, (HMENU)-1, hInst, NULL );
+        SendMessage( hCtrl, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), MAKELPARAM(FALSE, 0) );
+#endif
+
+
         rtn = TRUE;
         break;
 
