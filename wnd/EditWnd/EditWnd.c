@@ -1258,14 +1258,15 @@ editOnMouseMove( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
     BOOL bCaretPosChange;
 
-    x = max(0,(SHORT)LOWORD(lParam));
-    y = max(0,(SHORT)HIWORD(lParam));
+    x = (SHORT)LOWORD(lParam);
+    y = (SHORT)HIWORD(lParam);
 
     if( (wParam & MK_LBUTTON) )
     {
         bCaretPosChange = EditWndBuffSetCaretPos( editWndDataPtr->hEditWndBuff, ((x + (editWndDataPtr->iHorzPos*editWndDataPtr->cxChar))/editWndDataPtr->cxChar), ((y + (editWndDataPtr->iVertPos*editWndDataPtr->cyChar))/editWndDataPtr->cyChar) );
         if( bCaretPosChange )
         {
+            editWndCaretPosOutScroll(hwnd,editWndDataPtr);
             editWndCaretPosUpdate(editWndDataPtr);
             editWndInvalidateRect( hwnd, NULL, FALSE );
         }
