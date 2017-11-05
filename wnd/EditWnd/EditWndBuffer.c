@@ -979,8 +979,16 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
         /*------------ undo用(ここまで) ------------*/
 #endif
 
+#if 0
+        DebugWndPrintf("h->lineData.selectPtr                 :0x%08lX\r\n",h->lineData.selectPtr);
+        DebugWndPrintf("h->lineData.nowPtr                    :0x%08lX\r\n",h->lineData.nowPtr   );
+        DebugWndPrintf("h->lineData.selectPtr                 :0x%08lX\r\n",h->lineData.selectPtr);
+        DebugWndPrintf("(h->lineData.nowPtr)->caretDataPos    :0x%08lX\r\n",(h->lineData.nowPtr)->caretDataPos);
+        DebugWndPrintf("h->lineData.selectCaretPos            :0x%08lX\r\n",h->lineData.selectCaretPos);
+#endif
+
         if( ((h->lineData.selectPtr != NULL) && (h->lineData.nowPtr != h->lineData.selectPtr)) ||
-            ((h->lineData.nowPtr == h->lineData.selectPtr) && ((h->lineData.nowPtr)->caretDataPos != (h->lineData.selectPtr)->caretDataPos)) )
+            ((h->lineData.nowPtr == h->lineData.selectPtr) && ((h->lineData.nowPtr)->caretDataPos != h->lineData.selectCaretPos)) )
         { /* 選択開始位置有り */
             nop();
         }
