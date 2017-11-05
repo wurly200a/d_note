@@ -333,7 +333,6 @@ EditWndReplaceData( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp, 
     BOOL rtn = (BOOL)FALSE;
 
     /* ‚±‚±‚Å‚Í‘I‘ð—Ìˆæ‚ª’uŠ·‘ÎÛ•¶Žš—ñ‚Æ‡‚Á‚Ä‚¢‚é‘O’ñ */
-#if 0
     editWndRemoveData( hwnd, FALSE );
     EditWndBuffDataSet( editWndDataPtr->hEditWndBuff,dataPtr,length,FALSE );
 
@@ -342,7 +341,6 @@ EditWndReplaceData( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp, 
     editWndCaretPosOutScroll(hwnd,editWndDataPtr);
 
     editWndInvalidateRect( hwnd, NULL, TRUE );
-#endif
 
     return rtn;
 }

@@ -983,8 +983,11 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                 (!mainWndData.bFrMatchCase && !STRNCASECMP(dataPtr,pfr->lpstrFindWhat,dwSize)) )
             {
                 /* エディットコントロールのメッセージに従うなら EM_REPLACESEL だが */
-                okMessage(hwnd, TEXT("\"%s\" と一致したので、\"%s\"に置換します"),pfr->lpstrFindWhat, pfr->lpstrReplaceWith );
-                EditWndReplaceData(mainWndData.hWndIo,pfr->lpstrReplaceWith,pfr->wReplaceWithLen,(pfr->Flags&FR_DOWN)?FALSE:TRUE,(pfr->Flags&FR_MATCHCASE)?TRUE:FALSE);
+#if 0
+                okMessage(hwnd, TEXT("\"%s\" と一致したので、\"%s\"(%d文字)に置換します"),pfr->lpstrFindWhat, pfr->lpstrReplaceWith, min(strlen(pfr->lpstrReplaceWith),pfr->wReplaceWithLen) );
+#endif
+                EditWndReplaceData(mainWndData.hWndIo,pfr->lpstrReplaceWith,min(strlen(pfr->lpstrReplaceWith),pfr->wReplaceWithLen),(pfr->Flags&FR_DOWN)?FALSE:TRUE,(pfr->Flags&FR_MATCHCASE)?TRUE:FALSE);
+                bProcFind = (BOOL)TRUE; /* 次の文字列を探せ */
             }
             else
             { /* 選択領域の文字列が不一致 */
@@ -1003,7 +1006,7 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     if( bProcFind )
     {
-        if( EditWndFindDataSet(mainWndData.hWndIo,pfr->lpstrFindWhat,pfr->wFindWhatLen,(pfr->Flags&FR_DOWN)?FALSE:TRUE,(pfr->Flags&FR_MATCHCASE)?TRUE:FALSE) )
+        if( EditWndFindDataSet(mainWndData.hWndIo,pfr->lpstrFindWhat,min(strlen(pfr->lpstrFindWhat),pfr->wFindWhatLen),(pfr->Flags&FR_DOWN)?FALSE:TRUE,(pfr->Flags&FR_MATCHCASE)?TRUE:FALSE) )
         {
             nop();
         }
