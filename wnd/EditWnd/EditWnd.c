@@ -318,6 +318,36 @@ EditWndFindDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp, 
 }
 
 /********************************************************************************
+ * 内容  : EDITウィンドウの文字列置換
+ * 引数  : HWND hwnd
+ * 引数  : TCHAR* dataPtr
+ * 引数  : DWORD  length
+ * 引数  : BOOL bDirectionUp
+ * 引数  : BOOL bMatchCase
+ * 戻り値: BOOL
+ ***************************************/
+BOOL
+EditWndReplaceData( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp, BOOL bMatchCase )
+{
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    BOOL rtn = (BOOL)FALSE;
+
+    /* ここでは選択領域が置換対象文字列と合っている前提 */
+#if 0
+    editWndRemoveData( hwnd, FALSE );
+    EditWndBuffDataSet( editWndDataPtr->hEditWndBuff,dataPtr,length,FALSE );
+
+    setAllScrollInfo(hwnd);
+
+    editWndCaretPosOutScroll(hwnd,editWndDataPtr);
+
+    editWndInvalidateRect( hwnd, NULL, TRUE );
+#endif
+
+    return rtn;
+}
+
+/********************************************************************************
  * 内容  : メインウィンドウ内で処理するメッセージを判定する
  * 引数  : MSG *msg
  * 戻り値: BOOL
