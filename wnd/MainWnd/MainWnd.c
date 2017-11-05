@@ -938,7 +938,9 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     if( pfr->Flags & FR_DIALOGTERM )
     {
+#if 0
         DebugWndPrintf("FR_DIALOGTERM\r\n");
+#endif
         mainWndData.hDlgModeless = NULL;
     }
     else
