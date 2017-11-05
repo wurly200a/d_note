@@ -620,6 +620,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break;
 
         case IDM_EDIT_FIND_NEXT:
+            okMessage(hwnd, TEXT("IDM_EDIT_FIND_NEXT"));
             break;
 
         case IDM_EDIT_GOTO_LINE:
@@ -638,6 +639,14 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 #ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
             EditWndDataSet( mainWndData.hWndIo, strPtr, strlen(strPtr), FALSE );
 #endif                  /*  エディットコントロール使用  or  通常  */
+            break;
+
+        case IDM_EDIT_GOTO_FILE_TOP:
+            SendMessage( mainWndData.hWndIo, WM_GOTOLINE, 0, 0 );
+            break;
+
+        case IDM_EDIT_GOTO_FILE_END:
+            SendMessage( mainWndData.hWndIo, WM_GOTOLINE, 0, SendMessage(mainWndData.hWndIo,EM_GETLINECOUNT,0,0)-1 );
             break;
 
         case IDM_FORMAT_FONT:
@@ -921,9 +930,7 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     if( pfr->Flags & FR_DIALOGTERM )
     {
-#if 0
         DebugWndPrintf("FR_DIALOGTERM\r\n");
-#endif
         mainWndData.hDlgModeless = NULL;
     }
     else
@@ -933,52 +940,30 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     if( (pfr->Flags & FR_FINDNEXT) )
     {
-        static BOOL bFindExec;
-
-        if( !bFindExec )
-        {
-            bFindExec = TRUE;
 #if 0
-            DebugWndPrintf("FR_FINDNEXT:%s,%d\r\n",pfr->lpstrFindWhat,pfr->wFindWhatLen);
+        DebugWndPrintf("FR_FINDNEXT:%s,%d\r\n",pfr->lpstrFindWhat,pfr->wFindWhatLen);
 #endif
-            if( EditWndFindDataSet(mainWndData.hWndIo,pfr->lpstrFindWhat,pfr->wFindWhatLen,(pfr->Flags&FR_DOWN)?FALSE:TRUE,(pfr->Flags&FR_MATCHCASE)?TRUE:FALSE) )
-            {
-            }
-            else
-            {
-                okMessage(mainWndData.hDlgModeless, TEXT("\"%s\" が見つかりません。"),pfr->lpstrFindWhat);
-            }
-            bFindExec = FALSE;
+        if( EditWndFindDataSet(mainWndData.hWndIo,pfr->lpstrFindWhat,pfr->wFindWhatLen,(pfr->Flags&FR_DOWN)?FALSE:TRUE,(pfr->Flags&FR_MATCHCASE)?TRUE:FALSE) )
+        {
+            nop();
         }
         else
         {
-            /* do nothing */
+            okMessage(mainWndData.hDlgModeless, TEXT("\"%s\" が見つかりません。"),pfr->lpstrFindWhat);
         }
     }
-    else
+    else if( pfr->Flags & FR_REPLACE )
     {
-        nop();
+        okMessage(hwnd, TEXT("\"%s\" を置換。"),pfr->lpstrFindWhat);
     }
-
-#if 0
-    if( ((pfr->Flags & FR_REPLACE) || (pfr->Flags & FR_REPLACEALL)) && (!PopFindReplaceText(hwndEdit,&iOffset,pfr)) )
+    else if( pfr->Flags & FR_REPLACEALL )
     {
-        okMessage(hwnd, TEXT("\"%s\" が見つかりません。"),pfr->lpstrFindWhat);
+        okMessage(hwnd, TEXT("\"%s\" を全て置換。"),pfr->lpstrFindWhat);
     }
     else
     {
         nop();
     }
-
-    if( pfr->Flags & FR_REPLACEALL )
-    {
-        while( PopFindReplaceText(hwndEdit, &iOffset, pfr) );
-    }
-    else
-    {
-        nop();
-    }
-#endif
 
     return rtn;
 }
