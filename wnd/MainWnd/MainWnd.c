@@ -908,15 +908,15 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     }
 
     mainWndData.searchDataPtr   = pfr->lpstrFindWhat;
-    mainWndData.searchDataSize  = pfr->wFindWhatLen;
+    mainWndData.searchDataSize  = min(strlen(mainWndData.searchDataPtr),pfr->wFindWhatLen);
     mainWndData.replaceDataPtr  = pfr->lpstrReplaceWith;
-    mainWndData.replaceDataSize = pfr->wReplaceWithLen;
+    mainWndData.replaceDataSize = min(strlen(mainWndData.replaceDataPtr),pfr->wReplaceWithLen);
 
-    DebugWndPrintf("%s(%d),%s(%d)\r\n",mainWndData.searchDataPtr,mainWndData.searchDataSize,mainWndData.replaceDataPtr,mainWndData.replaceDataSize);
+    DebugWndPrintf("FindReplace: %s(%d),%s(%d)\r\n",mainWndData.searchDataPtr,mainWndData.searchDataSize,mainWndData.replaceDataPtr,mainWndData.replaceDataSize);
 
     if( (pfr->Flags & FR_FINDNEXT) )
     { /* åüçı */
-        if( EditWndFindDataSet(mainWndData.hWndIo,mainWndData.searchDataPtr,min(strlen(mainWndData.searchDataPtr),mainWndData.searchDataSize),mainWndData.bFrUp,mainWndData.bFrMatchCase) )
+        if( EditWndFindDataSet(mainWndData.hWndIo,mainWndData.searchDataPtr,mainWndData.searchDataSize,mainWndData.bFrUp,mainWndData.bFrMatchCase) )
         {
             nop();
         }
@@ -929,11 +929,11 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     { /* íuä∑ */
         BOOL bProcFind = (BOOL)FALSE;
 
-        bProcFind = EditWndReplaceData(mainWndData.hWndIo,mainWndData.searchDataPtr,mainWndData.replaceDataPtr,min(strlen(mainWndData.replaceDataPtr),mainWndData.replaceDataSize),mainWndData.bFrUp,mainWndData.bFrMatchCase);
+        bProcFind = EditWndReplaceData(mainWndData.hWndIo,mainWndData.searchDataPtr,mainWndData.replaceDataPtr,mainWndData.replaceDataSize,mainWndData.bFrUp,mainWndData.bFrMatchCase);
 
         if( bProcFind )
         { /* åüçı */
-            if( EditWndFindDataSet(mainWndData.hWndIo,mainWndData.searchDataPtr,min(strlen(mainWndData.searchDataPtr),mainWndData.searchDataSize),mainWndData.bFrUp,mainWndData.bFrMatchCase) )
+            if( EditWndFindDataSet(mainWndData.hWndIo,mainWndData.searchDataPtr,mainWndData.searchDataSize,mainWndData.bFrUp,mainWndData.bFrMatchCase) )
             {
                 nop();
             }
@@ -951,13 +951,13 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     { /* ëSÇƒíuä∑ */
         BOOL bProcFind = (BOOL)FALSE;
 
-        bProcFind = EditWndReplaceData(mainWndData.hWndIo,mainWndData.searchDataPtr,mainWndData.replaceDataPtr,min(strlen(mainWndData.replaceDataPtr),mainWndData.replaceDataSize),mainWndData.bFrUp,mainWndData.bFrMatchCase);
+        bProcFind = EditWndReplaceData(mainWndData.hWndIo,mainWndData.searchDataPtr,mainWndData.replaceDataPtr,mainWndData.replaceDataSize,mainWndData.bFrUp,mainWndData.bFrMatchCase);
 
         while( bProcFind )
         {
-            if( EditWndFindDataSet(mainWndData.hWndIo,mainWndData.searchDataPtr,min(strlen(mainWndData.searchDataPtr),mainWndData.searchDataSize),mainWndData.bFrUp,mainWndData.bFrMatchCase) )
+            if( EditWndFindDataSet(mainWndData.hWndIo,mainWndData.searchDataPtr,mainWndData.searchDataSize,mainWndData.bFrUp,mainWndData.bFrMatchCase) )
             {
-                bProcFind = EditWndReplaceData(mainWndData.hWndIo,mainWndData.searchDataPtr,mainWndData.replaceDataPtr,min(strlen(mainWndData.replaceDataPtr),mainWndData.replaceDataSize),mainWndData.bFrUp,mainWndData.bFrMatchCase);
+                bProcFind = EditWndReplaceData(mainWndData.hWndIo,mainWndData.searchDataPtr,mainWndData.replaceDataPtr,mainWndData.replaceDataSize,mainWndData.bFrUp,mainWndData.bFrMatchCase);
             }
             else
             {
