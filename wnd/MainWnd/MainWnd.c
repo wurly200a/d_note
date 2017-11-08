@@ -877,8 +877,6 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
     LPFINDREPLACE pfr;
-    BOOL bProcFind = (BOOL)FALSE;
-    BOOL bProcReplace = (BOOL)FALSE;
 
     pfr = (LPFINDREPLACE)lParam;
 
@@ -943,36 +941,10 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     }
 
     if( (pfr->Flags & FR_FINDNEXT) )
-    {
+    { /* 検索 */
 #if 0
         DebugWndPrintf("FR_FINDNEXT:%s,%d\r\n",pfr->lpstrFindWhat,pfr->wFindWhatLen);
 #endif
-        bProcFind = (BOOL)TRUE;
-    }
-    else if( pfr->Flags & FR_REPLACE )
-    {
-        bProcReplace = (BOOL)TRUE;
-    }
-    else if( pfr->Flags & FR_REPLACEALL )
-    {
-        okMessage(hwnd, TEXT("\"%s\" を全て置換。"),pfr->lpstrFindWhat);
-    }
-    else
-    {
-        nop();
-    }
-
-    if( bProcReplace )
-    { /* 置換 */
-        bProcFind = EditWndReplaceData(mainWndData.hWndIo,pfr->lpstrFindWhat,pfr->lpstrReplaceWith,min(strlen(pfr->lpstrReplaceWith),pfr->wReplaceWithLen),(pfr->Flags&FR_DOWN)?FALSE:TRUE,mainWndData.bFrMatchCase);
-    }
-    else
-    {
-        nop();
-    }
-
-    if( bProcFind )
-    { /* 検索 */
         if( EditWndFindDataSet(mainWndData.hWndIo,pfr->lpstrFindWhat,min(strlen(pfr->lpstrFindWhat),pfr->wFindWhatLen),(pfr->Flags&FR_DOWN)?FALSE:TRUE,(pfr->Flags&FR_MATCHCASE)?TRUE:FALSE) )
         {
             nop();
@@ -980,6 +952,46 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         else
         {
             okMessage(mainWndData.hDlgModeless, TEXT("\"%s\" が見つかりません。"),pfr->lpstrFindWhat);
+        }
+    }
+    else if( pfr->Flags & FR_REPLACE )
+    { /* 置換 */
+        BOOL bProcFind = (BOOL)FALSE;
+
+        bProcFind = EditWndReplaceData(mainWndData.hWndIo,pfr->lpstrFindWhat,pfr->lpstrReplaceWith,min(strlen(pfr->lpstrReplaceWith),pfr->wReplaceWithLen),(pfr->Flags&FR_DOWN)?FALSE:TRUE,mainWndData.bFrMatchCase);
+
+        if( bProcFind )
+        { /* 検索 */
+            if( EditWndFindDataSet(mainWndData.hWndIo,pfr->lpstrFindWhat,min(strlen(pfr->lpstrFindWhat),pfr->wFindWhatLen),(pfr->Flags&FR_DOWN)?FALSE:TRUE,(pfr->Flags&FR_MATCHCASE)?TRUE:FALSE) )
+            {
+                nop();
+            }
+            else
+            {
+                okMessage(mainWndData.hDlgModeless, TEXT("\"%s\" が見つかりません。"),pfr->lpstrFindWhat);
+            }
+        }
+        else
+        {
+            nop();
+        }
+    }
+    else if( pfr->Flags & FR_REPLACEALL )
+    { /* 全て置換 */
+        BOOL bProcFind = (BOOL)FALSE;
+
+        bProcFind = EditWndReplaceData(mainWndData.hWndIo,pfr->lpstrFindWhat,pfr->lpstrReplaceWith,min(strlen(pfr->lpstrReplaceWith),pfr->wReplaceWithLen),(pfr->Flags&FR_DOWN)?FALSE:TRUE,mainWndData.bFrMatchCase);
+
+        while( bProcFind )
+        {
+            if( EditWndFindDataSet(mainWndData.hWndIo,pfr->lpstrFindWhat,min(strlen(pfr->lpstrFindWhat),pfr->wFindWhatLen),(pfr->Flags&FR_DOWN)?FALSE:TRUE,(pfr->Flags&FR_MATCHCASE)?TRUE:FALSE) )
+            {
+                bProcFind = EditWndReplaceData(mainWndData.hWndIo,pfr->lpstrFindWhat,pfr->lpstrReplaceWith,min(strlen(pfr->lpstrReplaceWith),pfr->wReplaceWithLen),(pfr->Flags&FR_DOWN)?FALSE:TRUE,mainWndData.bFrMatchCase);
+            }
+            else
+            {
+                bProcFind = FALSE;
+            }
         }
     }
     else

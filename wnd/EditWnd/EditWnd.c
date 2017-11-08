@@ -356,7 +356,7 @@ EditWndReplaceData( HWND hwnd, TCHAR* searchDataPtr, TCHAR* replaceDataPtr, DWOR
 #if 0
             okMessage(hwnd, TEXT("\"%s\" ‚Æˆê’v‚µ‚½‚Ì‚ÅA\"%s\"(%d•¶Žš)‚É’uŠ·‚µ‚Ü‚·"),pfr->lpstrFindWhat, pfr->lpstrReplaceWith, min(strlen(pfr->lpstrReplaceWith),pfr->wReplaceWithLen) );
 #endif
-            /* editWndRemoveData( hwnd, FALSE ); */
+            editWndRemoveData( hwnd, FALSE );
             EditWndBuffDataSet( editWndDataPtr->hEditWndBuff,replaceDataPtr,replaceDataSize,FALSE );
 
             setAllScrollInfo(hwnd);
