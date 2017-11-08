@@ -45,6 +45,10 @@ typedef struct
     HWND hWndDebug;
     BOOL bFrUp;
     BOOL bFrMatchCase;
+    TCHAR* searchDataPtr;
+    DWORD searchDataSize;
+    TCHAR* replaceDataPtr;
+    DWORD replaceDataSize;
 } S_MAINWND_DATA;
 
 #define MAINWND_DEF_H

@@ -880,36 +880,6 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     pfr = (LPFINDREPLACE)lParam;
 
-#if 0
-    typedef struct tagFINDREPLACEA {
-        DWORD lStructSize;
-        HWND hwndOwner;
-        HINSTANCE hInstance;
-        DWORD Flags;
-        LPSTR lpstrFindWhat;
-        LPSTR lpstrReplaceWith;
-        WORD wFindWhatLen;
-        WORD wReplaceWithLen;
-        LPARAM lCustData;
-        LPFRHOOKPROC lpfnHook;
-        LPCSTR lpTemplateName;
-    } FINDREPLACEA,*LPFINDREPLACEA;
-
-    typedef struct tagFINDREPLACEW {
-        DWORD lStructSize;
-        HWND hwndOwner;
-        HINSTANCE hInstance;
-        DWORD Flags;
-        LPWSTR lpstrFindWhat;
-        LPWSTR lpstrReplaceWith;
-        WORD wFindWhatLen;
-        WORD wReplaceWithLen;
-        LPARAM lCustData;
-        LPFRHOOKPROC lpfnHook;
-        LPCWSTR lpTemplateName;
-    } FINDREPLACEW,*LPFINDREPLACEW;
-#endif
-
     if( pfr->Flags & FR_DOWN )
     {
         mainWndData.bFrUp = FALSE;
@@ -930,9 +900,6 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     if( pfr->Flags & FR_DIALOGTERM )
     {
-#if 0
-        DebugWndPrintf("FR_DIALOGTERM\r\n");
-#endif
         mainWndData.hDlgModeless = NULL;
     }
     else
@@ -940,35 +907,39 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         nop();
     }
 
+    mainWndData.searchDataPtr   = pfr->lpstrFindWhat;
+    mainWndData.searchDataSize  = pfr->wFindWhatLen;
+    mainWndData.replaceDataPtr  = pfr->lpstrReplaceWith;
+    mainWndData.replaceDataSize = pfr->wReplaceWithLen;
+
+    DebugWndPrintf("%s(%d),%s(%d)\r\n",mainWndData.searchDataPtr,mainWndData.searchDataSize,mainWndData.replaceDataPtr,mainWndData.replaceDataSize);
+
     if( (pfr->Flags & FR_FINDNEXT) )
     { /* 検索 */
-#if 0
-        DebugWndPrintf("FR_FINDNEXT:%s,%d\r\n",pfr->lpstrFindWhat,pfr->wFindWhatLen);
-#endif
-        if( EditWndFindDataSet(mainWndData.hWndIo,pfr->lpstrFindWhat,min(strlen(pfr->lpstrFindWhat),pfr->wFindWhatLen),(pfr->Flags&FR_DOWN)?FALSE:TRUE,(pfr->Flags&FR_MATCHCASE)?TRUE:FALSE) )
+        if( EditWndFindDataSet(mainWndData.hWndIo,mainWndData.searchDataPtr,min(strlen(mainWndData.searchDataPtr),mainWndData.searchDataSize),mainWndData.bFrUp,mainWndData.bFrMatchCase) )
         {
             nop();
         }
         else
         {
-            okMessage(mainWndData.hDlgModeless, TEXT("\"%s\" が見つかりません。"),pfr->lpstrFindWhat);
+            okMessage(mainWndData.hDlgModeless, TEXT("\"%s\" が見つかりません。"),mainWndData.searchDataPtr);
         }
     }
     else if( pfr->Flags & FR_REPLACE )
     { /* 置換 */
         BOOL bProcFind = (BOOL)FALSE;
 
-        bProcFind = EditWndReplaceData(mainWndData.hWndIo,pfr->lpstrFindWhat,pfr->lpstrReplaceWith,min(strlen(pfr->lpstrReplaceWith),pfr->wReplaceWithLen),(pfr->Flags&FR_DOWN)?FALSE:TRUE,mainWndData.bFrMatchCase);
+        bProcFind = EditWndReplaceData(mainWndData.hWndIo,mainWndData.searchDataPtr,mainWndData.replaceDataPtr,min(strlen(mainWndData.replaceDataPtr),mainWndData.replaceDataSize),mainWndData.bFrUp,mainWndData.bFrMatchCase);
 
         if( bProcFind )
         { /* 検索 */
-            if( EditWndFindDataSet(mainWndData.hWndIo,pfr->lpstrFindWhat,min(strlen(pfr->lpstrFindWhat),pfr->wFindWhatLen),(pfr->Flags&FR_DOWN)?FALSE:TRUE,(pfr->Flags&FR_MATCHCASE)?TRUE:FALSE) )
+            if( EditWndFindDataSet(mainWndData.hWndIo,mainWndData.searchDataPtr,min(strlen(mainWndData.searchDataPtr),mainWndData.searchDataSize),mainWndData.bFrUp,mainWndData.bFrMatchCase) )
             {
                 nop();
             }
             else
             {
-                okMessage(mainWndData.hDlgModeless, TEXT("\"%s\" が見つかりません。"),pfr->lpstrFindWhat);
+                okMessage(mainWndData.hDlgModeless, TEXT("\"%s\" が見つかりません。"),mainWndData.searchDataPtr);
             }
         }
         else
@@ -980,13 +951,13 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     { /* 全て置換 */
         BOOL bProcFind = (BOOL)FALSE;
 
-        bProcFind = EditWndReplaceData(mainWndData.hWndIo,pfr->lpstrFindWhat,pfr->lpstrReplaceWith,min(strlen(pfr->lpstrReplaceWith),pfr->wReplaceWithLen),(pfr->Flags&FR_DOWN)?FALSE:TRUE,mainWndData.bFrMatchCase);
+        bProcFind = EditWndReplaceData(mainWndData.hWndIo,mainWndData.searchDataPtr,mainWndData.replaceDataPtr,min(strlen(mainWndData.replaceDataPtr),mainWndData.replaceDataSize),mainWndData.bFrUp,mainWndData.bFrMatchCase);
 
         while( bProcFind )
         {
-            if( EditWndFindDataSet(mainWndData.hWndIo,pfr->lpstrFindWhat,min(strlen(pfr->lpstrFindWhat),pfr->wFindWhatLen),(pfr->Flags&FR_DOWN)?FALSE:TRUE,(pfr->Flags&FR_MATCHCASE)?TRUE:FALSE) )
+            if( EditWndFindDataSet(mainWndData.hWndIo,mainWndData.searchDataPtr,min(strlen(mainWndData.searchDataPtr),mainWndData.searchDataSize),mainWndData.bFrUp,mainWndData.bFrMatchCase) )
             {
-                bProcFind = EditWndReplaceData(mainWndData.hWndIo,pfr->lpstrFindWhat,pfr->lpstrReplaceWith,min(strlen(pfr->lpstrReplaceWith),pfr->wReplaceWithLen),(pfr->Flags&FR_DOWN)?FALSE:TRUE,mainWndData.bFrMatchCase);
+                bProcFind = EditWndReplaceData(mainWndData.hWndIo,mainWndData.searchDataPtr,mainWndData.replaceDataPtr,min(strlen(mainWndData.replaceDataPtr),mainWndData.replaceDataSize),mainWndData.bFrUp,mainWndData.bFrMatchCase);
             }
             else
             {
