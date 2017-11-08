@@ -317,30 +317,64 @@ EditWndFindDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp, 
     return rtn;
 }
 
+#ifdef _MSC_VER
+#define STRNCASECMP strnicmp
+#else
+#define STRNCASECMP strncasecmp
+#endif
 /********************************************************************************
  * 内容  : EDITウィンドウの文字列置換
  * 引数  : HWND hwnd
- * 引数  : TCHAR* dataPtr
- * 引数  : DWORD  length
+ * 引数  : TCHAR* searchDataPtr
+ * 引数  : TCHAR* replaceDataPtr
+ * 引数  : DWORD  replaceDataSize
  * 引数  : BOOL bDirectionUp
  * 引数  : BOOL bMatchCase
  * 戻り値: BOOL
  ***************************************/
 BOOL
-EditWndReplaceData( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp, BOOL bMatchCase )
+EditWndReplaceData( HWND hwnd, TCHAR* searchDataPtr, TCHAR* replaceDataPtr, DWORD replaceDataSize, BOOL bDirectionUp, BOOL bMatchCase )
 {
     S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
     BOOL rtn = (BOOL)FALSE;
 
-    /* ここでは選択領域が置換対象文字列と合っている前提 */
-    editWndRemoveData( hwnd, FALSE );
-    EditWndBuffDataSet( editWndDataPtr->hEditWndBuff,dataPtr,length,FALSE );
+    DWORD dwTmpSize;
+    TCHAR *tmpDataPtr;
 
-    setAllScrollInfo(hwnd);
+    dwTmpSize = EditWndGetDataSize(hwnd,EDITWND_SELECTED);
 
-    editWndCaretPosOutScroll(hwnd,editWndDataPtr);
+    if( dwTmpSize )
+    {
+        tmpDataPtr = malloc( dwTmpSize + 1 );
+        *(tmpDataPtr + dwTmpSize) = '\0';
 
-    editWndInvalidateRect( hwnd, NULL, TRUE );
+        EditWndDataGet( hwnd,tmpDataPtr,dwTmpSize,EDITWND_SELECTED );
+        if( ( bMatchCase && !strncmp( tmpDataPtr,searchDataPtr,dwTmpSize)) ||
+            (!bMatchCase && !STRNCASECMP(tmpDataPtr,searchDataPtr,dwTmpSize)) )
+        {
+            /* エディットコントロールのメッセージに従うなら EM_REPLACESEL だが */
+#if 0
+            okMessage(hwnd, TEXT("\"%s\" と一致したので、\"%s\"(%d文字)に置換します"),pfr->lpstrFindWhat, pfr->lpstrReplaceWith, min(strlen(pfr->lpstrReplaceWith),pfr->wReplaceWithLen) );
+#endif
+            /* editWndRemoveData( hwnd, FALSE ); */
+            EditWndBuffDataSet( editWndDataPtr->hEditWndBuff,replaceDataPtr,replaceDataSize,FALSE );
+
+            setAllScrollInfo(hwnd);
+
+            editWndCaretPosOutScroll(hwnd,editWndDataPtr);
+
+            editWndInvalidateRect( hwnd, NULL, TRUE );
+            rtn = (BOOL)TRUE; /* 次の文字列を探せ */
+        }
+        else
+        { /* 選択領域の文字列が不一致 */
+            rtn = (BOOL)TRUE; /* 先に文字列を探せ */
+        }
+    }
+    else
+    { /* 選択領域の文字列がない */
+        rtn = (BOOL)TRUE; /* 先に文字列を探せ */
+    }
 
     return rtn;
 }

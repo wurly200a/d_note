@@ -145,13 +145,14 @@ BOOL EditWndFindDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bDirectio
 /********************************************************************************
  * 内容  : EDITウィンドウの文字列置換
  * 引数  : HWND hwnd
- * 引数  : TCHAR* dataPtr
- * 引数  : DWORD  length
+ * 引数  : TCHAR* searchDataPtr
+ * 引数  : TCHAR* replaceDataPtr
+ * 引数  : DWORD  replaceDataSize
  * 引数  : BOOL bDirectionUp
  * 引数  : BOOL bMatchCase
  * 戻り値: BOOL
  ***************************************/
-BOOL EditWndReplaceData( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp, BOOL bMatchCase );
+BOOL EditWndReplaceData( HWND hwnd, TCHAR* searchDataPtr, TCHAR* replaceDataPtr, DWORD replaceDataSize, BOOL bDirectionUp, BOOL bMatchCase );
 
 #define EDITWND_H
 #endif /* EDITWND_H */

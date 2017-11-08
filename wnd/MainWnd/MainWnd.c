@@ -71,12 +71,6 @@ static LRESULT (*wndProcTbl[MAINWND_MAX])( HWND hwnd, UINT message, WPARAM wPara
 #define USE_EDITCONTROL
 #endif
 
-#ifdef _MSC_VER
-#define STRNCASECMP strnicmp
-#else
-#define STRNCASECMP strncasecmp
-#endif
-
 /********************************************************************************
  * 内容  : メインウィンドウクラスの登録、ウィンドウの生成
  * 引数  : HINSTANCE hInst
@@ -969,37 +963,8 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     }
 
     if( bProcReplace )
-    {
-        DWORD dwSize;
-        TCHAR *dataPtr;
-
-        dwSize = EditWndGetDataSize(mainWndData.hWndIo,EDITWND_SELECTED);
-
-        if( dwSize )
-        {
-            dataPtr = malloc( dwSize + 1 );
-            *(dataPtr + dwSize) = '\0';
-
-            EditWndDataGet( mainWndData.hWndIo,dataPtr,dwSize,EDITWND_SELECTED );
-            if( ( mainWndData.bFrMatchCase && !strncmp( dataPtr,pfr->lpstrFindWhat,dwSize)) ||
-                (!mainWndData.bFrMatchCase && !STRNCASECMP(dataPtr,pfr->lpstrFindWhat,dwSize)) )
-            {
-                /* エディットコントロールのメッセージに従うなら EM_REPLACESEL だが */
-#if 0
-                okMessage(hwnd, TEXT("\"%s\" と一致したので、\"%s\"(%d文字)に置換します"),pfr->lpstrFindWhat, pfr->lpstrReplaceWith, min(strlen(pfr->lpstrReplaceWith),pfr->wReplaceWithLen) );
-#endif
-                EditWndReplaceData(mainWndData.hWndIo,pfr->lpstrReplaceWith,min(strlen(pfr->lpstrReplaceWith),pfr->wReplaceWithLen),(pfr->Flags&FR_DOWN)?FALSE:TRUE,(pfr->Flags&FR_MATCHCASE)?TRUE:FALSE);
-                bProcFind = (BOOL)TRUE; /* 次の文字列を探せ */
-            }
-            else
-            { /* 選択領域の文字列が不一致 */
-                bProcFind = (BOOL)TRUE; /* 先に文字列を探せ */
-            }
-        }
-        else
-        { /* 選択領域の文字列がない */
-            bProcFind = (BOOL)TRUE; /* 先に文字列を探せ */
-        }
+    { /* 置換 */
+        bProcFind = EditWndReplaceData(mainWndData.hWndIo,pfr->lpstrFindWhat,pfr->lpstrReplaceWith,min(strlen(pfr->lpstrReplaceWith),pfr->wReplaceWithLen),(pfr->Flags&FR_DOWN)?FALSE:TRUE,mainWndData.bFrMatchCase);
     }
     else
     {
@@ -1007,7 +972,7 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     }
 
     if( bProcFind )
-    {
+    { /* 検索 */
         if( EditWndFindDataSet(mainWndData.hWndIo,pfr->lpstrFindWhat,min(strlen(pfr->lpstrFindWhat),pfr->wFindWhatLen),(pfr->Flags&FR_DOWN)?FALSE:TRUE,(pfr->Flags&FR_MATCHCASE)?TRUE:FALSE) )
         {
             nop();
