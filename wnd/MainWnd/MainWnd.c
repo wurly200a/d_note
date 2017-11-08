@@ -601,11 +601,12 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break;
 
         case IDM_EDIT_FIND:
-            fr.lStructSize   = sizeof (FINDREPLACE);
-            fr.hwndOwner     = hwnd;
-            fr.Flags         = (mainWndData.bFrUp ? 0 : FR_DOWN)|(mainWndData.bFrMatchCase ? FR_MATCHCASE : 0)|FR_HIDEWHOLEWORD/*|FR_HIDEMATCHCASE*/;
-            fr.lpstrFindWhat = strFind;
-            fr.wFindWhatLen  = 80;
+            fr.lStructSize      = sizeof (FINDREPLACE);
+            fr.hwndOwner        = hwnd;
+            fr.Flags            = (mainWndData.bFrUp ? 0 : FR_DOWN)|(mainWndData.bFrMatchCase ? FR_MATCHCASE : 0)|FR_HIDEWHOLEWORD/*|FR_HIDEMATCHCASE*/;
+            fr.lpstrFindWhat    = strFind;
+            fr.lpstrReplaceWith = strRep;
+            fr.wReplaceWithLen  = fr.wFindWhatLen = 80;
             mainWndData.hDlgModeless = FindText(&fr);
             break;
 
@@ -620,7 +621,21 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break;
 
         case IDM_EDIT_FIND_NEXT:
-            okMessage(hwnd, TEXT("IDM_EDIT_FIND_NEXT"));
+            if( mainWndData.searchDataSize && mainWndData.searchDataPtr )
+            {
+                if( EditWndFindDataSet(mainWndData.hWndIo,mainWndData.searchDataPtr,mainWndData.searchDataSize,mainWndData.bFrUp,mainWndData.bFrMatchCase) )
+                {
+                    nop();
+                }
+                else
+                {
+                    okMessage(mainWndData.hDlgModeless, TEXT("\"%s\" Ç™å©Ç¬Ç©ÇËÇ‹ÇπÇÒÅB"),mainWndData.searchDataPtr);
+                }
+            }
+            else
+            {
+                PostMessage( hwnd,WM_COMMAND,IDM_EDIT_FIND,0);
+            }
             break;
 
         case IDM_EDIT_GOTO_LINE:
@@ -907,12 +922,19 @@ onFindMsgString( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         nop();
     }
 
+#if 0
+    DebugWndPrintf("FindReplace: 0x%08lX\r\n",pfr->Flags);
+    DebugWndPrintf("FindReplace: %s(%d),%s(%d)\r\n",pfr->lpstrFindWhat,pfr->wFindWhatLen,pfr->lpstrReplaceWith,pfr->wReplaceWithLen);
+#endif
+
     mainWndData.searchDataPtr   = pfr->lpstrFindWhat;
     mainWndData.searchDataSize  = min(strlen(mainWndData.searchDataPtr),pfr->wFindWhatLen);
     mainWndData.replaceDataPtr  = pfr->lpstrReplaceWith;
     mainWndData.replaceDataSize = min(strlen(mainWndData.replaceDataPtr),pfr->wReplaceWithLen);
 
+#if 0
     DebugWndPrintf("FindReplace: %s(%d),%s(%d)\r\n",mainWndData.searchDataPtr,mainWndData.searchDataSize,mainWndData.replaceDataPtr,mainWndData.replaceDataSize);
+#endif
 
     if( (pfr->Flags & FR_FINDNEXT) )
     { /* åüçı */
