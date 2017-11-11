@@ -893,15 +893,15 @@ editOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             break;
 
         case VK_HOME:
-            DebugWndPrintf("VK_HOME\r\n");
+//            DebugWndPrintf("VK_HOME\r\n");
             bErase = FALSE;
             EditWndBuffSetCaretPos(editWndDataPtr->hEditWndBuff,0,EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff));
             break;
 
         case VK_END :
-            DebugWndPrintf("VK_END\r\n");
+//            DebugWndPrintf("VK_END\r\n");
             bErase = FALSE;
-            EditWndBuffSetCaretPos(editWndDataPtr->hEditWndBuff,EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff)-1,EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff));
+            EditWndBuffSetCaretPos(editWndDataPtr->hEditWndBuff,EditWndBuffGetColumnMaxSize(editWndDataPtr->hEditWndBuff),EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff));
             break;
 
         case VK_PRIOR: /* Pg Up */
