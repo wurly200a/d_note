@@ -184,7 +184,7 @@ EditWndDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bInit )
 {
     S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
-    EditWndBuffDataSet( editWndDataPtr->hEditWndBuff, dataPtr, length, bInit );
+    EditWndBuffDataSet( editWndDataPtr->hEditWndBuff, dataPtr, length, bInit, TRUE );
 
     if( bInit )
     {
@@ -276,7 +276,7 @@ EditWndNewLineCodeSet( HWND hwnd, NEWLINECODE_TYPE newLineCodeType )
     if( dataTopPtr != NULL )
     {
         EditWndBuffDataGet( editWndDataPtr->hEditWndBuff, dataTopPtr, allDataSize, BUFF_ALL );
-        EditWndBuffDataSet( editWndDataPtr->hEditWndBuff, dataTopPtr, allDataSize, TRUE );
+        EditWndBuffDataSet( editWndDataPtr->hEditWndBuff, dataTopPtr, allDataSize, TRUE, TRUE );
         setAllScrollInfo(hwnd);
         editWndInvalidateRect( hwnd, NULL, TRUE );
 
@@ -357,7 +357,7 @@ EditWndReplaceData( HWND hwnd, TCHAR* searchDataPtr, TCHAR* replaceDataPtr, DWOR
             okMessage(hwnd, TEXT("\"%s\" と一致したので、\"%s\"(%d文字)に置換します"),pfr->lpstrFindWhat, pfr->lpstrReplaceWith, min(strlen(pfr->lpstrReplaceWith),pfr->wReplaceWithLen) );
 #endif
             editWndRemoveData( hwnd, FALSE );
-            EditWndBuffDataSet( editWndDataPtr->hEditWndBuff,replaceDataPtr,replaceDataSize,FALSE );
+            EditWndBuffDataSet( editWndDataPtr->hEditWndBuff,replaceDataPtr,replaceDataSize,FALSE, TRUE );
 
             setAllScrollInfo(hwnd);
 
@@ -1051,7 +1051,7 @@ editOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
             if( size )
             {
-                EditWndBuffDataSet( editWndDataPtr->hEditWndBuff, data,size,FALSE );
+                EditWndBuffDataSet( editWndDataPtr->hEditWndBuff, data,size,FALSE, TRUE );
                 if( bRectSelect )
                 {
 #if 0 /* デバッグ用 */
@@ -1938,7 +1938,7 @@ editWndRemoveData( HWND hwnd, BOOL bBackSpace )
 {
     S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
-    EditWndBuffRemoveData( editWndDataPtr->hEditWndBuff, bBackSpace );
+    EditWndBuffRemoveData( editWndDataPtr->hEditWndBuff, bBackSpace, TRUE );
     SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_CHANGE), (LPARAM)hwnd);
 }
 

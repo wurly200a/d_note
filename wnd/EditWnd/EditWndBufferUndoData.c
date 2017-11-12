@@ -62,20 +62,41 @@ EditWndBufferUndoDataAllRemoveLinkedList( S_BUFF_UNDO_DATA **topPtrPtr, S_BUFF_U
 /********************************************************************************
  * 内容  : アンドゥデータの生成
  * 引数  : UNDO_TYPE undoType
- * 引数  : DWORD     size
+ * 引数  : TCHAR* dataPtr
+ * 引数  : DWORD length
  * 戻り値: S_BUFF_UNDO_DATA *
  ***************************************/
 S_BUFF_UNDO_DATA *
-EditWndBufferUndoDataCreate( UNDO_TYPE undoType, DWORD size )
+EditWndBufferUndoDataCreate( UNDO_TYPE undoType, TCHAR* dataPtr, DWORD length )
 {
     S_BUFF_UNDO_DATA *newPtr = NULL;
+    DWORD dataSize = (DWORD)sizeof(S_BUFF_UNDO_DATA);
 
-    newPtr = (S_BUFF_UNDO_DATA *)malloc( sizeof(S_BUFF_UNDO_DATA) );
+    if( undoType == UNDO_TYPE_REMOVE )
+    {
+        dataSize += length;
+    }
+    else
+    {
+        nop();
+    }
+    newPtr = (S_BUFF_UNDO_DATA *)malloc( dataSize );
+
     if( newPtr != NULL )
     {
         memset( newPtr, sizeof(S_BUFF_UNDO_DATA), 0 );
         newPtr->undoType = undoType;
-        newPtr->size     = size;
+        newPtr->size     = length;
+
+        if( undoType == UNDO_TYPE_REMOVE )
+        {
+            newPtr->dataPtr = ((TCHAR *)newPtr)+sizeof(S_BUFF_UNDO_DATA);
+            memcpy( newPtr->dataPtr, dataPtr, length );
+        }
+        else
+        {
+            nop();
+        }
     }
     else
     {

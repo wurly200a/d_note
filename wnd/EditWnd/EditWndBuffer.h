@@ -46,9 +46,10 @@ void EditWndBuffEnd( H_EDITWND_BUFF hEditWndBuff );
  * 引数  : TCHAR* dataPtr
  * 引数  : DWORD  length
  * 引数  : BOOL   bInit  (TRUE:既存データをクリア,FALSE:クリアしない)
+ * 引数  : BOOL   bUndoEnable
  * 戻り値: なし
  ***************************************/
-void EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, BOOL bInit );
+void EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, BOOL bInit, BOOL bUndoEnable );
 
 typedef enum
 {
@@ -203,9 +204,10 @@ void EditWndBuffSetNewLineCode( H_EDITWND_BUFF hEditWndBuff, UINT newLineType );
  * 内容  : データ削除
  * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 引数  : BOOL bBackSpace
+ * 引数  : BOOL bUndoEnable
  * 戻り値: なし
  ***************************************/
-void EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace );
+void EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace, BOOL bUndoEnable );
 
 /********************************************************************************
  * 内容  : 改行データ取得

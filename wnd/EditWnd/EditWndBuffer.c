@@ -146,10 +146,11 @@ EditWndBuffEnd( H_EDITWND_BUFF hEditWndBuff )
  * 引数  : TCHAR* dataPtr
  * 引数  : DWORD  length
  * 引数  : BOOL   bInit  (TRUE:既存データをクリア,FALSE:クリアしない)
+ * 引数  : BOOL   bUndoEnable
  * 戻り値: なし
  ***************************************/
 void
-EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, BOOL bInit )
+EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, BOOL bInit, BOOL bUndoEnable )
 {
     S_BUFF_LINE_DATA *lineDataPtr;
     S_BUFF_LINE_DATA *tempTopPtr = NULL;
@@ -159,7 +160,6 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
     DWORD lineLengthSum = 0;
     DWORD caretPos = 0;
     H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
-    S_BUFF_UNDO_DATA *undoTempDataPtr;
 
     if( bInit )
     {
@@ -362,10 +362,19 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
         nop();
     }
 
-    undoTempDataPtr = EditWndBufferUndoDataCreate(UNDO_TYPE_SET,length);
-    EditWndBufferUndoDataAddLinkedList(&(h->undoData.topPtr),&(h->undoData.endPtr),undoTempDataPtr);
+    if( bUndoEnable )
+    {
+        S_BUFF_UNDO_DATA *undoTempDataPtr;
 
-    DebugWndPrintf("EditWndBufferUndoDataAddLinkedList: 0x%08lX,0x%08lX\r\n",h->undoData.topPtr,h->undoData.endPtr);
+        undoTempDataPtr = EditWndBufferUndoDataCreate(UNDO_TYPE_SET,NULL,length);
+        EditWndBufferUndoDataAddLinkedList(&(h->undoData.topPtr),&(h->undoData.endPtr),undoTempDataPtr);
+
+        DebugWndPrintf("EditWndBufferUndoDataAddLinkedList: 0x%08lX,0x%08lX\r\n",h->undoData.topPtr,h->undoData.endPtr);
+    }
+    else
+    {
+        nop();
+    }
 }
 
 /********************************************************************************
@@ -941,10 +950,11 @@ EditWndBuffSetNewLineCode( H_EDITWND_BUFF hEditWndBuff, UINT newLineType )
  * 内容  : データ削除
  * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 引数  : BOOL bBackSpace
+ * 引数  : BOOL bUndoEnable
  * 戻り値: なし
  ***************************************/
 void
-EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
+EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace, BOOL bUndoEnable )
 {
     DWORD removeSize = 0,saveCaretPos;
     S_BUFF_LINE_DATA *newPtr = NULL,*prevPtr = NULL,*nextPtr = NULL,*nowPtr = NULL,*savePtr;
@@ -958,25 +968,6 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
 #endif
     if( (h->lineData.nowPtr) != NULL )
     {
-#if 0
-        DWORD dwSizeForUndo;
-        TCHAR *dataPtrForUndo;
-
-        /*------------ undo用(ここから) ------------*/
-        dwSizeForUndo = EditWndBuffGetDataSize(h,BUFF_SELECTED);
-        dataPtrForUndo = malloc( sizeof(TCHAR) * dwSizeForUndo );
-        EditWndBuffDataGet(h, dataPtrForUndo, dwSizeForUndo, BUFF_SELECTED);
-        /*------------ undo用(ここまで) ------------*/
-#endif
-
-#if 0
-        DebugWndPrintf("h->lineData.selectPtr                 :0x%08lX\r\n",h->lineData.selectPtr);
-        DebugWndPrintf("h->lineData.nowPtr                    :0x%08lX\r\n",h->lineData.nowPtr   );
-        DebugWndPrintf("h->lineData.selectPtr                 :0x%08lX\r\n",h->lineData.selectPtr);
-        DebugWndPrintf("(h->lineData.nowPtr)->caretDataPos    :0x%08lX\r\n",(h->lineData.nowPtr)->caretDataPos);
-        DebugWndPrintf("h->lineData.selectCaretPos            :0x%08lX\r\n",h->lineData.selectCaretPos);
-#endif
-
         if( ((h->lineData.selectPtr != NULL) && (h->lineData.nowPtr != h->lineData.selectPtr)) ||
             ((h->lineData.nowPtr == h->lineData.selectPtr) && ((h->lineData.nowPtr)->caretDataPos != h->lineData.selectCaretPos)) )
         { /* 選択開始位置有り */
@@ -1041,6 +1032,26 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace )
         /* 実際の削除処理(ここから) */
         if( (h->lineData.selectPtr) != NULL )
         { /* 選択開始位置有り */
+            if( bUndoEnable )
+            {
+                DWORD dwSizeForUndo;
+                TCHAR *dataPtrForUndo;
+                S_BUFF_UNDO_DATA *undoTempDataPtr;
+
+                dwSizeForUndo = EditWndBuffGetDataSize(h,BUFF_SELECTED);
+                dataPtrForUndo = malloc( sizeof(TCHAR) * dwSizeForUndo );
+                EditWndBuffDataGet(h, dataPtrForUndo, dwSizeForUndo, BUFF_SELECTED);
+                undoTempDataPtr = EditWndBufferUndoDataCreate(UNDO_TYPE_REMOVE,dataPtrForUndo,dwSizeForUndo);
+                free(dataPtrForUndo);
+                EditWndBufferUndoDataAddLinkedList(&(h->undoData.topPtr),&(h->undoData.endPtr),undoTempDataPtr);
+
+                DebugWndPrintf("EditWndBufferUndoDataAddLinkedList: 0x%08lX,0x%08lX\r\n",h->undoData.topPtr,h->undoData.endPtr);
+            }
+            else
+            {
+                nop();
+            }
+
             if( ((h->lineData.nowPtr) == (h->lineData.selectPtr)) &&
                 (((h->lineData.nowPtr)->lineNum) == ((h->lineData.selectPtr)->lineNum)) )
             { /* 選択範囲は同一行内 */
@@ -1476,17 +1487,27 @@ EditWndBuffUndo( H_EDITWND_BUFF hEditWndBuff )
     DebugWndPrintf("EditWndBuffUndo,%d\r\n",rtn);
 #endif
 
-    if( h->undoData.topPtr )
+    if( h->undoData.endPtr )
     {
         S_BUFF_UNDO_DATA *undoDataPtr;
 
-        undoDataPtr = h->undoData.topPtr;
+        undoDataPtr = h->undoData.endPtr;
 
-        DebugWndPrintf("EditWndBuffUndo,0x%08lX\r\n",undoDataPtr->size);
+        DebugWndPrintf("EditWndBuffUndo,type=%d,0x%08lX\r\n",undoDataPtr->undoType,undoDataPtr->size);
 
-        setSelectPosNowPosToFar(h,TRUE,undoDataPtr->size);
-        EditWndBuffRemoveData(h,TRUE);
-
+        if( undoDataPtr->undoType == UNDO_TYPE_SET )
+        {
+            setSelectPosNowPosToFar(h,TRUE,undoDataPtr->size);
+            EditWndBuffRemoveData(h,TRUE,FALSE);
+        }
+        else if( undoDataPtr->undoType == UNDO_TYPE_REMOVE )
+        {
+            EditWndBuffDataSet( hEditWndBuff, undoDataPtr->dataPtr, undoDataPtr->size, FALSE, FALSE );
+        }
+        else
+        {
+            nop();
+        }
         EditWndBufferUndoDataRemoveLinkedList(&(h->undoData.topPtr),&(h->undoData.endPtr),undoDataPtr);
         EditWndBufferUndoDataDestroy(undoDataPtr);
 
