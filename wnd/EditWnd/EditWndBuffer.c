@@ -36,10 +36,7 @@ typedef struct tagS_EDITWND_BUFF_LOCAL
     struct
     {
         UNDO_TYPE        undoType        ;
-        S_BUFF_LINE_DATA *lastLineDataPtr;
-        DWORD            caretPos        ;
         DWORD            size            ;
-        TCHAR            *undoDataPtr    ;
     } undoInfo;
 } S_EDITWND_BUFF_LOCAL;
 typedef S_EDITWND_BUFF_LOCAL * H_EDITWND_BUFF_LOCAL;
@@ -371,11 +368,7 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
     }
 
     h->undoInfo.undoType   = UNDO_TYPE_SET;
-    h->undoInfo.lastLineDataPtr  = h->lineData.nowPtr;
-    h->undoInfo.caretPos = (h->lineData.nowPtr)->caretDataPos;
     h->undoInfo.size     = length;
-
-//    DebugWndPrintf("0x%08lX,0x%08lX,0x%08lX\r\n",h->undoInfo.lastLineDataPtr,h->undoInfo.caretPos,h->undoInfo.size);
 }
 
 /********************************************************************************
