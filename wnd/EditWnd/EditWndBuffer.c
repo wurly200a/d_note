@@ -160,10 +160,13 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
     DWORD lineLengthSum = 0;
     DWORD caretPos = 0;
     H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
+    BOOL bUndoEnableLocal = bUndoEnable;
 
     if( bInit )
     {
+        bUndoEnableLocal = FALSE;
         EditWndBuffInit(hEditWndBuff);
+        EditWndBufferUndoDataAllRemoveLinkedList(&(h->undoData.topPtr),&(h->undoData.endPtr));
     }
     else
     {
@@ -362,7 +365,7 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
         nop();
     }
 
-    if( bUndoEnable )
+    if( bUndoEnableLocal )
     {
         S_BUFF_UNDO_DATA *undoTempDataPtr;
 

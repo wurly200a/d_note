@@ -184,7 +184,7 @@ EditWndDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bInit )
 {
     S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
-    EditWndBuffDataSet( editWndDataPtr->hEditWndBuff, dataPtr, length, bInit, TRUE );
+    EditWndBuffDataSet( editWndDataPtr->hEditWndBuff, dataPtr, length, bInit, bInit ? FALSE : TRUE );
 
     if( bInit )
     {
@@ -276,7 +276,7 @@ EditWndNewLineCodeSet( HWND hwnd, NEWLINECODE_TYPE newLineCodeType )
     if( dataTopPtr != NULL )
     {
         EditWndBuffDataGet( editWndDataPtr->hEditWndBuff, dataTopPtr, allDataSize, BUFF_ALL );
-        EditWndBuffDataSet( editWndDataPtr->hEditWndBuff, dataTopPtr, allDataSize, TRUE, TRUE );
+        EditWndBuffDataSet( editWndDataPtr->hEditWndBuff, dataTopPtr, allDataSize, TRUE, FALSE );
         setAllScrollInfo(hwnd);
         editWndInvalidateRect( hwnd, NULL, TRUE );
 
