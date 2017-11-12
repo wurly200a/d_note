@@ -31,6 +31,7 @@ OBJECTS = \
           ..\\wnd\\EditWnd\\EditWnd.o			  \
           ..\\wnd\\EditWnd\\EditWndBuffer.o		  \
           ..\\wnd\\EditWnd\\EditWndBufferData.o	  \
+          ..\\wnd\\EditWnd\\EditWndBufferUndoData.o \
           ..\\wnd\\MainWnd\\MainWnd.o			  \
           ..\\wnd\\MainWnd\\MainWndMenu.o		  \
           ..\\wnd\\ModalDlg\\ModalDialog.o		  \

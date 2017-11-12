@@ -7,7 +7,7 @@ typedef enum
     UNDO_TYPE_REMOVE,
 } UNDO_TYPE;
 
-typedef struct tag_buffer_line_data
+typedef struct tagS_BUFF_UNDO_DATA
 {
     S_LIST_HEADER header         ;
     UNDO_TYPE     undoType       ;

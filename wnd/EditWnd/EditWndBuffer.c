@@ -4,6 +4,7 @@
 #include "DebugWnd.h"
 #include "LinkedList.h"
 #include "EditWndBufferDataType.h"
+#include "EditWndBufferUndoDataType.h"
 
 /* 外部関数定義 */
 
@@ -11,13 +12,6 @@
 
 /* 内部関数定義 */
 #include "EditWndBuffer.h"
-
-typedef enum
-{
-    UNDO_TYPE_NONE  ,
-    UNDO_TYPE_SET   ,
-    UNDO_TYPE_REMOVE,
-} UNDO_TYPE;
 
 typedef struct tagS_EDITWND_BUFF_LOCAL
 {
@@ -35,9 +29,9 @@ typedef struct tagS_EDITWND_BUFF_LOCAL
     INT   tabSize    ;
     struct
     {
-        UNDO_TYPE        undoType        ;
-        DWORD            size            ;
-    } undoInfo;
+        S_BUFF_UNDO_DATA *topPtr       ; /* 先頭のデータ                           */
+        S_BUFF_UNDO_DATA *endPtr       ; /* 最後のデータ                           */
+    } undoData;
 } S_EDITWND_BUFF_LOCAL;
 typedef S_EDITWND_BUFF_LOCAL * H_EDITWND_BUFF_LOCAL;
 
@@ -165,6 +159,7 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
     DWORD lineLengthSum = 0;
     DWORD caretPos = 0;
     H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
+    S_BUFF_UNDO_DATA *undoTempDataPtr;
 
     if( bInit )
     {
@@ -367,8 +362,10 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
         nop();
     }
 
-    h->undoInfo.undoType   = UNDO_TYPE_SET;
-    h->undoInfo.size     = length;
+    undoTempDataPtr = EditWndBufferUndoDataCreate(UNDO_TYPE_SET,length);
+    EditWndBufferUndoDataAddLinkedList(&(h->undoData.topPtr),&(h->undoData.endPtr),undoTempDataPtr);
+
+    DebugWndPrintf("EditWndBufferUndoDataAddLinkedList: 0x%08lX,0x%08lX\r\n",h->undoData.topPtr,h->undoData.endPtr);
 }
 
 /********************************************************************************
@@ -1478,18 +1475,28 @@ EditWndBuffUndo( H_EDITWND_BUFF hEditWndBuff )
 #if 0
     DebugWndPrintf("EditWndBuffUndo,%d\r\n",rtn);
 #endif
-    if( h->undoInfo.undoType )
-    {
-        DebugWndPrintf("EditWndBuffUndo,0x%08lX\r\n",h->undoInfo.size);
 
-        setSelectPosNowPosToFar(h,TRUE,h->undoInfo.size);
+    if( h->undoData.topPtr )
+    {
+        S_BUFF_UNDO_DATA *undoDataPtr;
+
+        undoDataPtr = h->undoData.topPtr;
+
+        DebugWndPrintf("EditWndBuffUndo,0x%08lX\r\n",undoDataPtr->size);
+
+        setSelectPosNowPosToFar(h,TRUE,undoDataPtr->size);
         EditWndBuffRemoveData(h,TRUE);
 
-        h->undoInfo.undoType = UNDO_TYPE_NONE;
+        EditWndBufferUndoDataRemoveLinkedList(&(h->undoData.topPtr),&(h->undoData.endPtr),undoDataPtr);
+        EditWndBufferUndoDataDestroy(undoDataPtr);
+
+        DebugWndPrintf("EditWndBufferUndoDataRemoveLinkedList: 0x%08lX,0x%08lX\r\n",h->undoData.topPtr,h->undoData.endPtr);
+
         rtn = (BOOL)TRUE;
     }
     else
     {
+        nop();
     }
 
     return (BOOL)rtn;
