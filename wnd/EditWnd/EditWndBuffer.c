@@ -58,14 +58,8 @@ EditWndBuffCreate( void )
     h = (H_EDITWND_BUFF_LOCAL)malloc( sizeof(S_EDITWND_BUFF_LOCAL) );
     if( h != NULL )
     {
-        h->lineData.topPtr         = NULL;
-        h->lineData.endPtr         = NULL;
-        h->lineData.nowPtr         = NULL;
-        h->lineData.selectPtr      = NULL;
-        h->lineData.selectCaretPos = 0;
+        memset((void *)h,0,sizeof(S_EDITWND_BUFF_LOCAL));
         h->NewLineType = EDITWND_BUFF_NEWLINE_CRLF;
-        h->xCaret      = 0;
-        h->yCaret      = 0;
         h->tabSize     = 8;
     }
     else

@@ -84,7 +84,7 @@ EditWndBufferUndoDataCreate( UNDO_TYPE undoType, TCHAR* dataPtr, DWORD length )
 
     if( newPtr != NULL )
     {
-        memset( newPtr, sizeof(S_BUFF_UNDO_DATA), 0 );
+        memset( newPtr, 0, dataSize );
         newPtr->undoType = undoType;
         newPtr->size     = length;
 

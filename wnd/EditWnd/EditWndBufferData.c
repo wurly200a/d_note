@@ -157,7 +157,7 @@ BuffLineDataCreate( DWORD size, INT newLineCodeSize, TCHAR *dataPtr, DWORD lineN
     newPtr = (S_BUFF_LINE_DATA *)malloc( sizeof(S_BUFF_LINE_DATA) + (size * sizeof(TCHAR)) + 1 );
     if( newPtr != NULL )
     {
-        memset( newPtr, sizeof(S_BUFF_LINE_DATA), 0 );
+        memset( newPtr, 0, sizeof(S_BUFF_LINE_DATA) );
         newPtr->lineNum         = lineNum;
         newPtr->caretDataPos    = caretPos;
         newPtr->dataSize        = size;
