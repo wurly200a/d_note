@@ -33,5 +33,12 @@ void ConfigSaveDword( CONFIG_ID id, DWORD data );
  ***************************************/
 INT ConfigLoadDword( CONFIG_ID id );
 
+/********************************************************************************
+ * 内容  : デバッグ変数(DWORD値)を読み込む
+ * 引数  : なし
+ * 戻り値: INT
+ ***************************************/
+DWORD ConfigLoadDebugValue( void );
+
 #define CONFIG_H
 #endif /* CONFIG_H */

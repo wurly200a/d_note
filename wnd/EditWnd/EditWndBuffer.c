@@ -366,7 +366,9 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
         undoTempDataPtr = EditWndBufferUndoDataCreate(UNDO_TYPE_SET,NULL,length);
         EditWndBufferUndoDataAddLinkedList(&(h->undoData.topPtr),&(h->undoData.endPtr),undoTempDataPtr);
 
+#if 0
         DebugWndPrintf("EditWndBufferUndoDataAddLinkedList: 0x%08lX,0x%08lX\r\n",h->undoData.topPtr,h->undoData.endPtr);
+#endif
     }
     else
     {
@@ -994,7 +996,9 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace, BOOL bUndoE
                     }
                     else
                     {
+#if 0
                         DebugWndPrintf("No Action(Position 0,0)\r\n");
+#endif
                     }
                 }
             }
@@ -1019,7 +1023,9 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace, BOOL bUndoE
                     }
                     else
                     { /* ŽŸs–³‚µ */
+#if 0
                         DebugWndPrintf("No Action(DEL at LastPos)\r\n");
+#endif
                     }
                 }
             }
@@ -1041,8 +1047,9 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace, BOOL bUndoE
                 undoTempDataPtr = EditWndBufferUndoDataCreate(UNDO_TYPE_REMOVE,dataPtrForUndo,dwSizeForUndo);
                 free(dataPtrForUndo);
                 EditWndBufferUndoDataAddLinkedList(&(h->undoData.topPtr),&(h->undoData.endPtr),undoTempDataPtr);
-
+#if 0
                 DebugWndPrintf("EditWndBufferUndoDataAddLinkedList: 0x%08lX,0x%08lX\r\n",h->undoData.topPtr,h->undoData.endPtr);
+#endif
             }
             else
             {
@@ -1173,12 +1180,16 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace, BOOL bUndoE
                 }
                 else
                 {
+#if 0
                     DebugWndPrintf("Bug!!!\r\n");
+#endif
                 }
             }
             else
             {
+#if 0
                 DebugWndPrintf("arienai\r\n");
+#endif
             }
         }
         else if( joinPattern == 2 )
@@ -1205,12 +1216,16 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace, BOOL bUndoE
                 }
                 else
                 {
+#if 0
                     DebugWndPrintf("Bug!!!\r\n");
+#endif
                 }
             }
             else
             {
+#if 0
                 DebugWndPrintf("arienai\r\n");
+#endif
             }
         }
         else
@@ -1221,7 +1236,9 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace, BOOL bUndoE
     }
     else
     {
+#if 0
         DebugWndPrintf("No Action(Empty)\r\n");
+#endif
     }
 }
 
@@ -1489,9 +1506,9 @@ EditWndBuffUndo( H_EDITWND_BUFF hEditWndBuff )
         S_BUFF_UNDO_DATA *undoDataPtr;
 
         undoDataPtr = h->undoData.endPtr;
-
+#if 0
         DebugWndPrintf("EditWndBuffUndo,type=%d,0x%08lX\r\n",undoDataPtr->undoType,undoDataPtr->size);
-
+#endif
         if( undoDataPtr->undoType == UNDO_TYPE_SET )
         {
             setSelectPosNowPosToFar(h,TRUE,undoDataPtr->size);
@@ -1507,9 +1524,9 @@ EditWndBuffUndo( H_EDITWND_BUFF hEditWndBuff )
         }
         EditWndBufferUndoDataRemoveLinkedList(&(h->undoData.topPtr),&(h->undoData.endPtr),undoDataPtr);
         EditWndBufferUndoDataDestroy(undoDataPtr);
-
+#if 0
         DebugWndPrintf("EditWndBufferUndoDataRemoveLinkedList: 0x%08lX,0x%08lX\r\n",h->undoData.topPtr,h->undoData.endPtr);
-
+#endif
         rtn = (BOOL)TRUE;
     }
     else

@@ -263,7 +263,15 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     DeleteObject(hFont);
     ReleaseDC( hwnd,hdc );
 
-    mainWndData.hWndDebug = DebugWndCreate(mainWndData.hInstance,mainWndData.szAppName,TRUE);
+    if( ConfigLoadDebugValue() == 0xDDDDDDDD )
+    {
+        mainWndData.hWndDebug = DebugWndCreate(mainWndData.hInstance,mainWndData.szAppName,TRUE);
+        DebugWndPrintf("DEBUG=%08lX\r\n",ConfigLoadDebugValue());
+    }
+    else
+    {
+        nop();
+    }
 
     ModalDlgInit(mainWndData.hInstance,mainWndData.szAppName);
     FileInitialize( hwnd ); /* ÉtÉ@ÉCÉãèâä˙âª     */

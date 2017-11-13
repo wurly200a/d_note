@@ -113,3 +113,27 @@ ConfigLoadDword( CONFIG_ID id )
 
     return (DWORD)rtn;
 }
+
+/********************************************************************************
+ * 内容  : デバッグ変数(DWORD値)を読み込む
+ * 引数  : なし
+ * 戻り値: INT
+ ***************************************/
+DWORD
+ConfigLoadDebugValue( void )
+{
+    TCHAR szDword[11];
+    DWORD rtn = (DWORD)0;
+
+    if( configData.bInitConfig )
+    {
+        GetPrivateProfileString( configData.szAppName, TEXT("DEBUG"), TEXT("0x00000000"), szDword, 11, configData.szIniFileName );
+        rtn = strtoul( szDword+2,NULL,16 );
+    }
+    else
+    {
+        nop();
+    }
+
+    return (DWORD)rtn;
+}
