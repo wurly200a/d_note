@@ -76,7 +76,7 @@ static void updateTextMetrics( HWND hwnd );
 static void setAllScrollInfo( HWND hwnd );
 static void getAllScrollInfo( HWND hwnd );
 static void setScrollPos( HWND hwnd, int fnBar, DWORD nPos );
-static void editWndInvalidateRect( HWND hWnd, RECT *rectPtr, BOOL bErase );
+static void editWndInvalidateRect( HWND hWnd, RECT *rectPtr, BOOL bErase, TCHAR *strDebugMsg );
 
 /* 内部変数定義 */
 
@@ -168,7 +168,7 @@ EditWndDataInit( HWND hwnd )
     EditWndBuffInit(editWndDataPtr->hEditWndBuff);
 
     setAllScrollInfo(hwnd);
-    editWndInvalidateRect( hwnd, NULL, TRUE );
+    editWndInvalidateRect( hwnd, NULL, TRUE, "EditWndDataInit" );
 }
 
 /********************************************************************************
@@ -197,7 +197,7 @@ EditWndDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bInit )
 
     EditWndBuffSelectOff(editWndDataPtr->hEditWndBuff);
     setAllScrollInfo(hwnd);
-    editWndInvalidateRect( hwnd, NULL, TRUE );
+    editWndInvalidateRect( hwnd, NULL, TRUE, "EditWndDataSet" );
 }
 
 /********************************************************************************
@@ -278,7 +278,7 @@ EditWndNewLineCodeSet( HWND hwnd, NEWLINECODE_TYPE newLineCodeType )
         EditWndBuffDataGet( editWndDataPtr->hEditWndBuff, dataTopPtr, allDataSize, BUFF_ALL );
         EditWndBuffDataSet( editWndDataPtr->hEditWndBuff, dataTopPtr, allDataSize, TRUE, FALSE );
         setAllScrollInfo(hwnd);
-        editWndInvalidateRect( hwnd, NULL, TRUE );
+        editWndInvalidateRect( hwnd, NULL, TRUE, "EditWndNewLineCodeSet" );
 
         free( dataTopPtr );
         bRtn = TRUE;
@@ -312,7 +312,7 @@ EditWndFindDataSet( HWND hwnd, TCHAR* dataPtr, DWORD length, BOOL bDirectionUp, 
 
     editWndCaretPosOutScroll(hwnd,editWndDataPtr);
 
-    editWndInvalidateRect( hwnd, NULL, TRUE );
+    editWndInvalidateRect( hwnd, NULL, TRUE, "EditWndFindDataSet" );
 
     return rtn;
 }
@@ -363,7 +363,7 @@ EditWndReplaceData( HWND hwnd, TCHAR* searchDataPtr, TCHAR* replaceDataPtr, DWOR
 
             editWndCaretPosOutScroll(hwnd,editWndDataPtr);
 
-            editWndInvalidateRect( hwnd, NULL, TRUE );
+            editWndInvalidateRect( hwnd, NULL, TRUE, "EditWndReplaceData" );
             rtn = (BOOL)TRUE; /* 次の文字列を探せ */
         }
         else
@@ -934,7 +934,7 @@ editOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             editWndCaretPosOutScroll(hwnd,editWndDataPtr);
 
             HideCaret(hwnd);
-            editWndInvalidateRect( hwnd, NULL, bErase );
+            editWndInvalidateRect( hwnd, NULL, bErase, "editOnKeyDown" );
             editWndCaretPosUpdate(editWndDataPtr);
             ShowCaret(hwnd);
         }
@@ -1057,11 +1057,11 @@ editOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 #if 0 /* デバッグ用 */
                     DebugEditWndRect = 1;
 #endif
-                    editWndInvalidateRect( hwnd, &rect, TRUE );
+                    editWndInvalidateRect( hwnd, &rect, TRUE, "editOnChar_bRectSelect" );
                 }
                 else
                 {
-                    editWndInvalidateRect( hwnd, NULL, TRUE );
+                    editWndInvalidateRect( hwnd, NULL, TRUE, "editOnChar" );
                 }
                 SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_CHANGE), (LPARAM)hwnd);
             }
@@ -1330,7 +1330,7 @@ editOnMouseMove( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         {
             editWndCaretPosOutScroll(hwnd,editWndDataPtr);
             editWndCaretPosUpdate(editWndDataPtr);
-            editWndInvalidateRect( hwnd, NULL, FALSE );
+            editWndInvalidateRect( hwnd, NULL, FALSE, "editOnMouseMove" );
         }
         else
         {
@@ -1395,7 +1395,7 @@ editOnLbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     if( bSelectOffChange || bSelectOnChange || bCaretPosChange )
     {
-        editWndInvalidateRect( hwnd, NULL, TRUE );
+        editWndInvalidateRect( hwnd, NULL, TRUE, "editOnLbuttonDown" );
     }
     else
     {
@@ -1617,7 +1617,7 @@ editOnCut( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
             /* CUTのみ */
             editWndRemoveData( hwnd,FALSE );
-            editWndInvalidateRect( hwnd, NULL, TRUE );
+            editWndInvalidateRect( hwnd, NULL, TRUE, "editOnCut" );
         }
         else
         {
@@ -1744,7 +1744,7 @@ editOnClear( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     else
     {
         editWndRemoveData( hwnd,FALSE );
-        editWndInvalidateRect( hwnd, NULL, TRUE );
+        editWndInvalidateRect( hwnd, NULL, TRUE, "editOnClear" );
     }
 
     return rtn;
@@ -1766,7 +1766,7 @@ editOnUndo( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     if( EditWndBuffUndo(editWndDataPtr->hEditWndBuff) )
     {
-        editWndInvalidateRect( hwnd, NULL, TRUE );
+        editWndInvalidateRect( hwnd, NULL, TRUE, "editOnUndo" );
     }
     else
     {
@@ -1796,7 +1796,7 @@ editOnSetSel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         {
             EditWndBuffSetCaretPos(editWndDataPtr->hEditWndBuff, EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff),EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff));
             setScrollPos( hwnd, SB_VERT, EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff) );
-            editWndInvalidateRect( hwnd, NULL, TRUE );
+            editWndInvalidateRect( hwnd, NULL, TRUE, "editOnSetSel" );
         }
         else
         {
@@ -1809,7 +1809,7 @@ editOnSetSel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         HideCaret(hwnd);
         EditWndBuffSetCaretPos(editWndDataPtr->hEditWndBuff,0xffffffff,EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff));
         setScrollPos( hwnd, SB_VERT, EditWndBuffGetLineMaxSize(editWndDataPtr->hEditWndBuff) );
-        editWndInvalidateRect( hwnd, NULL, TRUE );
+        editWndInvalidateRect( hwnd, NULL, TRUE, "editOnSelSet" );
         editWndCaretPosUpdate(editWndDataPtr);
         ShowCaret(hwnd);
     }
@@ -1837,7 +1837,7 @@ editOnSetFont( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     if( lParam )
     {
-        editWndInvalidateRect( hwnd, NULL, TRUE );
+        editWndInvalidateRect( hwnd, NULL, TRUE, "editOnSetFont" );
     }
     else
     {
@@ -1908,7 +1908,7 @@ editOnGoToLine( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     editWndCaretPosOutScroll(hwnd,editWndDataPtr);
 
-    editWndInvalidateRect( hwnd, NULL, TRUE );
+    editWndInvalidateRect( hwnd, NULL, TRUE, "editOnGoToLine" );
 
     return (LRESULT)result;
 }
@@ -2100,20 +2100,19 @@ setScrollPos( HWND hwnd, int fnBar, DWORD nPos )
  * 引数  : HWND hWnd
  * 引数  : RECT *rectPtr
  * 引数  : BOOL bErase
+ * 引数  : TCHAR *strDebugMsg
  * 戻り値: なし
  ***************************************/
 static void
-editWndInvalidateRect( HWND hWnd, RECT *rectPtr, BOOL bErase )
+editWndInvalidateRect( HWND hWnd, RECT *rectPtr, BOOL bErase, TCHAR *strDebugMsg )
 {
-#if 0
     if( rectPtr != NULL )
     {
-        DebugWndPrintf("InvalidateRect,left:%d,top:%d,right:%d,bottom:%d,%s\r\n",rectPtr->left,rectPtr->top,rectPtr->right,rectPtr->bottom,(bErase?"TRUE":"FALSE"));
+        DebugWndPrintf("InvalidateRect,%s,left:%d,top:%d,right:%d,bottom:%d,%s\r\n",strDebugMsg,rectPtr->left,rectPtr->top,rectPtr->right,rectPtr->bottom,(bErase?"TRUE":"FALSE"));
     }
     else
     {
-        DebugWndPrintf("InvalidateRect,NULL,%s\r\n",(bErase?"TRUE":"FALSE"));
+        DebugWndPrintf("InvalidateRect,%s,NULL,%s\r\n",strDebugMsg,(bErase?"TRUE":"FALSE"));
     }
-#endif
     InvalidateRect( hWnd, rectPtr, bErase );
 }
