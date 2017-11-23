@@ -1,5 +1,7 @@
 .SUFFIXES: .rc .res
 
+# "c:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Auxiliary/Build/vcvarsall.bat" x86 8.1
+
 TARGET = dnote.exe
 CC      = "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.11.25503\bin\HostX86\x86\cl.exe"
 RC      = "C:\Program Files (x86)\Windows Kits\8.1\bin\x86\rc.exe"
@@ -28,6 +30,7 @@ OBJECTS = \
           ..\\wnd\\EditWnd\\EditWnd.o			  \
           ..\\wnd\\EditWnd\\EditWndBuffer.o		  \
           ..\\wnd\\EditWnd\\EditWndBufferData.o	  \
+          ..\\wnd\\EditWnd\\EditWndBufferUndoData.o \
           ..\\wnd\\MainWnd\\MainWnd.o			  \
           ..\\wnd\\MainWnd\\MainWndMenu.o		  \
           ..\\wnd\\ModalDlg\\ModalDialog.o		  \
