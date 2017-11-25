@@ -1361,7 +1361,7 @@ editOnLbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
     BOOL bSelectOffChange = FALSE;
     BOOL bSelectOnChange = FALSE;
-    BOOL bCaretPosChange;
+    BOOL bCaretPosChange = FALSE;
 
     getAllScrollInfo(hwnd);
 
@@ -1370,7 +1370,7 @@ editOnLbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     if( wParam & MK_SHIFT )
     {
-        nop(); /* たぶん他イベント(WM_MOUSEMOVE)で処理されているのでここでは処理不要 */
+        nop(); /* WM_KEYDOWN の VK_SHIFT のところで範囲選択ONしているのでここでは処理していない */
     }
     else
     {
@@ -1383,7 +1383,7 @@ editOnLbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     if( wParam & MK_SHIFT )
     {
-        nop(); /* たぶん他イベント(WM_MOUSEMOVE)で処理されているのでここでは処理不要 */
+        nop(); /* WM_KEYDOWN の VK_SHIFT のところで範囲選択ONしているのでここでは処理していない */
     }
     else
     {
@@ -1393,7 +1393,7 @@ editOnLbuttonDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
 //    DebugWndPrintf("%d,%d,%d\r\n",bSelectOffChange,bSelectOnChange,bCaretPosChange);
 
-    if( bSelectOffChange || bSelectOnChange || bCaretPosChange )
+    if( bSelectOffChange || (bCaretPosChange && editWndDataPtr->bShiftKeyOn) )
     {
         editWndInvalidateRect( hwnd, NULL, TRUE, "editOnLbuttonDown" );
     }
