@@ -13,6 +13,8 @@ typedef struct tagS_BUFF_UNDO_DATA
     UNDO_TYPE     undoType       ;
     TCHAR         *dataPtr       ;
     DWORD         size           ;
+    DWORD         lineNum        ;
+    DWORD         caretPos       ;
 } S_BUFF_UNDO_DATA;
 
 /********************************************************************************
@@ -46,9 +48,11 @@ void EditWndBufferUndoDataAllRemoveLinkedList( S_BUFF_UNDO_DATA **topPtrPtr, S_B
  * 引数  : UNDO_TYPE undoType
  * 引数  : TCHAR* dataPtr
  * 引数  : DWORD length
+ * 引数  : DWORD lineNum
+ * 引数  : DWORD caretPos
  * 戻り値: S_BUFF_UNDO_DATA *
  ***************************************/
-S_BUFF_UNDO_DATA *EditWndBufferUndoDataCreate( UNDO_TYPE undoType, TCHAR* dataPtr, DWORD length );
+S_BUFF_UNDO_DATA *EditWndBufferUndoDataCreate( UNDO_TYPE undoType, TCHAR* dataPtr, DWORD length, DWORD lineNum, DWORD caretPos );
 
 /********************************************************************************
  * 内容  : アンドゥデータの解放

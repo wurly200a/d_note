@@ -2,6 +2,7 @@
 #include "common.h"
 
 /* 個別インクルードファイル */
+#include "DebugWnd.h"
 #include "LinkedList.h"
 #include "EditWndBufferUndoDataType.h"
 
@@ -64,10 +65,12 @@ EditWndBufferUndoDataAllRemoveLinkedList( S_BUFF_UNDO_DATA **topPtrPtr, S_BUFF_U
  * 引数  : UNDO_TYPE undoType
  * 引数  : TCHAR* dataPtr
  * 引数  : DWORD length
+ * 引数  : DWORD lineNum
+ * 引数  : DWORD caretPos
  * 戻り値: S_BUFF_UNDO_DATA *
  ***************************************/
 S_BUFF_UNDO_DATA *
-EditWndBufferUndoDataCreate( UNDO_TYPE undoType, TCHAR* dataPtr, DWORD length )
+EditWndBufferUndoDataCreate( UNDO_TYPE undoType, TCHAR* dataPtr, DWORD length, DWORD lineNum, DWORD caretPos )
 {
     S_BUFF_UNDO_DATA *newPtr = NULL;
     DWORD dataSize = (DWORD)sizeof(S_BUFF_UNDO_DATA);
@@ -84,19 +87,28 @@ EditWndBufferUndoDataCreate( UNDO_TYPE undoType, TCHAR* dataPtr, DWORD length )
 
     if( newPtr != NULL )
     {
+        TCHAR cForLog = ' ';
+
         memset( newPtr, 0, dataSize );
         newPtr->undoType = undoType;
         newPtr->size     = length;
+        newPtr->lineNum  = lineNum;
+        newPtr->caretPos = caretPos;
 
         if( undoType == UNDO_TYPE_REMOVE )
         {
             newPtr->dataPtr = ((TCHAR *)newPtr)+sizeof(S_BUFF_UNDO_DATA);
             memcpy( newPtr->dataPtr, dataPtr, length );
+
+            cForLog = *(newPtr->dataPtr);
         }
         else
         {
             nop();
         }
+#if 0
+        DebugWndPrintf("EditWndBufferUndoDataCreate,%d,%c...,%08lX,%08lX,%08lX\r\n",newPtr->undoType,cForLog,newPtr->size,newPtr->lineNum,newPtr->caretPos);
+#endif
     }
     else
     {

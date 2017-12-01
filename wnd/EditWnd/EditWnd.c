@@ -1768,6 +1768,7 @@ editOnUndo( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     if( EditWndBuffUndo(editWndDataPtr->hEditWndBuff) )
     {
+        editWndCaretPosOutScroll(hwnd,editWndDataPtr);
         editWndInvalidateRect( hwnd, NULL, TRUE, "editOnUndo" );
     }
     else
@@ -2108,6 +2109,7 @@ setScrollPos( HWND hwnd, int fnBar, DWORD nPos )
 static void
 editWndInvalidateRect( HWND hWnd, RECT *rectPtr, BOOL bErase, TCHAR *strDebugMsg )
 {
+#if 0
     if( rectPtr != NULL )
     {
         DebugWndPrintf("InvalidateRect,%s,left:%d,top:%d,right:%d,bottom:%d,%s\r\n",strDebugMsg,rectPtr->left,rectPtr->top,rectPtr->right,rectPtr->bottom,(bErase?"TRUE":"FALSE"));
@@ -2116,5 +2118,6 @@ editWndInvalidateRect( HWND hWnd, RECT *rectPtr, BOOL bErase, TCHAR *strDebugMsg
     {
         DebugWndPrintf("InvalidateRect,%s,NULL,%s\r\n",strDebugMsg,(bErase?"TRUE":"FALSE"));
     }
+#endif
     InvalidateRect( hWnd, rectPtr, bErase );
 }
