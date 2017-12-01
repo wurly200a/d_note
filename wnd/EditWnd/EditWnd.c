@@ -935,6 +935,7 @@ editOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
             HideCaret(hwnd);
             editWndInvalidateRect( hwnd, NULL, bErase, "editOnKeyDown" );
+            editWndCaretPosOutScroll(hwnd,editWndDataPtr);
             editWndCaretPosUpdate(editWndDataPtr);
             ShowCaret(hwnd);
         }
@@ -1073,6 +1074,7 @@ editOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
         editOnImeStartComposition( hwnd, message, wParam, lParam );
 
+        editWndCaretPosOutScroll(hwnd,editWndDataPtr);
         editWndCaretPosUpdate(editWndDataPtr);
         setAllScrollInfo(hwnd);
     }
