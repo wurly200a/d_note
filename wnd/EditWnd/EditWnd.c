@@ -76,6 +76,13 @@ static void updateTextMetrics( HWND hwnd );
 static void setAllScrollInfo( HWND hwnd );
 static void getAllScrollInfo( HWND hwnd );
 static void setScrollPos( HWND hwnd, int fnBar, DWORD nPos );
+
+enum
+{
+    EDITWND_INVALID_RECT_KIND_1LINE_NOWPOS_AFTER,
+};
+typedef INT EDITWND_INVALID_RECT_KIND;
+static void editWndGetInvalidateRect( S_EDITWND_DATA *editWndDataPtr, RECT *rectPtr, EDITWND_INVALID_RECT_KIND kind );
 static void editWndInvalidateRect( HWND hWnd, RECT *rectPtr, BOOL bErase, TCHAR *strDebugMsg );
 
 /* 内部変数定義 */
@@ -120,7 +127,7 @@ static LRESULT (*editWndProcTbl[EDITWND_MAX])( HWND hwnd, UINT message, WPARAM w
 };
 /* *INDENT-ON* */
 
-WORD DebugEditWndRect;
+WORD DebugInvalidRectPaintRed;
 
 /********************************************************************************
  * 内容  : EDITウィンドウクラスの登録
@@ -589,7 +596,7 @@ editOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                     }
                 }
 
-                if( DebugEditWndRect )
+                if( DebugInvalidRectPaintRed )
                 { /* デバッグ用 */
                     SetBkColor(hdc, RGB(0xFF,0x00,0x00) );
                 }
@@ -663,7 +670,7 @@ editOnPaint( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         /* do nothing */
     }
 
-    DebugEditWndRect = 0; /* デバッグ用 */
+    DebugInvalidRectPaintRed = 0; /* デバッグ用 */
 
     return 0;
 }
@@ -1037,10 +1044,7 @@ editOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
                 if( bLiteralFix )
                 {
-                    rect.left   = (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar;
-                    rect.top    = (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar;
-                    rect.right  = editWndDataPtr->cxClient;
-                    rect.bottom = rect.top + editWndDataPtr->cyChar;
+                    editWndGetInvalidateRect(editWndDataPtr,&rect,EDITWND_INVALID_RECT_KIND_1LINE_NOWPOS_AFTER);
                     bRectSelect = TRUE;
                 }
                 else
@@ -1055,9 +1059,6 @@ editOnChar( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                 EditWndBuffDataSet( editWndDataPtr->hEditWndBuff, data,size,FALSE, TRUE );
                 if( bRectSelect )
                 {
-#if 0 /* デバッグ用 */
-                    DebugEditWndRect = 1;
-#endif
                     editWndInvalidateRect( hwnd, &rect, TRUE, "editOnChar_bRectSelect" );
                 }
                 else
@@ -2100,6 +2101,36 @@ setScrollPos( HWND hwnd, int fnBar, DWORD nPos )
 
 /********************************************************************************
  * 内容  : 矩形無効化
+ * 引数  : S_EDITWND_DATA *editWndDataPtr
+ * 引数  : RECT *rectPtr
+ * 引数  : EDITWND_INVALID_RECT_KIND kind
+ * 戻り値: なし
+ ***************************************/
+static void
+editWndGetInvalidateRect( S_EDITWND_DATA *editWndDataPtr, RECT *rectPtr, EDITWND_INVALID_RECT_KIND kind )
+{
+    if( rectPtr != NULL )
+    {
+        if( kind == EDITWND_INVALID_RECT_KIND_1LINE_NOWPOS_AFTER )
+        {
+            /* 今のキャレット位置から X座標：クライアント領域最後、Y座標：1行分 */
+            rectPtr->left   = (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iHorzPos)*editWndDataPtr->cxChar;
+            rectPtr->top    = (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff)-editWndDataPtr->iVertPos)*editWndDataPtr->cyChar;
+            rectPtr->right  = editWndDataPtr->cxClient;
+            rectPtr->bottom = rectPtr->top + editWndDataPtr->cyChar;
+        }
+        else
+        {
+        }
+    }
+    else
+    {
+        nop();
+    }
+}
+
+/********************************************************************************
+ * 内容  : 矩形無効化
  * 引数  : HWND hWnd
  * 引数  : RECT *rectPtr
  * 引数  : BOOL bErase
@@ -2112,6 +2143,7 @@ editWndInvalidateRect( HWND hWnd, RECT *rectPtr, BOOL bErase, TCHAR *strDebugMsg
 #if 0
     if( rectPtr != NULL )
     {
+        DebugInvalidRectPaintRed = 1; /* 直後に無効化した矩形を描画したところを赤にする */
         DebugWndPrintf("InvalidateRect,%s,left:%d,top:%d,right:%d,bottom:%d,%s\r\n",strDebugMsg,rectPtr->left,rectPtr->top,rectPtr->right,rectPtr->bottom,(bErase?"TRUE":"FALSE"));
     }
     else
