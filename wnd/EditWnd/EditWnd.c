@@ -1572,8 +1572,8 @@ editOnImeStartComposition( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam
     GetObject( editWndDataPtr->hFont, sizeof(LOGFONT), (PTSTR)&(logFont) );
 
     cf.dwStyle = CFS_POINT;
-    cf.ptCurrentPos.x = EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) * editWndDataPtr->cxChar;
-    cf.ptCurrentPos.y = EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) * editWndDataPtr->cyChar;
+    cf.ptCurrentPos.x = (EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) - editWndDataPtr->iHorzPos) * editWndDataPtr->cxChar;
+    cf.ptCurrentPos.y = (EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) - editWndDataPtr->iVertPos) * editWndDataPtr->cyChar;
 
     hImc = ImmGetContext( hwnd );
     ImmSetCompositionWindow( hImc, &cf );
