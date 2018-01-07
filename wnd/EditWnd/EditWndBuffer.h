@@ -200,14 +200,20 @@ enum
  ***************************************/
 void EditWndBuffSetNewLineCode( H_EDITWND_BUFF hEditWndBuff, UINT newLineType );
 
+enum
+{
+    EDITWND_BUFF_REMOVE_DATA_RESULT_WITHIN_LINE,
+    EDITWND_BUFF_REMOVE_DATA_RESULT_OTHER      ,
+};
+typedef INT EDITWND_BUFF_REMOVE_DATA_RESULT;
 /********************************************************************************
  * 内容  : データ削除
  * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 引数  : BOOL bBackSpace
  * 引数  : BOOL bUndoEnable
- * 戻り値: なし
+ * 戻り値: EDITWND_BUFF_REMOVE_DATA_RESULT
  ***************************************/
-void EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace, BOOL bUndoEnable );
+EDITWND_BUFF_REMOVE_DATA_RESULT EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace, BOOL bUndoEnable );
 
 /********************************************************************************
  * 内容  : 改行データ取得

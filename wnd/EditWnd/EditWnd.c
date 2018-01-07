@@ -69,9 +69,9 @@ static LRESULT editOnLineFromChar       ( HWND hwnd, UINT message, WPARAM wParam
 static LRESULT editOnGoToLine           ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT editOnDefault            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
-static void editWndRemoveData( HWND hwnd, BOOL bBackSpace );
+static BOOL editWndRemoveData( HWND hwnd, BOOL bBackSpace );
 static void editWndCaretPosUpdate( S_EDITWND_DATA *editWndDataPtr );
-static void editWndCaretPosOutScroll( HWND hwnd, S_EDITWND_DATA *editWndDataPtr );
+static BOOL editWndCaretPosOutScroll( HWND hwnd, S_EDITWND_DATA *editWndDataPtr );
 static void updateTextMetrics( HWND hwnd );
 static void setAllScrollInfo( HWND hwnd );
 static void getAllScrollInfo( HWND hwnd );
@@ -829,6 +829,7 @@ editOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     LRESULT rtn = 0;
     BOOL bErase = TRUE;
     BOOL bProc = TRUE;
+    BOOL bRemoveWithinLine = FALSE;
     S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
     if( wParam == VK_SHIFT )
@@ -885,7 +886,7 @@ editOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             }
             else
             {
-                editWndRemoveData( hwnd, FALSE );
+                bRemoveWithinLine = editWndRemoveData( hwnd, FALSE );
             }
             break;
         case VK_BACK:
@@ -895,7 +896,7 @@ editOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             }
             else
             {
-                editWndRemoveData( hwnd, TRUE );
+                bRemoveWithinLine = editWndRemoveData( hwnd, TRUE );
             }
             break;
 
@@ -929,6 +930,9 @@ editOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
         if( bProc )
         {
+            RECT rect;
+            BOOL bCaretPosOutScoll;
+
             if( editWndDataPtr->bShiftKeyOn )
             {
                 nop();
@@ -938,11 +942,20 @@ editOnKeyDown( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                 EditWndBuffSelectOff(editWndDataPtr->hEditWndBuff);
             }
 
-            editWndCaretPosOutScroll(hwnd,editWndDataPtr);
+            bCaretPosOutScoll = editWndCaretPosOutScroll(hwnd,editWndDataPtr);
 
             HideCaret(hwnd);
-            editWndInvalidateRect( hwnd, NULL, bErase, "editOnKeyDown" );
-            editWndCaretPosOutScroll(hwnd,editWndDataPtr);
+
+            if( bRemoveWithinLine && !bCaretPosOutScoll )
+            {
+                editWndGetInvalidateRect(editWndDataPtr,&rect,EDITWND_INVALID_RECT_KIND_1LINE_NOWPOS_AFTER);
+                editWndInvalidateRect( hwnd, &rect, bErase, "editOnKeyDown_bRectSelect" );
+            }
+            else
+            {
+                editWndInvalidateRect( hwnd, NULL, bErase, "editOnKeyDown" );
+            }
+
             editWndCaretPosUpdate(editWndDataPtr);
             ShowCaret(hwnd);
         }
@@ -1935,15 +1948,27 @@ editOnDefault( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  * 内容  : データ削除
  * 引数  : HWND hwnd
  * 引数  : bBackSpace
- * 戻り値: なし
+ * 戻り値: BOOL
  ***************************************/
-static void
+static BOOL
 editWndRemoveData( HWND hwnd, BOOL bBackSpace )
 {
     S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+    BOOL bRemoveWithinLine = (BOOL)FALSE;
+    EDITWND_BUFF_REMOVE_DATA_RESULT removeResult;
 
-    EditWndBuffRemoveData( editWndDataPtr->hEditWndBuff, bBackSpace, TRUE );
+    removeResult = EditWndBuffRemoveData( editWndDataPtr->hEditWndBuff, bBackSpace, TRUE );
+    if( removeResult == EDITWND_BUFF_REMOVE_DATA_RESULT_WITHIN_LINE )
+    {
+        bRemoveWithinLine = (BOOL)TRUE;
+    }
+    else
+    {
+        nop();
+    }
     SendMessage(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(0,EN_CHANGE), (LPARAM)hwnd);
+
+    return bRemoveWithinLine;
 }
 
 /********************************************************************************
@@ -1968,21 +1993,25 @@ editWndCaretPosUpdate( S_EDITWND_DATA *editWndDataPtr )
  * 内容  : キャレットが表示範囲外に有った場合のスクロール処理
  * 引数  : HWND hwnd
  * 引数  : S_EDITWND_DATA *editWndDataPtr
- * 戻り値: なし
+ * 戻り値: BOOL
  ***************************************/
-static void
+static BOOL
 editWndCaretPosOutScroll( HWND hwnd, S_EDITWND_DATA *editWndDataPtr )
 {
+    BOOL bRtn = (BOOL)FALSE;
+
     if( editWndDataPtr != NULL )
     {
         /* キャレットが表示範囲外に有った場合の処理(横方向) */
         if( EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) < editWndDataPtr->iHorzPos )
         {
             setScrollPos( hwnd, SB_HORZ, EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) );
+            bRtn = (BOOL)TRUE;
         }
         else if( (editWndDataPtr->iHorzPos+editWndDataPtr->cxBuffer-1) < EditWndBuffGetCaretXpos(editWndDataPtr->hEditWndBuff) )
         {
             setScrollPos( hwnd, SB_HORZ, (editWndDataPtr->iHorzPos+editWndDataPtr->cxBuffer-1) );
+            bRtn = (BOOL)TRUE;
         }
         else
         {
@@ -1993,10 +2022,12 @@ editWndCaretPosOutScroll( HWND hwnd, S_EDITWND_DATA *editWndDataPtr )
         if( EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) < editWndDataPtr->iVertPos )
         {
             setScrollPos( hwnd, SB_VERT, EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) );
+            bRtn = (BOOL)TRUE;
         }
         else if( (editWndDataPtr->iVertPos+editWndDataPtr->cyBuffer-1) < EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) )
         {
             setScrollPos( hwnd, SB_VERT, EditWndBuffGetCaretYpos(editWndDataPtr->hEditWndBuff) - (editWndDataPtr->cyBuffer-1) );
+            bRtn = (BOOL)TRUE;
         }
         else
         {
@@ -2007,6 +2038,8 @@ editWndCaretPosOutScroll( HWND hwnd, S_EDITWND_DATA *editWndDataPtr )
     {
         nop();
     }
+
+    return bRtn;
 }
 
 /********************************************************************************

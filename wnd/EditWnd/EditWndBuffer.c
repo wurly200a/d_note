@@ -946,11 +946,12 @@ EditWndBuffSetNewLineCode( H_EDITWND_BUFF hEditWndBuff, UINT newLineType )
  * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 引数  : BOOL bBackSpace
  * 引数  : BOOL bUndoEnable
- * 戻り値: なし
+ * 戻り値: EDITWND_BUFF_REMOVE_DATA_RESULT
  ***************************************/
-void
+EDITWND_BUFF_REMOVE_DATA_RESULT
 EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace, BOOL bUndoEnable )
 {
+    EDITWND_BUFF_REMOVE_DATA_RESULT result = EDITWND_BUFF_REMOVE_DATA_RESULT_OTHER;
     DWORD removeSize = 0,saveCaretPos;
     S_BUFF_LINE_DATA *newPtr = NULL,*prevPtr = NULL,*nextPtr = NULL,*nowPtr = NULL,*savePtr;
     S_BUFF_LINE_DATA *dividePrePtr,*dividePostPtr;
@@ -983,6 +984,7 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace, BOOL bUndoE
                     {
                         setSelectPosNowPosToFar(h,TRUE,1);
                     }
+                    result = EDITWND_BUFF_REMOVE_DATA_RESULT_WITHIN_LINE;
                 }
                 else
                 { /* キャレットが行の先頭位置。つまり、前行との結合。*/
@@ -1010,6 +1012,7 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace, BOOL bUndoE
                     {
                         setSelectPosNowPosToFar(h,FALSE,1);
                     }
+                    result = EDITWND_BUFF_REMOVE_DATA_RESULT_WITHIN_LINE;
                 }
                 else
                 { /* キャレットが行の最終位置。つまり、次行との結合。*/
@@ -1243,6 +1246,8 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace, BOOL bUndoE
         DebugWndPrintf("No Action(Empty)\r\n");
 #endif
     }
+
+    return result;
 }
 
 /********************************************************************************
