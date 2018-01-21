@@ -60,7 +60,7 @@ package wnd {
             WM_KILLFOCUS()
             WM_DROPFILES()
             WM_INITMENUPOPUP()
-            FINDMSGSTRINGの登録メッセージ()
+            FINDMSGSTRING縺ｮ逋ｻ骭ｲ繝｡繝�繧ｻ繝ｼ繧ｸ()
             WM_APP()
         }
 
