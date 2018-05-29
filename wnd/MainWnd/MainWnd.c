@@ -95,7 +95,7 @@ MainWndCreate( HINSTANCE hInst, PTSTR szAppName, LPSTR szCmdLine, int nCmdShow, 
     wc.cbClsExtra       = 0; /* クラス構造体の為の追加領域を予約する */
     wc.cbWndExtra       = 0; /* ウィンドウ構造体の為の追加領域を予約する */
     wc.hInstance        = hInst;
-    wc.hIcon            = LoadIcon( hInst, pAppName );          /* アイコン */
+    wc.hIcon            = LoadIcon( hInst, "MAIN_ICON" );          /* アイコン */
     wc.hCursor          = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground    = (HBRUSH) (COLOR_BTNFACE + 1); /* 背景 */
     wc.lpszMenuName     = pAppName;
@@ -401,12 +401,46 @@ onClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     }
     else
     {
+        BOOL bCancel = (BOOL)FALSE;
+
         ConfigSaveDword( CONFIG_ID_WINDOW_POS_X , mainWndData.xWindowPos );
         ConfigSaveDword( CONFIG_ID_WINDOW_POS_Y , mainWndData.yWindowPos );
         ConfigSaveDword( CONFIG_ID_WINDOW_POS_DX, mainWndData.cxWindow   );
         ConfigSaveDword( CONFIG_ID_WINDOW_POS_DY, mainWndData.cyWindow   );
 
-        DestroyWindow( hwnd );
+        if( ConfigIsSame(0,CONFIG_ID_MAX) )
+        {
+            nop();
+        }
+        else
+        {
+            int iReturn;
+
+            iReturn = MessageBox( hwnd,TEXT("設定は変更されています。\n\n変更を保存しますか?"),mainWndData.szAppName,MB_YESNOCANCEL|MB_ICONEXCLAMATION );
+//            iReturn = MessageBox( hwnd,TEXT("Configuration is changed.\n\nSave Changes?"),mainWndData.szAppName,MB_YESNOCANCEL|MB_ICONEXCLAMATION );
+
+            if( (iReturn == IDYES) )
+            {
+                ConfigWrite(0,CONFIG_ID_MAX);
+            }
+            else if( iReturn == IDCANCEL )
+            {
+                bCancel = (BOOL)TRUE;
+            }
+            else
+            {
+                nop();
+            }
+        }
+
+        if( !bCancel )
+        {
+            DestroyWindow( hwnd );
+        }
+        else
+        {
+            nop();
+        }
     }
 
     return 0;

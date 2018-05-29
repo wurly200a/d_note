@@ -33,6 +33,46 @@ void ConfigSaveDword( CONFIG_ID id, DWORD data );
  ***************************************/
 INT ConfigLoadDword( CONFIG_ID id );
 
+/**
+ * ------------------------------------------------------------------------------
+ * @brief  文字列設定値を保存する
+ * @param  id
+ * @param  ptstrValue
+ * @return なし
+ * @date 2017年01月04日 13時50分25秒
+ **/
+void ConfigSaveString( CONFIG_ID id, PTSTR ptstrValue );
+
+/**
+ * ------------------------------------------------------------------------------
+ * @brief  文字列設定値を読み込む
+ * @param  id
+ * @return PTSTR
+ * @date 2017年01月04日 13時50分25秒
+ **/
+PTSTR ConfigLoadString( CONFIG_ID id );
+
+/**
+ * ------------------------------------------------------------------------------
+ * @brief  設定値を保存する
+ * @param  start_id
+ * @param  end_id
+ * @return なし
+ * @date 2017年01月04日 13時50分25秒
+ **/
+PTSTR ConfigWrite( CONFIG_ID start_id, CONFIG_ID end_id );
+
+
+/**
+ * ------------------------------------------------------------------------------
+ * @brief  設定値が変更されていないかチェックする
+ * @param  start_id
+ * @param  end_id
+ * @return
+ * @date 2017年01月04日 13時50分25秒
+ **/
+BOOL ConfigIsSame( CONFIG_ID start_id, CONFIG_ID end_id );
+
 /********************************************************************************
  * 内容  : デバッグ変数(DWORD値)を読み込む
  * 引数  : なし

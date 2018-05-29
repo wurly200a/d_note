@@ -19,10 +19,17 @@ typedef struct
 
 static S_CONFIG__DATA configData;
 
+typedef enum
+{
+    CONFIG_DATA_DWORD,
+    CONFIG_DATA_STRING,
+} CONFIG_DATA_TYPE;
+
 typedef struct
 {
-    PTSTR         pKeyName;    /* キー名 */
-    PTSTR         pInitValue;  /* 初期値 */
+    PTSTR            pKeyName;    /* キー名 */
+    PTSTR            pInitValue;  /* 初期値 */
+    CONFIG_DATA_TYPE dataType;
 } S_CONFIG_INFO;
 
 static S_CONFIG_INFO configInfoTbl[CONFIG_ID_MAX] =
@@ -32,6 +39,14 @@ static S_CONFIG_INFO configInfoTbl[CONFIG_ID_MAX] =
     { TEXT("iWindowPosDX"),TEXT("0x000001F4") }, /* 500 */
     { TEXT("iWindowPosDY"),TEXT("0x0000012C") }, /* 300 */
 };
+
+#define CONFIG_DATA_STRING_LENGTH_MAX 512
+typedef struct
+{
+    TCHAR szValue[CONFIG_DATA_STRING_LENGTH_MAX];
+} S_CONFIG_PARAM;
+
+S_CONFIG_PARAM configParam[CONFIG_ID_MAX];
 
 /********************************************************************************
  * 内容  : 設定管理モジュールの初期化
@@ -43,6 +58,7 @@ void
 ConfigInit( HINSTANCE hInst, PTSTR szAppName )
 {
     DWORD length;
+    int i;
 
     configData.bInitConfig = TRUE;
     configData.hInstance   = hInst;
@@ -52,6 +68,11 @@ ConfigInit( HINSTANCE hInst, PTSTR szAppName )
     configData.szIniFileName[length-1] = 'i';
     configData.szIniFileName[length-2] = 'n';
     configData.szIniFileName[length-3] = 'i';
+
+    for( i=0; i<CONFIG_ID_MAX; i++ )
+    {
+        GetPrivateProfileString( szAppName, configInfoTbl[i].pKeyName, configInfoTbl[i].pInitValue, configParam[i].szValue, CONFIG_DATA_STRING_LENGTH_MAX, configData.szIniFileName );
+    }
 }
 
 /********************************************************************************
@@ -63,14 +84,15 @@ ConfigInit( HINSTANCE hInst, PTSTR szAppName )
 void
 ConfigSaveDword( CONFIG_ID id, DWORD data )
 {
-    TCHAR szDword[11];
-
     if( configData.bInitConfig )
     {
-        if( id < CONFIG_ID_MAX )
+        if( (id < CONFIG_ID_MAX) &&
+            (configInfoTbl[id].dataType == CONFIG_DATA_DWORD) )
         {
-            wsprintf( szDword, "0x%08lX", data );
-            WritePrivateProfileString( configData.szAppName, configInfoTbl[id].pKeyName, szDword, configData.szIniFileName );
+            wsprintf( configParam[id].szValue, "0x%08lX", data );
+#ifdef OLD_CONFIG_SAVE_LOAD
+            WritePrivateProfileString( configData.szAppName, configInfoTbl[id].pKeyName, configParam[id].szValue, configData.szIniFileName );
+#endif
         }
         else
         {
@@ -91,15 +113,17 @@ ConfigSaveDword( CONFIG_ID id, DWORD data )
 INT
 ConfigLoadDword( CONFIG_ID id )
 {
-    TCHAR szDword[11];
     DWORD rtn = (DWORD)0;
 
     if( configData.bInitConfig )
     {
-        if( id < CONFIG_ID_MAX )
+        if( (id < CONFIG_ID_MAX) &&
+            (configInfoTbl[id].dataType == CONFIG_DATA_DWORD) )
         {
-            GetPrivateProfileString( configData.szAppName, configInfoTbl[id].pKeyName, configInfoTbl[id].pInitValue, szDword, 11, configData.szIniFileName );
-            rtn = strtol( szDword+2,NULL,16 );
+#ifdef OLD_CONFIG_SAVE_LOAD
+            GetPrivateProfileString( configData.szAppName, configInfoTbl[id].pKeyName, configInfoTbl[id].pInitValue, configInfoTbl[id].szValue, CONFIG_DATA_STRING_LENGTH_MAX, configData.szIniFileName );
+#endif
+            rtn = strtoul( &(configParam[id].szValue[2]),NULL,16 );
         }
         else
         {
@@ -112,6 +136,145 @@ ConfigLoadDword( CONFIG_ID id )
     }
 
     return (DWORD)rtn;
+}
+
+/**
+ * ------------------------------------------------------------------------------
+ * @brief  文字列設定値を保存する
+ * @param  id
+ * @param  ptstrValue
+ * @return なし
+ * @date 2017年01月04日 13時50分25秒
+ **/
+void
+ConfigSaveString( CONFIG_ID id, PTSTR ptstrValue )
+{
+    if( configData.bInitConfig )
+    {
+        if( (id < CONFIG_ID_MAX) &&
+            (configInfoTbl[id].dataType == CONFIG_DATA_STRING) )
+        {
+            strcpy( configParam[id].szValue, ptstrValue );
+#ifdef OLD_CONFIG_SAVE_LOAD
+            WritePrivateProfileString( configData.szAppName, configInfoTbl[id].pKeyName, configParam[id].szValue, configData.szIniFileName );
+#endif
+        }
+        else
+        {
+            nop();
+        }
+    }
+    else
+    {
+        nop();
+    }
+}
+
+/**
+ * ------------------------------------------------------------------------------
+ * @brief  文字列設定値を読み込む
+ * @param  id
+ * @return PTSTR
+ * @date 2017年01月04日 13時50分25秒
+ **/
+PTSTR
+ConfigLoadString( CONFIG_ID id )
+{
+    PTSTR rtn = "\0";
+
+    if( configData.bInitConfig )
+    {
+        if( (id < CONFIG_ID_MAX) &&
+            (configInfoTbl[id].dataType == CONFIG_DATA_STRING) )
+        {
+#ifdef OLD_CONFIG_SAVE_LOAD
+            GetPrivateProfileString( configData.szAppName, configInfoTbl[id].pKeyName, configInfoTbl[id].pInitValue, configInfoTbl[id].szValue, CONFIG_DATA_STRING_LENGTH_MAX, configData.szIniFileName );
+#endif
+            rtn = configParam[id].szValue;
+        }
+        else
+        {
+            nop();
+        }
+    }
+    else
+    {
+        nop();
+    }
+
+    return (DWORD)rtn;
+}
+
+/**
+ * ------------------------------------------------------------------------------
+ * @brief  設定値を保存する
+ * @param  start_id
+ * @param  end_id
+ * @return なし
+ * @date 2017年01月04日 13時50分25秒
+ **/
+PTSTR
+ConfigWrite( CONFIG_ID start_id, CONFIG_ID end_id )
+{
+    CONFIG_ID i;
+
+    if(((0<=start_id)&&(start_id<CONFIG_ID_MAX)) &&
+       ((0<=end_id  )&&(end_id  <CONFIG_ID_MAX)) )
+    {
+        end_id = end_id + 1;
+    }
+    else
+    {
+        start_id = (CONFIG_ID)0;
+        end_id   = (CONFIG_ID)CONFIG_ID_MAX;
+    }
+
+    for( i=start_id; i<end_id; i++ )
+    {
+        WritePrivateProfileString( configData.szAppName, configInfoTbl[i].pKeyName, configParam[i].szValue, configData.szIniFileName );
+    }
+}
+
+/**
+ * ------------------------------------------------------------------------------
+ * @brief  設定値が変更されていないかチェックする
+ * @param  start_id
+ * @param  end_id
+ * @return
+ * @date 2017年01月04日 13時50分25秒
+ **/
+BOOL
+ConfigIsSame( CONFIG_ID start_id, CONFIG_ID end_id )
+{
+    CONFIG_ID i;
+    BOOL bRtn = (BOOL)TRUE;
+
+    if(((0<=start_id)&&(start_id<CONFIG_ID_MAX)) &&
+       ((0<=end_id  )&&(end_id  <CONFIG_ID_MAX)) )
+    {
+        end_id = end_id + 1;
+    }
+    else
+    {
+        start_id = (CONFIG_ID)0;
+        end_id   = (CONFIG_ID)CONFIG_ID_MAX;
+    }
+
+    for( i=start_id; i<end_id; i++ )
+    {
+        TCHAR szValueTemp[CONFIG_DATA_STRING_LENGTH_MAX];
+
+        GetPrivateProfileString( configData.szAppName, configInfoTbl[i].pKeyName, configInfoTbl[i].pInitValue, szValueTemp, CONFIG_DATA_STRING_LENGTH_MAX, configData.szIniFileName );
+        if( !strcmp( szValueTemp, configParam[i].szValue ) )
+        {
+        }
+        else
+        {
+            bRtn = (BOOL)FALSE;
+        }
+    }
+
+    return bRtn;
 }
 
 /********************************************************************************

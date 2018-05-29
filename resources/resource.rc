@@ -1,2 +1,2 @@
-D-Note ICON "dnote.ico"
+MAIN_ICON ICON "icon.ico"
 BAR BITMAP "bar.bmp"
