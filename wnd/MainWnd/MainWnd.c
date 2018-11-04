@@ -414,22 +414,29 @@ onClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         }
         else
         {
-            int iReturn;
+            if( ConfigLoadDword(CONFIG_ID_BOOL_SAVE_CONFIRM) )
+            {
+                int iReturn;
 
-            iReturn = MessageBox( hwnd,TEXT("設定は変更されています。\n\n変更を保存しますか?"),mainWndData.szAppName,MB_YESNOCANCEL|MB_ICONEXCLAMATION );
+                iReturn = MessageBox( hwnd,TEXT("設定は変更されています。\n\n変更を保存しますか?"),mainWndData.szAppName,MB_YESNOCANCEL|MB_ICONEXCLAMATION );
 //            iReturn = MessageBox( hwnd,TEXT("Configuration is changed.\n\nSave Changes?"),mainWndData.szAppName,MB_YESNOCANCEL|MB_ICONEXCLAMATION );
 
-            if( (iReturn == IDYES) )
-            {
-                ConfigWrite(0,CONFIG_ID_MAX);
-            }
-            else if( iReturn == IDCANCEL )
-            {
-                bCancel = (BOOL)TRUE;
+                if( (iReturn == IDYES) )
+                {
+                    ConfigWrite(0,CONFIG_ID_MAX);
+                }
+                else if( iReturn == IDCANCEL )
+                {
+                    bCancel = (BOOL)TRUE;
+                }
+                else
+                {
+                    nop();
+                }
             }
             else
             {
-                nop();
+                ConfigWrite(0,CONFIG_ID_MAX);
             }
         }
 

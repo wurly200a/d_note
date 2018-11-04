@@ -34,10 +34,11 @@ typedef struct
 
 static S_CONFIG_INFO configInfoTbl[CONFIG_ID_MAX] =
 {
-    { TEXT("iWindowPosX" ),TEXT("0x00000000") },
-    { TEXT("iWindowPosY" ),TEXT("0x00000000") },
-    { TEXT("iWindowPosDX"),TEXT("0x000001F4") }, /* 500 */
-    { TEXT("iWindowPosDY"),TEXT("0x0000012C") }, /* 300 */
+    { TEXT("bSaveConfirm"),TEXT("0x00000000"), CONFIG_DATA_DWORD  },
+    { TEXT("iWindowPosX" ),TEXT("0x00000000"), CONFIG_DATA_DWORD  },
+    { TEXT("iWindowPosY" ),TEXT("0x00000000"), CONFIG_DATA_DWORD  },
+    { TEXT("iWindowPosDX"),TEXT("0x000001F4"), CONFIG_DATA_DWORD  }, /* 500 */
+    { TEXT("iWindowPosDY"),TEXT("0x0000012C"), CONFIG_DATA_DWORD  }, /* 300 */
 };
 
 #define CONFIG_DATA_STRING_LENGTH_MAX 512
