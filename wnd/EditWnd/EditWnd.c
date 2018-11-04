@@ -1339,9 +1339,16 @@ editOnMouseMove( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     x = (SHORT)LOWORD(lParam);
     y = (SHORT)HIWORD(lParam);
 
+//    DebugWndPrintf("x=%d,y=%d\r\n",x,y);
+
     if( (wParam & MK_LBUTTON) )
     {
-        bCaretPosChange = EditWndBuffSetCaretPos( editWndDataPtr->hEditWndBuff, ((x + (editWndDataPtr->iHorzPos*editWndDataPtr->cxChar))/editWndDataPtr->cxChar), ((y + (editWndDataPtr->iVertPos*editWndDataPtr->cyChar))/editWndDataPtr->cyChar) );
+        DWORD xPos    = max( 0, ((x + (editWndDataPtr->iHorzPos*editWndDataPtr->cxChar))/editWndDataPtr->cxChar) );
+        DWORD lineNum = max( 0, ((y + (editWndDataPtr->iVertPos*editWndDataPtr->cyChar))/editWndDataPtr->cyChar) );
+
+//        DebugWndPrintf("xPos=%d,lineNum=%d\r\n",xPos,lineNum);
+
+        bCaretPosChange = EditWndBuffSetCaretPos( editWndDataPtr->hEditWndBuff, xPos, lineNum );
         if( bCaretPosChange )
         {
             editWndCaretPosOutScroll(hwnd,editWndDataPtr);
