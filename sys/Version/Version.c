@@ -8,7 +8,7 @@
 /* “à•”ŠÖ”’è‹` */
 #include "Version.h"
 /* “à•”•Ï”’è‹` */
-static WORD versionData = 0x0007;
+static WORD versionData = 0x0008;
 static TCHAR szVersion[64];
 
 /********************************************************************************
