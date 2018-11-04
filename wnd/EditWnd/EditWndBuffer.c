@@ -676,6 +676,8 @@ EditWndBuffSetCaretPos( H_EDITWND_BUFF hEditWndBuff, DWORD xPos, DWORD lineNum )
     H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
     BOOL bCaretPosChange = FALSE;
 
+    lineNum = min(lineNum,EditWndBuffGetLineMaxSize(hEditWndBuff));
+
 #if 0
     DebugWndPrintf("EditWndBuffSetCaretPos,xPos=%d,lineNum=%d\r\n",xPos,lineNum);
 #endif
