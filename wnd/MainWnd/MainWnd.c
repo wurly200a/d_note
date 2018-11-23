@@ -31,6 +31,7 @@ static LRESULT onClose           ( HWND hwnd, UINT message, WPARAM wParam, LPARA
 static LRESULT onDestroy         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onCommand         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onMouseWheel      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT onMouseHwheel     ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onSetFocus        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onKillFocus       ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT onDropFiles       ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
@@ -58,6 +59,7 @@ static LRESULT (*wndProcTbl[MAINWND_MAX])( HWND hwnd, UINT message, WPARAM wPara
     onDestroy         , /* WM_DESTROY                    */
     onCommand         , /* WM_COMMAND                    */
     onMouseWheel      , /* WM_MOUSEWHEEL                 */
+    onMouseHwheel     , /* WM_MOUSEHWHEEL                */
     onSetFocus        , /* WM_SETFOCUS                   */
     onKillFocus       , /* WM_KILLFOCUS                  */
     onDropFiles       , /* WM_DROPFILES                  */
@@ -801,6 +803,24 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
  ***************************************/
 static LRESULT
 onMouseWheel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+
+    SendMessage(mainWndData.hWndIo,message,wParam,lParam);
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : WM_MOUSEHWHEEL を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+onMouseHwheel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     LRESULT rtn = 0;
 

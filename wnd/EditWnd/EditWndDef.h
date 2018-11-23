@@ -17,6 +17,7 @@ typedef enum
     EDITWND_ON_KILLFOCUS           , /* WM_KILLFOCUS            */
     EDITWND_ON_MOUSEACTIVATE       , /* WM_MOUSEACTIVATE        */
     EDITWND_ON_MOUSEWHEEL          , /* WM_MOUSEWHEEL           */
+    EDITWND_ON_MOUSEHWHEEL         , /* WM_MOUSEHWHEEL          */
     EDITWND_ON_MOUSEMOVE           , /* WM_MOUSEMOVE            */
     EDITWND_ON_LBUTTONDOWN         , /* WM_LBUTTONDOWN          */
     EDITWND_ON_MBUTTONDOWN         , /* WM_MBUTTONDOWN          */

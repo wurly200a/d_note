@@ -10,6 +10,7 @@ typedef enum
     MAINWND_ON_DESTROY         , /* WM_DESTROY                    */
     MAINWND_ON_COMMAND         , /* WM_COMMAND                    */
     MAINWND_ON_MOUSEWHEEL      , /* WM_MOUSEWHEEL                 */
+    MAINWND_ON_MOUSEHWHEEL     , /* WM_MOUSEHWHEEL                */
     MAINWND_ON_SETFOCUS        , /* WM_SETFOCUS                   */
     MAINWND_ON_KILLFOCUS       , /* WM_KILLFOCUS                  */
     MAINWND_ON_DROPFILES       , /* WM_DROPFILES                  */

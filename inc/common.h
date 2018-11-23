@@ -1,7 +1,7 @@
 #ifndef COMMON_H
 
-#define WINVER 0x0500
-#define _WIN32_WINNT 0x0500 /* for Mouse Wheel Support */
+#define WINVER 0x0600
+#define _WIN32_WINNT 0x0600 /* for Mouse Wheel Support */
 
 #include <windows.h>
 #include <imm.h>

@@ -23,7 +23,9 @@ typedef struct
     DWORD  dwCharSet;
     int    cxCaps;    /*  */
     int    iAccumDelta;
+    int    iHorzAccumDelta;
     int    iDeltaPerLine;
+    int    iDeltaPerChar;
     int    iHorzPos;     /* スクロールバーの横位置  */
     int    iVertPos;     /* スクロールバーの縦位置  */
     HFONT  hFont;
@@ -49,6 +51,7 @@ static LRESULT editOnSetFocus           ( HWND hwnd, UINT message, WPARAM wParam
 static LRESULT editOnKillFocus          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT editOnMouseActivate      ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT editOnMouseWheel         ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnMouseHwheel        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT editOnMouseMove          ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT editOnLbuttonDown        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT editOnMbuttonDown        ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
@@ -105,6 +108,7 @@ static LRESULT (*editWndProcTbl[EDITWND_MAX])( HWND hwnd, UINT message, WPARAM w
     editOnKillFocus          , /* WM_KILLFOCUS           */
     editOnMouseActivate      , /* WM_MOUSEACTIVATE       */
     editOnMouseWheel         , /* WM_MOUSEWHEEL          */
+    editOnMouseHwheel        , /* WM_MOUSEHWHEEL         */
     editOnMouseMove          , /* WM_MOUSEMOVE           */
     editOnLbuttonDown        , /* WM_LBUTTONDOWN         */
     editOnMbuttonDown        , /* WM_MBUTTONDOWN         */
@@ -442,6 +446,7 @@ editWndConvertMSGtoINDEX( UINT message )
     case WM_KILLFOCUS           :rtn = EDITWND_ON_KILLFOCUS           ;break;
     case WM_MOUSEACTIVATE       :rtn = EDITWND_ON_MOUSEACTIVATE       ;break;
     case WM_MOUSEWHEEL          :rtn = EDITWND_ON_MOUSEWHEEL          ;break;
+    case WM_MOUSEHWHEEL         :rtn = EDITWND_ON_MOUSEHWHEEL         ;break;
     case WM_MOUSEMOVE           :rtn = EDITWND_ON_MOUSEMOVE           ;break;
     case WM_LBUTTONDOWN         :rtn = EDITWND_ON_LBUTTONDOWN         ;break;
     case WM_MBUTTONDOWN         :rtn = EDITWND_ON_MBUTTONDOWN         ;break;
@@ -493,6 +498,7 @@ editOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     LRESULT rtn = 0;
     int iDelta;          /* for MouseWheel */
     ULONG ulScrollLines; /* for MouseWheel */
+    ULONG ulScrollChars; /* for MouseWheel */
     S_EDITWND_DATA *editWndDataPtr;
     LOGFONT logFont;
     LPCREATESTRUCT csPtr = (LPCREATESTRUCT)lParam;
@@ -522,6 +528,17 @@ editOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     else
     {
         editWndDataPtr->iDeltaPerLine = 0;
+    }
+
+    SystemParametersInfo(SPI_GETWHEELSCROLLCHARS,0, &ulScrollChars, 0);
+    iDelta = HIWORD(wParam);
+    if( ulScrollChars )
+    {
+        editWndDataPtr->iDeltaPerChar = WHEEL_DELTA / ulScrollChars;
+    }
+    else
+    {
+        editWndDataPtr->iDeltaPerChar = 0;
     }
 
     return rtn;
@@ -1297,6 +1314,10 @@ editOnMouseWheel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     LRESULT rtn = 0;
     S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
 
+#if 0
+    DebugWndPrintf("editOnMouseWheel,%X,%X,%X\r\n",message,wParam,lParam);
+#endif
+
     if( editWndDataPtr->iDeltaPerLine )
     {
         editWndDataPtr->iAccumDelta += (short)HIWORD(wParam);
@@ -1310,6 +1331,45 @@ editOnMouseWheel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         {
             SendMessage(hwnd, WM_VSCROLL, SB_LINEDOWN, 0);
             editWndDataPtr->iAccumDelta += editWndDataPtr->iDeltaPerLine;
+        }
+    }
+    else
+    {
+        /* do nothing */
+    }
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : WM_MOUSEHWHEEL を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+editOnMouseHwheel( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 1; /* チルトホイールを傾け続ける限り繰り返し WM_MOUSEHWHEEL メッセージが飛ぶようにするには1 */
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+
+//    DebugWndPrintf("editOnMouseHwheel,%X,%X,%X\r\n",message,wParam,lParam);
+
+    if( editWndDataPtr->iDeltaPerChar )
+    {
+        editWndDataPtr->iHorzAccumDelta += (short)GET_WHEEL_DELTA_WPARAM(wParam);
+
+        while( editWndDataPtr->iHorzAccumDelta >= editWndDataPtr->iDeltaPerChar )
+        {
+            SendMessage(hwnd, WM_HSCROLL, SB_LINERIGHT, 0);
+            editWndDataPtr->iHorzAccumDelta -= editWndDataPtr->iDeltaPerChar;
+        }
+        while( editWndDataPtr->iHorzAccumDelta <= -editWndDataPtr->iDeltaPerChar)
+        {
+            SendMessage(hwnd, WM_HSCROLL, SB_LINELEFT, 0);
+            editWndDataPtr->iHorzAccumDelta += editWndDataPtr->iDeltaPerChar;
         }
     }
     else
