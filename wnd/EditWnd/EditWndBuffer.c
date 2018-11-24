@@ -2073,7 +2073,9 @@ my_strstr( const TCHAR *strSource, DWORD startPos, DWORD maxNum, const TCHAR *st
 
     for( i=0; (*ptr != NULL)&&(i<maxNum); ptr++,i++ )
     {
-        if( startPos <= i )
+        charType = getCharType(charType,*ptr);
+
+        if( (startPos <= i) && (charType != DOUBLE_CHAR_LOW) )
         {
             if( isMatch(*ptr,*strTarget,bMatchCase) )
             { /* æ“ª•¶Žš‚ªˆê’v */
