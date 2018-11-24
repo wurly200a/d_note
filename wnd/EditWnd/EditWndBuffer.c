@@ -42,6 +42,7 @@ static BOOL getDispCharData( H_EDITWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, 
 static void setSelectPosNowPosToFar( H_EDITWND_BUFF_LOCAL h, BOOL bMinus, DWORD offset );
 static TCHAR *my_strstr( const TCHAR *strSource, DWORD startPos, DWORD maxNum, const TCHAR *strTarget, BOOL bMatchCase, BOOL bLastMach );
 static BOOL isMatch( TCHAR data1, TCHAR data2, BOOL bMatchCase );
+static CHARSET_TYPE getCharType( CHARSET_TYPE nowCharType, BYTE data );
 
 /* ì‡ïîïœêîíËã` */
 
@@ -1635,21 +1636,7 @@ detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset )
     {
         for( i=0; i<(dataPtr->dataSize-dataPtr->newLineCodeSize); i++ )
         {
-            if( charType == DOUBLE_CHAR_HIGH )
-            {
-                charType = DOUBLE_CHAR_LOW;
-            }
-            else
-            {
-                if( ( (BYTE)(*(dataPtr->data+i)) <= (BYTE)0x80) || (((BYTE)0xA0 <= (BYTE)(*(dataPtr->data+i))) && ((BYTE)(*(dataPtr->data+i)) <= (BYTE)0xDF)) )
-                {
-                    charType = SINGLE_CHAR;
-                }
-                else
-                {
-                    charType = DOUBLE_CHAR_HIGH;
-                }
-            }
+            charType = getCharType(charType,*(dataPtr->data+i));
 
             if( i==offset )
             {
@@ -2082,6 +2069,7 @@ my_strstr( const TCHAR *strSource, DWORD startPos, DWORD maxNum, const TCHAR *st
     TCHAR *ptr = strSource;
     TCHAR *rtnPtr = (TCHAR *)NULL;
     DWORD i;
+    int charType = SINGLE_CHAR;
 
     for( i=0; (*ptr != NULL)&&(i<maxNum); ptr++,i++ )
     {
@@ -2171,4 +2159,34 @@ isMatch( TCHAR data1, TCHAR data2, BOOL bMatchCase )
     }
 
     return bResult;
+}
+
+/********************************************************************************
+ * ì‡óe  :
+ * à¯êî  : CHARSET_TYPE nowCharType
+ * à¯êî  : BYTE data
+ * ñﬂÇËíl: CHARSET_TYPE
+ ***************************************/
+static CHARSET_TYPE
+getCharType( CHARSET_TYPE nowCharType, BYTE data )
+{
+    CHARSET_TYPE rtn = nowCharType;
+
+    if( rtn == DOUBLE_CHAR_HIGH )
+    {
+        rtn = DOUBLE_CHAR_LOW;
+    }
+    else
+    {
+        if( ( (BYTE)(data) <= (BYTE)0x80) || (((BYTE)0xA0 <= (BYTE)(data)) && ((BYTE)(data) <= (BYTE)0xDF)) )
+        {
+            rtn = SINGLE_CHAR;
+        }
+        else
+        {
+            rtn = DOUBLE_CHAR_HIGH;
+        }
+    }
+
+    return rtn;
 }
