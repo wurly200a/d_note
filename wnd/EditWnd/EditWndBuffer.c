@@ -1186,6 +1186,18 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace, BOOL bUndoE
                     (h->lineData.nowPtr) = newPtr;
 
                     BuffLineDataUpdateLineNumAfter( (h->lineData.nowPtr) );
+
+                    if( bUndoEnable )
+                    {
+                        S_BUFF_UNDO_DATA *undoTempDataPtr;
+
+                        undoTempDataPtr = EditWndBufferUndoDataCreate(UNDO_TYPE_JOIN,NULL,0,newPtr->lineNum,newPtr->caretDataPos);
+                        EditWndBufferUndoDataAddLinkedList(&(h->undoData.topPtr),&(h->undoData.endPtr),undoTempDataPtr);
+                    }
+                    else
+                    {
+                        nop();
+                    }
                 }
                 else
                 {
@@ -1222,6 +1234,18 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace, BOOL bUndoE
                     (h->lineData.nowPtr) = newPtr;
 
                     BuffLineDataUpdateLineNumAfter( (h->lineData.nowPtr) );
+
+                    if( bUndoEnable )
+                    {
+                        S_BUFF_UNDO_DATA *undoTempDataPtr;
+
+                        undoTempDataPtr = EditWndBufferUndoDataCreate(UNDO_TYPE_JOIN,NULL,0,newPtr->lineNum,newPtr->caretDataPos);
+                        EditWndBufferUndoDataAddLinkedList(&(h->undoData.topPtr),&(h->undoData.endPtr),undoTempDataPtr);
+                    }
+                    else
+                    {
+                        nop();
+                    }
                 }
                 else
                 {
@@ -1530,6 +1554,16 @@ EditWndBuffUndo( H_EDITWND_BUFF hEditWndBuff )
         {
             EditWndBuffSetCaretPos(h,undoDataPtr->caretPos,undoDataPtr->lineNum);
             EditWndBuffDataSet(h,undoDataPtr->dataPtr, undoDataPtr->size, FALSE, FALSE );
+        }
+        else if( undoDataPtr->undoType == UNDO_TYPE_JOIN )
+        {
+            static TCHAR data[3];
+            INT size;
+
+            size = EditWndBuffGetNewLineData(hEditWndBuff,data);
+
+            EditWndBuffSetCaretPos(h,undoDataPtr->caretPos,undoDataPtr->lineNum);
+            EditWndBuffDataSet(h,data,size,FALSE,FALSE);
         }
         else
         {

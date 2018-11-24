@@ -5,6 +5,7 @@ typedef enum
     UNDO_TYPE_NONE  ,
     UNDO_TYPE_SET   ,
     UNDO_TYPE_REMOVE,
+    UNDO_TYPE_JOIN  ,
 } UNDO_TYPE;
 
 typedef struct tagS_BUFF_UNDO_DATA
