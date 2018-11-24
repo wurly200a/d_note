@@ -2079,41 +2079,48 @@ setSelectPosNowPosToFar( H_EDITWND_BUFF_LOCAL h, BOOL bMinus, DWORD offset )
 static TCHAR *
 my_strstr( const TCHAR *strSource, DWORD startPos, DWORD maxNum, const TCHAR *strTarget, BOOL bMatchCase, BOOL bLastMatch )
 {
-    TCHAR *ptr = strSource + startPos;
+    TCHAR *ptr = strSource;
     TCHAR *rtnPtr = (TCHAR *)NULL;
     DWORD i;
 
     for( i=0; (*ptr != NULL)&&(i<maxNum); ptr++,i++ )
     {
-        if( isMatch(*ptr,*strTarget,bMatchCase) )
-        { /* æ“ª•¶Žš‚ªˆê’v */
-            TCHAR *ptr1 = ptr;
-            TCHAR *ptr2 = strTarget;
-            BOOL bMatched = (BOOL)TRUE;
+        if( startPos <= i )
+        {
+            if( isMatch(*ptr,*strTarget,bMatchCase) )
+            { /* æ“ª•¶Žš‚ªˆê’v */
+                TCHAR *ptr1 = ptr;
+                TCHAR *ptr2 = strTarget;
+                BOOL bMatched = (BOOL)TRUE;
 
-            for( ; *ptr2 != NULL; ptr1++,ptr2++ )
-            {
-                if( isMatch(*ptr1,*ptr2,bMatchCase) )
+                for( ; *ptr2 != NULL; ptr1++,ptr2++ )
                 {
-                    nop();
+                    if( isMatch(*ptr1,*ptr2,bMatchCase) )
+                    {
+                        nop();
+                    }
+                    else
+                    {
+                        bMatched = FALSE;
+                        break;
+                    }
+                }
+
+                if( bMatched )
+                {
+                    rtnPtr = ptr;
+                    if( bLastMatch )
+                    {
+                        nop();
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
                 else
                 {
-                    bMatched = FALSE;
-                    break;
-                }
-            }
-
-            if( bMatched )
-            {
-                rtnPtr = ptr;
-                if( bLastMatch )
-                {
                     nop();
-                }
-                else
-                {
-                    break;
                 }
             }
             else
