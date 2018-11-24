@@ -40,7 +40,7 @@ static CHARSET_TYPE detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset );
 static DWORD getCaretDispXpos( H_EDITWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dataPos );
 static BOOL getDispCharData( H_EDITWND_BUFF_LOCAL h, S_BUFF_LINE_DATA *linePtr, DWORD dispPos, S_BUFF_DISP_DATA *dataPtr );
 static void setSelectPosNowPosToFar( H_EDITWND_BUFF_LOCAL h, BOOL bMinus, DWORD offset );
-static TCHAR *my_strstr( const TCHAR *strSource, const TCHAR *strTarget, DWORD maxNum, BOOL bMatchCase, BOOL bLastMach );
+static TCHAR *my_strstr( const TCHAR *strSource, DWORD startPos, DWORD maxNum, const TCHAR *strTarget, BOOL bMatchCase, BOOL bLastMach );
 static BOOL isMatch( TCHAR data1, TCHAR data2, BOOL bMatchCase );
 
 /* 内部変数定義 */
@@ -1444,9 +1444,9 @@ EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD lengt
         if( !bDirectionUp )
         { /* 下へ */
             for( nowPtr = (h->lineData.nowPtr),nowDataPos=(h->lineData.nowPtr)->caretDataPos; nowPtr != NULL; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.nextPtr,nowDataPos=0 )
-            {
+            { /* 1行ごとに処理 */
                 TCHAR *ptr;
-                ptr = (TCHAR *)my_strstr(nowPtr->data+nowDataPos,dataPtr,nowPtr->dataSize,bMatchCase,FALSE);
+                ptr = (TCHAR *)my_strstr(nowPtr->data,nowDataPos,nowPtr->dataSize,dataPtr,bMatchCase,FALSE);
 
                 if( ptr )
                 { /* 見つかった */
@@ -1462,7 +1462,7 @@ EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD lengt
         else
         { /* 上へ */
             for( nowPtr = (h->lineData.nowPtr); nowPtr != NULL; nowPtr = (S_BUFF_LINE_DATA *)nowPtr->header.prevPtr )
-            {
+            { /* 1行ごとに処理 */
                 TCHAR *ptr;
                 DWORD maxNum;
 
@@ -1474,7 +1474,7 @@ EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD lengt
                 {
                     maxNum = nowPtr->dataSize;
                 }
-                ptr = (TCHAR *)my_strstr(nowPtr->data,dataPtr,maxNum,bMatchCase,TRUE);
+                ptr = (TCHAR *)my_strstr(nowPtr->data,0,maxNum,dataPtr,bMatchCase,TRUE);
 
                 if( ptr )
                 { /* 見つかった */
@@ -1629,6 +1629,8 @@ detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset )
     DWORD i;
     int charType = SINGLE_CHAR;
 
+//    DebugWndPrintf("detectCharSet:Offset=%d\r\n",offset);
+
     if( dataPtr != NULL )
     {
         for( i=0; i<(dataPtr->dataSize-dataPtr->newLineCodeSize); i++ )
@@ -1672,6 +1674,8 @@ detectCharSet( S_BUFF_LINE_DATA *dataPtr, DWORD offset )
     {
         nop();
     }
+
+//    DebugWndPrintf("detectCharSet:charType=%d\r\n",charType);
 
     return charType;
 }
@@ -2063,18 +2067,19 @@ setSelectPosNowPosToFar( H_EDITWND_BUFF_LOCAL h, BOOL bMinus, DWORD offset )
 }
 
 /********************************************************************************
- * 内容  :
+ * 内容  : 1行の文字列データから、特定の文字列を見つける
  * 引数  : const TCHAR *strSource
- * 引数  : const TCHAR *strTarget
+ * 引数  : DWORD       startPos
  * 引数  : DWORD       maxNum
+ * 引数  : const TCHAR *strTarget 特定の文字列
  * 引数  : BOOL        bMatchCase
  * 引数  : BOOL        bLastMatch
- * 戻り値: TCHAR *
+ * 戻り値: TCHAR * 見つからなかったらNULL、見つかったら1行の文字列データの中の特定の文字列の先頭ポインタ を返す
  ***************************************/
 static TCHAR *
-my_strstr( const TCHAR *strSource, const TCHAR *strTarget, DWORD maxNum, BOOL bMatchCase, BOOL bLastMatch )
+my_strstr( const TCHAR *strSource, DWORD startPos, DWORD maxNum, const TCHAR *strTarget, BOOL bMatchCase, BOOL bLastMatch )
 {
-    TCHAR *ptr = strSource;
+    TCHAR *ptr = strSource + startPos;
     TCHAR *rtnPtr = (TCHAR *)NULL;
     DWORD i;
 
