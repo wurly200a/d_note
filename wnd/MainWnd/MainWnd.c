@@ -635,6 +635,12 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 #endif                  /*  エディットコントロール使用  or  通常  */
             break;
 
+        case IDM_EDIT_REDO:
+#ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
+            SendMessage( mainWndData.hWndIo, WM_REDO, 0, 0 );
+#else                   /* [エディットコントロール使用] or  通常  */
+#endif                  /*  エディットコントロール使用  or  通常  */
+            break;
         case IDM_EDIT_CUT:
             SendMessage( mainWndData.hWndIo, WM_CUT, 0, 0 );
             break;

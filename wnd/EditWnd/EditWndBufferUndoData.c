@@ -75,7 +75,7 @@ EditWndBufferUndoDataCreate( UNDO_TYPE undoType, TCHAR* dataPtr, DWORD length, D
     S_BUFF_UNDO_DATA *newPtr = NULL;
     DWORD dataSize = (DWORD)sizeof(S_BUFF_UNDO_DATA);
 
-    if( undoType == UNDO_TYPE_REMOVE )
+    if( (undoType == UNDO_TYPE_REMOVE) || (undoType == UNDO_TYPE_SET) )
     {
         dataSize += length;
     }
@@ -95,7 +95,7 @@ EditWndBufferUndoDataCreate( UNDO_TYPE undoType, TCHAR* dataPtr, DWORD length, D
         newPtr->lineNum  = lineNum;
         newPtr->caretPos = caretPos;
 
-        if( undoType == UNDO_TYPE_REMOVE )
+        if( (undoType == UNDO_TYPE_REMOVE) || (undoType == UNDO_TYPE_SET) )
         {
             newPtr->dataPtr = ((TCHAR *)newPtr)+sizeof(S_BUFF_UNDO_DATA);
             memcpy( newPtr->dataPtr, dataPtr, length );

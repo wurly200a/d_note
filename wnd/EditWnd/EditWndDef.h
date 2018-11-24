@@ -31,6 +31,7 @@ typedef enum
     EDITWND_ON_PASTE               , /* WM_PASTE                */
     EDITWND_ON_CLEAR               , /* WM_CLEAR                */
     EDITWND_ON_UNDO                , /* WM_UNDO                 */
+    EDITWND_ON_REDO                , /* WM_REDO                 */
     EDITWND_ON_SETSEL              , /* EM_SETSEL               */
     EDITWND_ON_SETFONT             , /* WM_SETFONT              */
     EDITWND_ON_GETLINECOUNT        , /* EM_GETLINECOUNT         */
@@ -57,6 +58,7 @@ typedef enum
 #endif
 
 #define IDM_EDIT_UNDO                   40011
+#define IDM_EDIT_REDO                   40024
 #define IDM_EDIT_CUT                    40012
 #define IDM_EDIT_COPY                   40013
 #define IDM_EDIT_PASTE                  40014

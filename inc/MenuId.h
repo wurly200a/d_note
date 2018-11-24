@@ -11,6 +11,7 @@
 
 /* ï“èW */
 #define IDM_EDIT_UNDO                   40011
+#define IDM_EDIT_REDO                   40024
 #define IDM_EDIT_CUT                    40012
 #define IDM_EDIT_COPY                   40013
 #define IDM_EDIT_PASTE                  40014

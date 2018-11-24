@@ -65,6 +65,7 @@ static LRESULT editOnCopy               ( HWND hwnd, UINT message, WPARAM wParam
 static LRESULT editOnPaste              ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT editOnClear              ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT editOnUndo               ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+static LRESULT editOnRedo               ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT editOnSetSel             ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT editOnSetFont            ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 static LRESULT editOnGetLineCount       ( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
@@ -122,6 +123,7 @@ static LRESULT (*editWndProcTbl[EDITWND_MAX])( HWND hwnd, UINT message, WPARAM w
     editOnPaste              , /* WM_PASTE               */
     editOnClear              , /* WM_CLEAR               */
     editOnUndo               , /* WM_UNDO                */
+    editOnRedo               , /* WM_REDO                */
     editOnSetSel             , /* EM_SETSEL              */
     editOnSetFont            , /* WM_SETFONT             */
     editOnGetLineCount       , /* EM_GETLINECOUNT        */
@@ -460,6 +462,7 @@ editWndConvertMSGtoINDEX( UINT message )
     case WM_PASTE               :rtn = EDITWND_ON_PASTE               ;break;
     case WM_CLEAR               :rtn = EDITWND_ON_CLEAR               ;break;
     case WM_UNDO                :rtn = EDITWND_ON_UNDO                ;break;
+    case WM_REDO                :rtn = EDITWND_ON_REDO                ;break;
     case EM_SETSEL              :rtn = EDITWND_ON_SETSEL              ;break;
     case WM_SETFONT             :rtn = EDITWND_ON_SETFONT             ;break;
     case EM_GETLINECOUNT        :rtn = EDITWND_ON_GETLINECOUNT        ;break;
@@ -1851,6 +1854,33 @@ editOnUndo( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     {
         editWndCaretPosOutScroll(hwnd,editWndDataPtr);
         editWndInvalidateRect( hwnd, NULL, TRUE, "editOnUndo" );
+    }
+    else
+    {
+        nop();
+    }
+
+    return rtn;
+}
+
+/********************************************************************************
+ * 内容  : WM_REDO を処理する
+ * 引数  : HWND hwnd
+ * 引数  : UINT message
+ * 引数  : WPARAM wParam (内容はメッセージの種類により異なる)
+ * 引数  : LPARAM lParam (内容はメッセージの種類により異なる)
+ * 戻り値: LRESULT
+ ***************************************/
+static LRESULT
+editOnRedo( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+    LRESULT rtn = 0;
+    S_EDITWND_DATA *editWndDataPtr = (S_EDITWND_DATA *)(LONG_PTR)GetWindowLongPtr(hwnd,0);
+
+    if( EditWndBuffRedo(editWndDataPtr->hEditWndBuff) )
+    {
+        editWndCaretPosOutScroll(hwnd,editWndDataPtr);
+        editWndInvalidateRect( hwnd, NULL, TRUE, "editOnRedo" );
     }
     else
     {

@@ -17,6 +17,7 @@ static const ACCEL accelTbl[] =
     { (FVIRTKEY|FNOINVERT|FCONTROL),'S'       ,IDM_FILE_SAVE         },
     { (FVIRTKEY|FNOINVERT|FCONTROL),'P'       ,IDM_FILE_PRINT        },
     { (FVIRTKEY|FNOINVERT|FCONTROL),'Z'       ,IDM_EDIT_UNDO         },
+    { (FVIRTKEY|FNOINVERT|FCONTROL),'Y'       ,IDM_EDIT_REDO         },
     { (FVIRTKEY|FNOINVERT|FCONTROL),'X'       ,IDM_EDIT_CUT          },
     { (FVIRTKEY|FNOINVERT|FCONTROL),'C'       ,IDM_EDIT_COPY         },
     { (FVIRTKEY|FNOINVERT|FCONTROL),'V'       ,IDM_EDIT_PASTE        },
@@ -59,6 +60,7 @@ MenuCreate( void )
 
     hMenuPopup = CreateMenu();
     AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_UNDO       , TEXT("å≥Ç…ñﬂÇ∑(&U)\tCtrl+Z") );
+    AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_REDO       , TEXT("Ç‚ÇËíºÇµ(&R)\tCtrl+Y") );
     AppendMenu( hMenuPopup, MF_SEPARATOR, 0                   , NULL );
     AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_CUT        , TEXT("êÿÇËéÊÇË(&T)\tCtrl+X") );
     AppendMenu( hMenuPopup, MF_STRING   , IDM_EDIT_COPY       , TEXT("ÉRÉsÅ[(&C)\tCtrl+C") );

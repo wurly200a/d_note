@@ -268,7 +268,14 @@ BOOL EditWndBuffFindDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD 
  * 引数  : H_EDITWND_BUFF hEditWndBuff
  * 戻り値: BOOL
  ***************************************/
-BOOL EditWndBuffUndo( H_EDITWND_BUFF hEditWndBuff );
+BOOL EditWndBuffUndo( H_EDITWND_BUFF hEditWndBuff);
+
+/********************************************************************************
+ * 内容  : EDITウィンドウバッファのRedo
+ * 引数  : H_EDITWND_BUFF hEditWndBuff
+ * 戻り値: BOOL
+ ***************************************/
+BOOL EditWndBuffRedo( H_EDITWND_BUFF hEditWndBuff);
 
 #define EDITWND_BUFFER_H
 #endif /* EDITWND_BUFFER_H */
