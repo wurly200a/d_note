@@ -1550,9 +1550,8 @@ EditWndBuffUndo( H_EDITWND_BUFF hEditWndBuff )
         S_BUFF_UNDO_DATA *undoDataPtr;
 
         undoDataPtr = h->undoData.endPtr;
-#if 0
-        DebugWndPrintf("EditWndBuffUndo,type=%d,0x%08lX\r\n",undoDataPtr->undoType,undoDataPtr->size);
-#endif
+//        DebugWndCtrlPrintf( DEBUG_WND_CTRL_ID_01, "type=%d,size=%d,caretPos=%d,lineNum=%d",undoDataPtr->undoType,undoDataPtr->size,undoDataPtr->caretPos,undoDataPtr->lineNum );
+
         if( undoDataPtr->undoType == UNDO_TYPE_SET )
         {
             EditWndBuffSetCaretPos(h,undoDataPtr->caretPos,undoDataPtr->lineNum);
@@ -1616,6 +1615,8 @@ EditWndBuffRedo( H_EDITWND_BUFF hEditWndBuff )
 #if 0
         DebugWndPrintf("EditWndBuffRedo,type=%d,0x%08lX\r\n",redoDataPtr->undoType,redoDataPtr->size);
 #endif
+//        DebugWndCtrlPrintf( DEBUG_WND_CTRL_ID_02, "type=%d,size=%d,caretPos=%d,lineNum=%d",redoDataPtr->undoType,redoDataPtr->size,redoDataPtr->caretPos,redoDataPtr->lineNum );
+
         if( redoDataPtr->undoType == UNDO_TYPE_SET )
         {
             EditWndBuffSetCaretPos(h,redoDataPtr->caretPos,redoDataPtr->lineNum);
@@ -2084,7 +2085,7 @@ setSelectPosNowPosToFar( H_EDITWND_BUFF_LOCAL h, BOOL bMinus, DWORD offset )
 
 //            DebugWndPrintf("(Minus)nowOffset=%d,caretDataPos=%d\r\n",nowOffset,(h->lineData.nowPtr)->caretDataPos);
 
-            if( (prevPtr != NULL) &&
+            if( (prevPtr != NULL) && /* ‘Os‚ª‚ ‚è */
                 (0 < (nowOffset - ((h->lineData.nowPtr)->caretDataPos))) &&
                 ((nowOffset - ((h->lineData.nowPtr)->caretDataPos)) <= (prevPtr->newLineCodeSize)) )
             {

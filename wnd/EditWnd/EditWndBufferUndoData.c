@@ -87,7 +87,8 @@ EditWndBufferUndoDataCreate( UNDO_TYPE undoType, TCHAR* dataPtr, DWORD length, D
 
     if( newPtr != NULL )
     {
-        TCHAR cForLog = ' ';
+        TCHAR szBuf[24+1] = {0};
+        INT i;
 
         memset( newPtr, 0, dataSize );
         newPtr->undoType = undoType;
@@ -100,15 +101,17 @@ EditWndBufferUndoDataCreate( UNDO_TYPE undoType, TCHAR* dataPtr, DWORD length, D
             newPtr->dataPtr = ((TCHAR *)newPtr)+sizeof(S_BUFF_UNDO_DATA);
             memcpy( newPtr->dataPtr, dataPtr, length );
 
-            cForLog = *(newPtr->dataPtr);
+            for( i=0; i<min(length,8); i++ )
+            {
+                sprintf(szBuf+i*3,"%02X ",*(dataPtr+i));
+            }
         }
         else
         {
             nop();
         }
-#if 0
-        DebugWndPrintf("EditWndBufferUndoDataCreate,%d,%c...,%08lX,%08lX,%08lX\r\n",newPtr->undoType,cForLog,newPtr->size,newPtr->lineNum,newPtr->caretPos);
-#endif
+
+//        DebugWndCtrlPrintf( DEBUG_WND_CTRL_ID_03, "type=%d,size=%d,caretPos=%d,lineNum=%d,data=%s",newPtr->undoType,newPtr->size,newPtr->caretPos,newPtr->lineNum,szBuf);
     }
     else
     {
