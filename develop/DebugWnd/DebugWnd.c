@@ -8,6 +8,7 @@
 /* 外部関数定義 */
 #include "DebugWndFont.h"
 #include "DebugWndConfig.h"
+#include "DebugWndSomeCtrl.h"
 
 /* 外部変数定義 */
 
@@ -288,6 +289,126 @@ DebugWndClearLine( void )
     }
 
     return TRUE;
+}
+
+/********************************************************************************
+ * 内容   : デバッグウィンドウへの printf
+ * 引数   : DEBUG_WND_CTRL_ID ctrlId
+ * 引数   : PTSTR ptstrFormat, ...
+ * 戻り値 : BOOL
+ ********************************************************************************/
+BOOL
+DebugWndCtrlPrintf( DEBUG_WND_CTRL_ID ctrlId, PTSTR ptstrFormat, ...)
+{
+    va_list vaArgs;
+    static TCHAR szBuf[1024];
+
+    if( debugWndData.hWndEdit != NULL )
+    {
+        va_start(vaArgs, ptstrFormat);
+        if( wvsprintf(szBuf, ptstrFormat, vaArgs) != EOF )
+        {
+            switch( ctrlId )
+            {
+            case DEBUG_WND_CTRL_ID_01:
+                SetWindowText( DebugWndSomeCtrlGetHWND(DEBUG_WND_SOME_CTRL_PARAM1), szBuf );
+                break;
+            case DEBUG_WND_CTRL_ID_02:
+                SetWindowText( DebugWndSomeCtrlGetHWND(DEBUG_WND_SOME_CTRL_PARAM2), szBuf );
+                break;
+            case DEBUG_WND_CTRL_ID_03:
+                SetWindowText( DebugWndSomeCtrlGetHWND(DEBUG_WND_SOME_CTRL_PARAM3), szBuf );
+                break;
+            case DEBUG_WND_CTRL_ID_04:
+                SetWindowText( DebugWndSomeCtrlGetHWND(DEBUG_WND_SOME_CTRL_PARAM4), szBuf );
+                break;
+            case DEBUG_WND_CTRL_ID_05:
+                SetWindowText( DebugWndSomeCtrlGetHWND(DEBUG_WND_SOME_CTRL_PARAM5), szBuf );
+                break;
+            case DEBUG_WND_CTRL_ID_06:
+                SetWindowText( DebugWndSomeCtrlGetHWND(DEBUG_WND_SOME_CTRL_PARAM6), szBuf );
+                break;
+            case DEBUG_WND_CTRL_ID_07:
+                SetWindowText( DebugWndSomeCtrlGetHWND(DEBUG_WND_SOME_CTRL_PARAM7), szBuf );
+                break;
+            case DEBUG_WND_CTRL_ID_08:
+                SetWindowText( DebugWndSomeCtrlGetHWND(DEBUG_WND_SOME_CTRL_PARAM8), szBuf );
+                break;
+            case DEBUG_WND_CTRL_ID_09:
+                SetWindowText( DebugWndSomeCtrlGetHWND(DEBUG_WND_SOME_CTRL_PARAM9), szBuf );
+                break;
+            default:
+                nop();
+                break;
+            }
+        }
+        else
+        {
+            /* do nothing */
+        }
+        va_end(vaArgs);
+    }
+    else
+    {
+        /* do nothing */
+    }
+
+    return TRUE;
+}
+
+/********************************************************************************
+ * 内容   : デバッグウィンドウへのセット
+ * 引数   : DEBUG_WND_CTRL_ID ctrlId
+ * 引数   : DWORD value
+ * 戻り値 : BOOL
+ ********************************************************************************/
+BOOL
+DebugWndCtrlSet( DEBUG_WND_CTRL_ID ctrlId, DWORD value )
+{
+    TCHAR buf[50];
+
+    if( debugWndData.hWndEdit != NULL )
+    {
+        wsprintf(buf, "0x%08lX", value );
+
+        switch( ctrlId )
+        {
+        case DEBUG_WND_CTRL_ID_01:
+            SetWindowText( DebugWndSomeCtrlGetHWND(DEBUG_WND_SOME_CTRL_PARAM1), buf );
+            break;
+        case DEBUG_WND_CTRL_ID_02:
+            SetWindowText( DebugWndSomeCtrlGetHWND(DEBUG_WND_SOME_CTRL_PARAM2), buf );
+            break;
+        case DEBUG_WND_CTRL_ID_03:
+            SetWindowText( DebugWndSomeCtrlGetHWND(DEBUG_WND_SOME_CTRL_PARAM3), buf );
+            break;
+        case DEBUG_WND_CTRL_ID_04:
+            SetWindowText( DebugWndSomeCtrlGetHWND(DEBUG_WND_SOME_CTRL_PARAM4), buf );
+            break;
+        case DEBUG_WND_CTRL_ID_05:
+            SetWindowText( DebugWndSomeCtrlGetHWND(DEBUG_WND_SOME_CTRL_PARAM5), buf );
+            break;
+        case DEBUG_WND_CTRL_ID_06:
+            SetWindowText( DebugWndSomeCtrlGetHWND(DEBUG_WND_SOME_CTRL_PARAM6), buf );
+            break;
+        case DEBUG_WND_CTRL_ID_07:
+            SetWindowText( DebugWndSomeCtrlGetHWND(DEBUG_WND_SOME_CTRL_PARAM7), buf );
+            break;
+        case DEBUG_WND_CTRL_ID_08:
+            SetWindowText( DebugWndSomeCtrlGetHWND(DEBUG_WND_SOME_CTRL_PARAM8), buf );
+            break;
+        case DEBUG_WND_CTRL_ID_09:
+            SetWindowText( DebugWndSomeCtrlGetHWND(DEBUG_WND_SOME_CTRL_PARAM9), buf );
+            break;
+        default:
+            nop();
+            break;
+        }
+    }
+    else
+    {
+        /* do nothing */
+    }
 }
 
 /********************************************************************************

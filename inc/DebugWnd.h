@@ -1,5 +1,20 @@
 #ifndef DEBUGWND_H
 
+enum
+{
+    DEBUG_WND_CTRL_ID_01,
+    DEBUG_WND_CTRL_ID_02,
+    DEBUG_WND_CTRL_ID_03,
+    DEBUG_WND_CTRL_ID_04,
+    DEBUG_WND_CTRL_ID_05,
+    DEBUG_WND_CTRL_ID_06,
+    DEBUG_WND_CTRL_ID_07,
+    DEBUG_WND_CTRL_ID_08,
+    DEBUG_WND_CTRL_ID_09,
+    DEBUG_WND_CTRL_ID_MAX
+};
+typedef int DEBUG_WND_CTRL_ID ;
+
 /********************************************************************************
  * 内容  : デバッグウィンドウクラスの登録、ウィンドウの生成
  * 引数  : HINSTANCE hInst
@@ -36,6 +51,22 @@ BOOL DebugWndPrintfOW( PTSTR ptstrFormat, ...);
  * 戻り値 : BOOL
  ********************************************************************************/
 BOOL DebugWndClearLine( void );
+
+/********************************************************************************
+ * 内容   : デバッグウィンドウへの printf
+ * 引数   : DEBUG_WND_CTRL_ID ctrlId
+ * 引数   : PTSTR ptstrFormat, ...
+ * 戻り値 : BOOL
+ ********************************************************************************/
+BOOL DebugWndCtrlPrintf( DEBUG_WND_CTRL_ID ctrlId, PTSTR ptstrFormat, ...);
+
+/********************************************************************************
+ * 内容   : デバッグウィンドウへのセット
+ * 引数   : DEBUG_WND_CTRL_ID ctrlId
+ * 引数   : DWORD value
+ * 戻り値 : BOOL
+ ********************************************************************************/
+BOOL DebugWndCtrlSet( DEBUG_WND_CTRL_ID ctrlId, DWORD value );
 
 #define DEBUGWND_H
 #endif /* DEBUGWND_H */
