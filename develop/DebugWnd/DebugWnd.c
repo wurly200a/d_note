@@ -381,6 +381,9 @@ debugOnCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     DeleteObject(hFont);
     ReleaseDC( hwnd,hdc );
 
+    /* コントロールをまとめて生成 */
+    DebugWndSomeCtrlCreate(debugWndData.hInstance,hwnd);
+
     debugWndData.hWndEdit = CreateWindowEx( WS_EX_OVERLAPPEDWINDOW,
                                          TEXT ("edit"), NULL,
                                          WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL |
@@ -425,6 +428,10 @@ debugOnSize( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
     debugWndData.cxClient = LOWORD( lParam );
     debugWndData.cyClient = HIWORD( lParam );
+
+    /* コントロールをまとめて調整 */
+    DebugWndSomeCtrlSize( debugWndData.cxClient, debugWndData.cyChar );
+    topSizeSum = 200;
 
     MoveWindow( debugWndData.hWndEdit, 0, topSizeSum, debugWndData.cxClient, debugWndData.cyClient - topSizeSum - bottomSizeSum, TRUE) ;
 

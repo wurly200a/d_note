@@ -19,6 +19,7 @@ OBJECTS = \
           ..\\develop\\DebugWnd\\DebugWndMenu.o	  \
           ..\\develop\\DebugWnd\\DebugWndFont.o	  \
           ..\\develop\\DebugWnd\\DebugWndConfig.o \
+          ..\\develop\\DebugWnd\\DebugWndSomeCtrl.o \
                                                   \
           ..\\sys\\Config\\Config.o				  \
           ..\\sys\\DateTime\\DateTime.o			  \
