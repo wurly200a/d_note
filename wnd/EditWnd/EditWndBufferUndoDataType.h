@@ -55,11 +55,13 @@ void EditWndBufferUndoDataAllRemoveLinkedList( S_BUFF_UNDO_DATA **topPtrPtr, S_B
  * 引数  : UNDO_TYPE undoType
  * 引数  : TCHAR* dataPtr
  * 引数  : DWORD length
- * 引数  : DWORD lineNum
- * 引数  : DWORD caretPos
+ * 引数  : DWORD preLineNum
+ * 引数  : DWORD preCaretPos
+ * 引数  : DWORD postLineNum
+ * 引数  : DWORD postCaretPos
  * 戻り値: S_BUFF_UNDO_DATA *
  ***************************************/
-S_BUFF_UNDO_DATA *EditWndBufferUndoDataCreate( UNDO_TYPE undoType, TCHAR* dataPtr, DWORD length, DWORD lineNum, DWORD caretPos );
+S_BUFF_UNDO_DATA *EditWndBufferUndoDataCreate( UNDO_TYPE undoType, TCHAR* dataPtr, DWORD length, DWORD preLineNum, DWORD preCaretPos, DWORD postLineNum, DWORD postCaretPos );
 
 /********************************************************************************
  * 内容  : アンドゥデータの解放

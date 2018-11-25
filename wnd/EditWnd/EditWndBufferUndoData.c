@@ -65,12 +65,14 @@ EditWndBufferUndoDataAllRemoveLinkedList( S_BUFF_UNDO_DATA **topPtrPtr, S_BUFF_U
  * ˆø”  : UNDO_TYPE undoType
  * ˆø”  : TCHAR* dataPtr
  * ˆø”  : DWORD length
- * ˆø”  : DWORD lineNum
- * ˆø”  : DWORD caretPos
+ * ˆø”  : DWORD preLineNum
+ * ˆø”  : DWORD preCaretPos
+ * ˆø”  : DWORD postLineNum
+ * ˆø”  : DWORD postCaretPos
  * –ß‚è’l: S_BUFF_UNDO_DATA *
  ***************************************/
 S_BUFF_UNDO_DATA *
-EditWndBufferUndoDataCreate( UNDO_TYPE undoType, TCHAR* dataPtr, DWORD length, DWORD lineNum, DWORD caretPos )
+EditWndBufferUndoDataCreate( UNDO_TYPE undoType, TCHAR* dataPtr, DWORD length, DWORD preLineNum, DWORD preCaretPos, DWORD postLineNum, DWORD postCaretPos )
 {
     S_BUFF_UNDO_DATA *newPtr = NULL;
     DWORD dataSize = (DWORD)sizeof(S_BUFF_UNDO_DATA);
@@ -93,8 +95,10 @@ EditWndBufferUndoDataCreate( UNDO_TYPE undoType, TCHAR* dataPtr, DWORD length, D
         memset( newPtr, 0, dataSize );
         newPtr->undoType = undoType;
         newPtr->size     = length;
-        newPtr->postPos.lineNum  = lineNum;
-        newPtr->postPos.caretPos = caretPos;
+        newPtr->prePos.lineNum   = preLineNum  ;
+        newPtr->prePos.caretPos  = preCaretPos ;
+        newPtr->postPos.lineNum  = postLineNum ;
+        newPtr->postPos.caretPos = postCaretPos;
 
         if( (undoType == UNDO_TYPE_REMOVE) || (undoType == UNDO_TYPE_SET) )
         {
@@ -111,7 +115,7 @@ EditWndBufferUndoDataCreate( UNDO_TYPE undoType, TCHAR* dataPtr, DWORD length, D
             nop();
         }
 
-//        DebugWndCtrlPrintf( DEBUG_WND_CTRL_ID_03, "type=%d,size=%d,caretPos=%d,lineNum=%d,data=%s",newPtr->undoType,newPtr->size,newPtr->caretPos,newPtr->lineNum,szBuf);
+        DebugWndCtrlPrintf( DEBUG_WND_CTRL_ID_03, "type=%d,size=%d,pre=(%d,%d),post=(%d,%d),data=%s",newPtr->undoType,newPtr->size,preLineNum,preCaretPos,postLineNum,postCaretPos,szBuf);
     }
     else
     {

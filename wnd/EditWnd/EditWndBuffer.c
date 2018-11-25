@@ -161,6 +161,8 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
     DWORD caretPos = 0;
     H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
     BOOL bUndoEnableLocal = bUndoEnable;
+    DWORD preLineNum  = (h->lineData.nowPtr)->lineNum;
+    DWORD preCaretPos = (h->lineData.nowPtr)->caretDataPos;
 
     if( bInit )
     {
@@ -369,7 +371,7 @@ EditWndBuffDataSet( H_EDITWND_BUFF hEditWndBuff, TCHAR* dataPtr, DWORD length, B
     {
         S_BUFF_UNDO_DATA *undoTempDataPtr;
 
-        undoTempDataPtr = EditWndBufferUndoDataCreate(UNDO_TYPE_SET,dataPtr,length,(h->lineData.nowPtr)->lineNum,(h->lineData.nowPtr)->caretDataPos);
+        undoTempDataPtr = EditWndBufferUndoDataCreate(UNDO_TYPE_SET,dataPtr,length,preLineNum,preCaretPos,(h->lineData.nowPtr)->lineNum,(h->lineData.nowPtr)->caretDataPos);
         EditWndBufferUndoDataAddLinkedList(&(h->undoData.topPtr),&(h->undoData.endPtr),undoTempDataPtr); /* データセットをundoに繋ぐ */
         EditWndBufferUndoDataAllRemoveLinkedList(&(h->redoData.topPtr),&(h->redoData.endPtr)); /* redoリストは削除 */
     }
@@ -966,6 +968,8 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace, BOOL bUndoE
     S_BUFF_LINE_DATA *dividePrePtr,*dividePostPtr;
     BOOL bNormalDelete = FALSE;
     H_EDITWND_BUFF_LOCAL h = (H_EDITWND_BUFF_LOCAL)hEditWndBuff;
+    DWORD preLineNum  = (h->lineData.nowPtr)->lineNum;
+    DWORD preCaretPos = (h->lineData.nowPtr)->caretDataPos;
     INT joinPattern = (INT)0;
 
 #if 0
@@ -1155,7 +1159,7 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace, BOOL bUndoE
 
             if( bUndoEnable )
             {
-                undoTempDataPtr = EditWndBufferUndoDataCreate(UNDO_TYPE_REMOVE,dataPtrForUndo,dwSizeForUndo,(h->lineData.nowPtr)->lineNum,(h->lineData.nowPtr)->caretDataPos);
+                undoTempDataPtr = EditWndBufferUndoDataCreate(UNDO_TYPE_REMOVE,dataPtrForUndo,dwSizeForUndo,preLineNum,preCaretPos,(h->lineData.nowPtr)->lineNum,(h->lineData.nowPtr)->caretDataPos);
                 free(dataPtrForUndo);
                 EditWndBufferUndoDataAddLinkedList(&(h->undoData.topPtr),&(h->undoData.endPtr),undoTempDataPtr); /* データ削除をundoに繋ぐ */
                 EditWndBufferUndoDataAllRemoveLinkedList(&(h->redoData.topPtr),&(h->redoData.endPtr)); /* redoリストは削除 */
@@ -1198,7 +1202,7 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace, BOOL bUndoE
                     {
                         S_BUFF_UNDO_DATA *undoTempDataPtr;
 
-                        undoTempDataPtr = EditWndBufferUndoDataCreate(UNDO_TYPE_JOIN,NULL,0,newPtr->lineNum,newPtr->caretDataPos);
+                        undoTempDataPtr = EditWndBufferUndoDataCreate(UNDO_TYPE_JOIN,NULL,0,preLineNum,preCaretPos,newPtr->lineNum,newPtr->caretDataPos);
                         EditWndBufferUndoDataAddLinkedList(&(h->undoData.topPtr),&(h->undoData.endPtr),undoTempDataPtr); /* 前行との結合(1)をundoに繋ぐ */
                         EditWndBufferUndoDataAllRemoveLinkedList(&(h->redoData.topPtr),&(h->redoData.endPtr)); /* redoリストは削除 */
                     }
@@ -1247,7 +1251,7 @@ EditWndBuffRemoveData( H_EDITWND_BUFF hEditWndBuff, BOOL bBackSpace, BOOL bUndoE
                     {
                         S_BUFF_UNDO_DATA *undoTempDataPtr;
 
-                        undoTempDataPtr = EditWndBufferUndoDataCreate(UNDO_TYPE_JOIN,NULL,0,newPtr->lineNum,newPtr->caretDataPos);
+                        undoTempDataPtr = EditWndBufferUndoDataCreate(UNDO_TYPE_JOIN,NULL,0,preLineNum,preCaretPos,newPtr->lineNum,newPtr->caretDataPos);
                         EditWndBufferUndoDataAddLinkedList(&(h->undoData.topPtr),&(h->undoData.endPtr),undoTempDataPtr); /* 前行との結合(2)をundoに繋ぐ */
                         EditWndBufferUndoDataAllRemoveLinkedList(&(h->redoData.topPtr),&(h->redoData.endPtr)); /* redoリストは削除 */
                     }
@@ -1619,7 +1623,7 @@ EditWndBuffRedo( H_EDITWND_BUFF hEditWndBuff )
 
         if( redoDataPtr->undoType == UNDO_TYPE_SET )
         {
-            EditWndBuffSetCaretPos(h,redoDataPtr->postPos.caretPos,redoDataPtr->postPos.lineNum);
+            EditWndBuffSetCaretPos(h,redoDataPtr->prePos.caretPos,redoDataPtr->prePos.lineNum);
             EditWndBuffDataSet(h,redoDataPtr->dataPtr, redoDataPtr->size, FALSE, FALSE );
         }
         else if( redoDataPtr->undoType == UNDO_TYPE_REMOVE )
