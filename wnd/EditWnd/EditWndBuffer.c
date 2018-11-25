@@ -1550,17 +1550,17 @@ EditWndBuffUndo( H_EDITWND_BUFF hEditWndBuff )
         S_BUFF_UNDO_DATA *undoDataPtr;
 
         undoDataPtr = h->undoData.endPtr;
-//        DebugWndCtrlPrintf( DEBUG_WND_CTRL_ID_01, "type=%d,size=%d,caretPos=%d,lineNum=%d",undoDataPtr->undoType,undoDataPtr->size,undoDataPtr->caretPos,undoDataPtr->lineNum );
+//        DebugWndCtrlPrintf( DEBUG_WND_CTRL_ID_01, "type=%d,size=%d,caretPos=%d,lineNum=%d",undoDataPtr->undoType,undoDataPtr->size,undoDataPtr->postPos.caretPos,undoDataPtr->postPos.lineNum );
 
         if( undoDataPtr->undoType == UNDO_TYPE_SET )
         {
-            EditWndBuffSetCaretPos(h,undoDataPtr->caretPos,undoDataPtr->lineNum);
+            EditWndBuffSetCaretPos(h,undoDataPtr->postPos.caretPos,undoDataPtr->postPos.lineNum);
             setSelectPosNowPosToFar(h,TRUE,undoDataPtr->size);
             EditWndBuffRemoveData(h,TRUE,FALSE);
         }
         else if( undoDataPtr->undoType == UNDO_TYPE_REMOVE )
         {
-            EditWndBuffSetCaretPos(h,undoDataPtr->caretPos,undoDataPtr->lineNum);
+            EditWndBuffSetCaretPos(h,undoDataPtr->postPos.caretPos,undoDataPtr->postPos.lineNum);
             EditWndBuffDataSet(h,undoDataPtr->dataPtr, undoDataPtr->size, FALSE, FALSE );
         }
         else if( undoDataPtr->undoType == UNDO_TYPE_JOIN )
@@ -1570,7 +1570,7 @@ EditWndBuffUndo( H_EDITWND_BUFF hEditWndBuff )
 
             size = EditWndBuffGetNewLineData(hEditWndBuff,data);
 
-            EditWndBuffSetCaretPos(h,undoDataPtr->caretPos,undoDataPtr->lineNum);
+            EditWndBuffSetCaretPos(h,undoDataPtr->postPos.caretPos,undoDataPtr->postPos.lineNum);
             EditWndBuffDataSet(h,data,size,FALSE,FALSE);
         }
         else
@@ -1615,22 +1615,22 @@ EditWndBuffRedo( H_EDITWND_BUFF hEditWndBuff )
 #if 0
         DebugWndPrintf("EditWndBuffRedo,type=%d,0x%08lX\r\n",redoDataPtr->undoType,redoDataPtr->size);
 #endif
-//        DebugWndCtrlPrintf( DEBUG_WND_CTRL_ID_02, "type=%d,size=%d,caretPos=%d,lineNum=%d",redoDataPtr->undoType,redoDataPtr->size,redoDataPtr->caretPos,redoDataPtr->lineNum );
+//        DebugWndCtrlPrintf( DEBUG_WND_CTRL_ID_02, "type=%d,size=%d,caretPos=%d,lineNum=%d",redoDataPtr->undoType,redoDataPtr->size,redoDataPtr->postPos.caretPos,redoDataPtr->postPos.lineNum );
 
         if( redoDataPtr->undoType == UNDO_TYPE_SET )
         {
-            EditWndBuffSetCaretPos(h,redoDataPtr->caretPos,redoDataPtr->lineNum);
+            EditWndBuffSetCaretPos(h,redoDataPtr->postPos.caretPos,redoDataPtr->postPos.lineNum);
             EditWndBuffDataSet(h,redoDataPtr->dataPtr, redoDataPtr->size, FALSE, FALSE );
         }
         else if( redoDataPtr->undoType == UNDO_TYPE_REMOVE )
         {
-            EditWndBuffSetCaretPos(h,redoDataPtr->caretPos,redoDataPtr->lineNum);
+            EditWndBuffSetCaretPos(h,redoDataPtr->postPos.caretPos,redoDataPtr->postPos.lineNum);
             setSelectPosNowPosToFar(h,FALSE,redoDataPtr->size);
             EditWndBuffRemoveData(h,TRUE,FALSE);
         }
         else if( redoDataPtr->undoType == UNDO_TYPE_JOIN )
         {
-            EditWndBuffSetCaretPos(h,redoDataPtr->caretPos,redoDataPtr->lineNum);
+            EditWndBuffSetCaretPos(h,redoDataPtr->postPos.caretPos,redoDataPtr->postPos.lineNum);
             EditWndBuffRemoveData(h,FALSE,FALSE);
         }
         else

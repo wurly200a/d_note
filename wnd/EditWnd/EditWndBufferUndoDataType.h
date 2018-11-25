@@ -8,14 +8,20 @@ typedef enum
     UNDO_TYPE_JOIN  ,
 } UNDO_TYPE;
 
+typedef struct S_BUFF_UNDO_POSITION
+{
+    DWORD lineNum ;
+    DWORD caretPos;
+} S_BUFF_UNDO_POSITION;
+
 typedef struct tagS_BUFF_UNDO_DATA
 {
     S_LIST_HEADER header         ;
     UNDO_TYPE     undoType       ;
     TCHAR         *dataPtr       ;
     DWORD         size           ;
-    DWORD         lineNum        ;
-    DWORD         caretPos       ;
+    S_BUFF_UNDO_POSITION prePos  ;
+    S_BUFF_UNDO_POSITION postPos ;
 } S_BUFF_UNDO_DATA;
 
 /********************************************************************************
