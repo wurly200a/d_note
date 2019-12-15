@@ -253,8 +253,8 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     HFONT hFont,hOldFont;
 
     hdc = GetDC( hwnd );
-    hFont = GetStockObject(DEFAULT_GUI_FONT);
-    hOldFont = SelectObject(hdc, hFont);
+    hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+    hOldFont = (HFONT)SelectObject(hdc, hFont);
     GetTextMetrics( hdc, &tm );
     mainWndData.cxChar = tm.tmAveCharWidth;
     mainWndData.cyChar = tm.tmHeight + (tm.tmHeight/2) + (GetSystemMetrics(SM_CYEDGE) * 2);
@@ -312,7 +312,7 @@ onCreate( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
         dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
 #ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-        EditWndDataSet( mainWndData.hWndIo,dataPtr,dwSize,TRUE );
+        EditWndDataSet( mainWndData.hWndIo,(TCHAR *)dataPtr,dwSize,TRUE );
 #endif                  /*  エディットコントロール使用  or  通常  */
         doCaption( hwnd, FileGetTitleName(FILE_ID_BIN),FALSE );
     }
@@ -410,7 +410,7 @@ onClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         ConfigSaveDword( CONFIG_ID_WINDOW_POS_DX, mainWndData.cxWindow   );
         ConfigSaveDword( CONFIG_ID_WINDOW_POS_DY, mainWndData.cyWindow   );
 
-        if( ConfigIsSame(0,CONFIG_ID_MAX) )
+        if( ConfigIsSame((CONFIG_ID)0,CONFIG_ID_MAX) )
         {
             nop();
         }
@@ -425,7 +425,7 @@ onClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 
                 if( (iReturn == IDYES) )
                 {
-                    ConfigWrite(0,CONFIG_ID_MAX);
+                    ConfigWrite((CONFIG_ID)0,CONFIG_ID_MAX);
                 }
                 else if( iReturn == IDCANCEL )
                 {
@@ -438,7 +438,7 @@ onClose( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
             }
             else
             {
-                ConfigWrite(0,CONFIG_ID_MAX);
+                ConfigWrite((CONFIG_ID)0,CONFIG_ID_MAX);
             }
         }
 
@@ -555,7 +555,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                     mainWndData.bNeedSave = FALSE;
                     dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
 #ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-                    EditWndDataSet( mainWndData.hWndIo, dataPtr,dwSize,TRUE );
+                    EditWndDataSet( mainWndData.hWndIo, (TCHAR *)dataPtr,dwSize,TRUE );
 #endif                  /*  エディットコントロール使用  or  通常  */
                     doCaption( hwnd, FileGetTitleName(FILE_ID_BIN), FALSE );
                 }
@@ -568,17 +568,17 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         case IDM_FILE_SAVE:
 #ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
             dwSize = EditWndGetDataSize(mainWndData.hWndIo,EDITWND_ALL);
-            dataPtr = malloc( dwSize * sizeof(TCHAR) );
+            dataPtr = (PBYTE)malloc( dwSize * sizeof(TCHAR) );
             if( dataPtr != NULL )
             {
-                EditWndDataGet( mainWndData.hWndIo, dataPtr,dwSize,EDITWND_ALL );
-                if( (FileWrite( FILE_ID_BIN, dataPtr, dwSize )) == FILE_NAME_NOT_SET )
+                EditWndDataGet( mainWndData.hWndIo, (TCHAR *)dataPtr,dwSize,EDITWND_ALL );
+                if( (FileWrite( FILE_ID_BIN, (TCHAR *)dataPtr, dwSize )) == FILE_NAME_NOT_SET )
                 {
                     if( FileSaveDlg( hwnd,FILE_ID_BIN ) )
                     {
                         mainWndData.bNeedSave = FALSE;
                         doCaption( hwnd, FileGetTitleName(FILE_ID_BIN),FALSE );
-                        FileWrite( FILE_ID_BIN, dataPtr, dwSize );
+                        FileWrite( FILE_ID_BIN, (TCHAR *)dataPtr, dwSize );
                         rtn = 1;
                     }
                     else
@@ -590,7 +590,7 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
                 {
                     mainWndData.bNeedSave = FALSE;
                     doCaption( hwnd, FileGetTitleName(FILE_ID_BIN),FALSE );
-                    FileWrite( FILE_ID_BIN, dataPtr, dwSize );
+                    FileWrite( FILE_ID_BIN, (TCHAR *)dataPtr, dwSize );
                     rtn = 1;
                 }
                 free( dataPtr );
@@ -604,15 +604,15 @@ onCommand( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         case IDM_FILE_SAVE_AS:
 #ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
             dwSize = EditWndGetDataSize(mainWndData.hWndIo,EDITWND_ALL);
-            dataPtr = malloc( dwSize * sizeof(TCHAR) );
+            dataPtr = (PBYTE)malloc( dwSize * sizeof(TCHAR) );
             if( dataPtr != NULL )
             {
-                EditWndDataGet( mainWndData.hWndIo, dataPtr,dwSize,EDITWND_ALL );
+                EditWndDataGet( mainWndData.hWndIo, (TCHAR *)dataPtr,dwSize,EDITWND_ALL );
                 if( FileSaveDlg( hwnd,FILE_ID_BIN ) )
                 {
                     mainWndData.bNeedSave = FALSE;
                     doCaption( hwnd, FileGetTitleName(FILE_ID_BIN),FALSE );
-                    FileWrite( FILE_ID_BIN, dataPtr, dwSize );
+                    FileWrite( FILE_ID_BIN, (TCHAR *)dataPtr, dwSize );
                 }
                 else
                 {
@@ -899,7 +899,7 @@ onDropFiles( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
         FileSetName( FILE_ID_BIN, szFileName, FALSE );
         dataPtr = FileReadByte(FILE_ID_BIN,&dwSize);
 #ifndef USE_EDITCONTROL /*  エディットコントロール使用  or [通常] */
-        EditWndDataSet( mainWndData.hWndIo,dataPtr,dwSize,TRUE );
+        EditWndDataSet( mainWndData.hWndIo,(TCHAR *)dataPtr,dwSize,TRUE );
 #endif                  /*  エディットコントロール使用  or  通常  */
         doCaption( hwnd, FileGetTitleName(FILE_ID_BIN),FALSE );
     }
