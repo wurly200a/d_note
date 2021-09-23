@@ -1,16 +1,15 @@
 .SUFFIXES: .rc .res
 
-# "c:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Auxiliary/Build/vcvarsall.bat" x86 8.1
+# use "x86 Native Tools Command Prompt for VS 2019"
 
 TARGET = dnote.exe
-CC      = "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.11.25503\bin\HostX86\x86\cl.exe"
-RC      = "C:\Program Files (x86)\Windows Kits\8.1\bin\x86\rc.exe"
-LINK    = "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.11.25503\bin\HostX86\x86\link.exe"
-LIBPATH = "C:/Program Files (x86)/Windows Kits/8.1/Lib/winv6.3/um/x86"
+CC      = "cl.exe"
+RC      = "rc.exe"
+LINK    = "link.exe"
 
 CFLAGS = //I ../inc //W4 //O2 //MT //EHsc
 
-LDFLAGS = /SUBSYSTEM:WINDOWS /LIBPATH:$(LIBPATH)
+LDFLAGS = /SUBSYSTEM:WINDOWS
 LDLIBS  = ComCtl32.Lib ComDlg32.Lib User32.Lib Gdi32.Lib kernel32.Lib Imm32.Lib shell32.lib
 
 OBJECTS = \
@@ -18,6 +17,7 @@ OBJECTS = \
           ..\\develop\\DebugWnd\\DebugWndMenu.o	  \
           ..\\develop\\DebugWnd\\DebugWndFont.o	  \
           ..\\develop\\DebugWnd\\DebugWndConfig.o \
+          ..\\develop\\DebugWnd\\DebugWndSomeCtrl.o \
                                                   \
           ..\\sys\\Config\\Config.o				  \
           ..\\sys\\DateTime\\DateTime.o			  \
